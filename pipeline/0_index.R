@@ -38,14 +38,15 @@ AGGREGATE_EXT_OVERRIDE <- c(
   csv = "data", sav = "data", dta = "data", sas7bdat = "data",
   xlsx = "data", xls = "data", rds = "data"
 )
-LLM_BATCH_SIZE  <- 20
+if (!exists("LLM_BATCH_SIZE"))  LLM_BATCH_SIZE  <- 20
 N_DATA_READ     <- 5
 MAX_TOTAL_DATA_MB <- 10 * 1024  # 10 GB total data read cap per paper across all data files
 MAX_FILE_READ_SEC <- 5 * 60    # per-file read timeout (seconds); file is skipped if exceeded
 VALID_COL_TYPES <- c("continuous", "binary", "categorical", "ordinal", "date", "id",
                      "text", "continuous_comma_decimal", "continuous_outliers_excluded",
                      "empty", "unknown")
-MAX_COL_TYPE_LLM_CALLS <- 5L
+if (!exists("MAX_COL_TYPE_LLM_CALLS")) MAX_COL_TYPE_LLM_CALLS <- 5L
+if (!exists("FULL_RUN"))              FULL_RUN               <- FALSE
 # Folders with more than this many files are treated as aggregate datasets
 AGGREGATE_THRESHOLD <- 50
 # Max rows to scan below row 1 for a usable sub-header in multi-level CSV files
@@ -150,16 +151,16 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
     output_dir
   } else paper_output_dir(paper_id)
 
-  xml_path <- file.path(XML_DIR, paste0(paper_id, ".xml"))
-  paper    <- read(xml_path)
-  stopifnot(!is.null(paper$id))
-
   target_dir <- file.path(DATA_DIR, paper_id)
 
   # ── 1. Download ─────────────────────────────────────────────────────────────
 
   t_download_start <- proc.time()[["elapsed"]]
   if (download) {
+    xml_path <- file.path(XML_DIR, paste0(paper_id, ".xml"))
+    paper    <- read(xml_path)
+    stopifnot(!is.null(paper$id))
+
     links        <- osf_links(paper)
     unique_links <- setdiff(unique(links$text), BADGE_REPOS)
 
@@ -407,7 +408,7 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
   t_llm_start <- proc.time()[["elapsed"]]
   MAX_LLM_CALLS <- 10
   n_llm_calls   <- ceiling(length(llm_paths) / LLM_BATCH_SIZE)
-  if (n_llm_calls > MAX_LLM_CALLS) {
+  if (!FULL_RUN && n_llm_calls > MAX_LLM_CALLS) {
     stop("too_large: ", length(llm_paths), " paths would require ",
          n_llm_calls, " LLM calls (max ", MAX_LLM_CALLS, ")")
   }
@@ -720,7 +721,7 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
   if (!is.null(columns_df) && nrow(columns_df) > 0 && any(is.na(columns_df$col_type))) {
     ambig_rows <- which(is.na(columns_df$col_type))
     max_cols   <- MAX_COL_TYPE_LLM_CALLS * LLM_BATCH_SIZE
-    if (length(ambig_rows) > max_cols) ambig_rows <- ambig_rows[seq_len(max_cols)]
+    if (!FULL_RUN && length(ambig_rows) > max_cols) ambig_rows <- ambig_rows[seq_len(max_cols)]
     descriptors <- paste0('"', columns_df$column_name[ambig_rows], '"',
                           " (samples: ", columns_df$sample_values_unique[ambig_rows], ")")
     message("── LLM col_type: classifying ", length(ambig_rows), " ambiguous column(s)")

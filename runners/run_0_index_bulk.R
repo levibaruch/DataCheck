@@ -9,19 +9,39 @@ source("data_check/pipeline/0_index.R")
 
 # ── Config ────────────────────────────────────────────────────────────────────
 
+FULL_RUN    <- TRUE         # TRUE = no LLM call caps (file classification + col_type)
 N_RUNS      <- Inf          # Inf = all papers; set an integer to cap
 SEED        <- NULL         # set an integer for reproducibility, or NULL
 SUMMARY_CSV <- "./data_check/results/bulk_summary.csv"
-DOWNLOAD    <- TRUE        # Whether the script should attempt downloads or not
+DOWNLOAD    <- FALSE         # Whether the script should attempt downloads or not
 
+LLM_BATCH_SIZE         <- 20L  # paths sent per LLM call for file classification
+MAX_COL_TYPE_LLM_CALLS <- 5L   # max LLM calls for column type classification per paper
+
+# Set FROM_LOCAL = TRUE to skip downloading and re-process already-downloaded
+# datasets from the data/ folder. Discovers paper IDs from existing subdirs
+# instead of XML files — useful for re-runs after pipeline changes.
+FROM_LOCAL  <- TRUE
+
+# Set RESUME = FALSE to ignore prior bulk_summary.csv and re-run everything.
+# Typically set FALSE when doing a FROM_LOCAL re-run after pipeline changes.
+RESUME      <- FALSE
+
+if (FROM_LOCAL) DOWNLOAD <- FALSE
 if (!is.null(SEED)) set.seed(SEED)
 
 # ── Discover all papers ──────────────────────────────────────────────────────
 
-all_ids <- tools::file_path_sans_ext(
-  list.files(XML_DIR, pattern = "\\.xml$", full.names = FALSE)
-)
-if (length(all_ids) == 0) stop("No XML files found in ", XML_DIR)
+if (FROM_LOCAL) {
+  all_ids <- list.dirs(DATA_DIR, full.names = FALSE, recursive = FALSE)
+  all_ids <- all_ids[nchar(all_ids) > 0]
+  if (length(all_ids) == 0) stop("No paper directories found in ", DATA_DIR)
+} else {
+  all_ids <- tools::file_path_sans_ext(
+    list.files(XML_DIR, pattern = "\\.xml$", full.names = FALSE)
+  )
+  if (length(all_ids) == 0) stop("No XML files found in ", XML_DIR)
+}
 
 # ── Load prior progress ─────────────────────────────────────────────────────
 
@@ -29,8 +49,18 @@ done_ids <- character(0)
 if (file.exists(SUMMARY_CSV)) {
   prior <- tryCatch(read.csv(SUMMARY_CSV, stringsAsFactors = FALSE, colClasses = c(paper_id = "character")), error = function(e) NULL)
   if (!is.null(prior) && "paper_id" %in% names(prior)) {
-    done_ids <- unique(as.character(prior$paper_id))
-    message("── Resuming: ", length(done_ids), " paper(s) already processed, skipping")
+    # Backfill run_at column if missing (one-time migration)
+    if (!"run_at" %in% names(prior)) {
+      prior <- cbind(prior[, "paper_id", drop = FALSE],
+                     run_at = NA_character_,
+                     prior[, setdiff(names(prior), "paper_id"), drop = FALSE])
+      write.csv(prior, SUMMARY_CSV, row.names = FALSE)
+      message("── Migrated bulk_summary.csv: added run_at column")
+    }
+    if (RESUME) {
+      done_ids <- unique(as.character(prior$paper_id))
+      message("── Resuming: ", length(done_ids), " paper(s) already processed, skipping")
+    }
   }
 }
 
@@ -61,6 +91,7 @@ na_fallback <- function(x, na = NA) if (is.null(x) || length(x) == 0) na else x
 append_summary_row <- function(r) {
   row <- data.frame(
     paper_id     = na_fallback(r$paper_id, NA_character_),
+    run_at       = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
     success      = r$success,
     error        = na_fallback(r$error, NA_character_),
     elapsed_ms   = round(na_fallback(r$elapsed_sec, NA_real_) * 1000),
@@ -87,7 +118,7 @@ for (i in seq_along(remaining_ids)) {
   pid <- remaining_ids[i]
 
   # Double-check: re-read CSV in case a prior iteration already covered this ID
-  if (file.exists(SUMMARY_CSV)) {
+  if (RESUME && file.exists(SUMMARY_CSV)) {
     already <- tryCatch(read.csv(SUMMARY_CSV, stringsAsFactors = FALSE, colClasses = c(paper_id = "character")), error = function(e) NULL)
     if (!is.null(already) && pid %in% already$paper_id) {
       message("  skipping (already in CSV): ", pid)
