@@ -16,10 +16,19 @@ One row per file discovered in the paper's OSF repository.
 | `filename` | character | Basename of the file |
 | `ext` | character | File extension (lowercase) |
 | `type` | character | File type — see [File Types](#file-types) |
+| `type_source` | character | How `type` was determined — see [Type Source Values](#type-source-values) |
 | `group` | character | Experiment/study group — see [Groups](#groups) |
-| `type_source` | character | How `type` was determined: `rule` (extension override applied) or `llm` (LLM assignment accepted) |
-| `is_raw` | logical | `TRUE` if file appears to be raw (unprocessed) data |
-| `is_sentinel` | logical | `TRUE` if row represents a collapsed folder (>50 files) |
+| `aggregate_folder` | character \| NA | Relative path of the aggregate folder this file was expanded from; `NA` for non-aggregate files |
+| `data_granularity` | character \| NA | `"individual"` (part of a detected participant series), `"combined"` (classified individually), or `NA` (non-data file) |
+| `is_sentinel` | logical | `TRUE` if row represents a collapsed folder (>50 files) — always `FALSE` in current output; retained for compatibility |
+
+### Type Source Values
+
+| Value | Meaning |
+|---|---|
+| `"llm"` | Type assigned by Phase 1 LLM classification of an individual (non-aggregate) file |
+| `"extension_rule"` | Type assigned by `AGGREGATE_EXT_OVERRIDE` lookup applied per-file after aggregate expansion |
+| `"sentinel_llm"` | Type inherited from Phase 2 sentinel LLM classification for files with ambiguous extensions |
 
 ### File Types
 
@@ -111,9 +120,9 @@ runner to resume after a crash.
 | `column_ms` | integer | Time spent on column extraction in milliseconds |
 | `n_files` | integer | Total files discovered in the repository |
 | `n_data_files` | integer | Files classified as `type = "data"` |
-| `n_agg_dirs` | integer | Folders collapsed to sentinel rows |
-| `n_raw` | integer | Data files detected as raw (unprocessed) |
-| `n_nonraw` | integer | Data files detected as processed/derived |
+| `n_agg_dirs` | integer | Aggregate folders detected and sub-grouped |
+| `n_individual` | integer | Data files with `data_granularity = "individual"` (part of a detected series) |
+| `n_combined` | integer | Data files with `data_granularity = "combined"` (classified individually) |
 | `n_columns` | integer | Total columns extracted across all data files |
 | `n_src_files` | integer | Source data files from which columns were extracted |
 

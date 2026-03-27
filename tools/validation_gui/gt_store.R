@@ -5,19 +5,19 @@
 # ── Canonical column order ────────────────────────────────────────────────────
 
 GT_COLS <- c("paper_id", "rel_path", "type_gt", "group_gt",
-             "is_raw_gt", "validated_at", "annotator")
+             "data_granularity_gt", "validated_at", "annotator")
 
 # ── Empty GT data.frame ───────────────────────────────────────────────────────
 
 empty_gt <- function() {
   data.frame(
-    paper_id     = character(0),
-    rel_path     = character(0),
-    type_gt      = character(0),
-    group_gt     = character(0),
-    is_raw_gt    = logical(0),
-    validated_at = character(0),
-    annotator    = character(0),
+    paper_id             = character(0),
+    rel_path             = character(0),
+    type_gt              = character(0),
+    group_gt             = character(0),
+    data_granularity_gt  = character(0),
+    validated_at         = character(0),
+    annotator            = character(0),
     stringsAsFactors = FALSE
   )
 }
@@ -41,7 +41,6 @@ load_structure <- function(paper_id) {
   path <- file.path(outputs_dir, paper_id, "structure.csv")
   read.csv(path,
            colClasses      = c(paper_id    = "character",
-                               is_raw      = "logical",
                                is_sentinel = "logical"),
            stringsAsFactors = FALSE)
 }
@@ -54,14 +53,18 @@ read_gt <- function(paper_id) {
   if (!file.exists(path)) return(empty_gt())
   tryCatch({
     df <- read.csv(path,
-                   colClasses      = c(paper_id  = "character",
-                                       is_raw_gt = "logical"),
+                   colClasses      = c(paper_id = "character"),
                    stringsAsFactors = FALSE)
+    # Migrate legacy is_raw_gt column to data_granularity_gt
+    if ("is_raw_gt" %in% names(df) && !"data_granularity_gt" %in% names(df)) {
+      df$data_granularity_gt <- ifelse(isTRUE(df$is_raw_gt), "individual", NA_character_)
+      df$is_raw_gt <- NULL
+    }
     # Ensure all expected columns are present
     for (col in setdiff(GT_COLS, names(df))) df[[col]] <- NA_character_
-    # T035: silently correct is_raw_gt = TRUE for non-data files
+    # Silently correct data_granularity_gt to NA for non-data files
     non_data <- !is.na(df$type_gt) & df$type_gt != "data"
-    df$is_raw_gt[non_data] <- FALSE
+    df$data_granularity_gt[non_data] <- NA_character_
     df[GT_COLS]
   }, error = function(e) {
     warning("Could not read ground truth for ", paper_id, ": ", conditionMessage(e))

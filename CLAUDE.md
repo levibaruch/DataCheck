@@ -1,6 +1,6 @@
 # data_check Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-03-26
+Auto-generated from all feature plans. Last updated: 2026-03-27
 
 ## Active Technologies
 - R (base R only — no new packages; `haven`/`readxl`/`jsonlite` already present) + `llm_batch()`, `extract_json()` (existing helpers in `helper.R`); `jsonlite::fromJSON` (005-codebook-column-labelling)
@@ -37,6 +37,8 @@ Auto-generated from all feature plans. Last updated: 2026-03-26
 - Local filesystem — `data_check/psychds/<paper_id>/` output roo (021-psychds-conversion)
 - R (base R, no new packages) + `metacheck` (`llm_batch()`), `haven`, `readxl`, `jsonlite` — all already installed (022-file-type-taxonomy-refactor)
 - CSV files on local filesystem — `outputs/<paper_id>/structure.csv` (schema change), `docs/output-schemas.md` (doc update) (022-file-type-taxonomy-refactor)
+- R (base R only — no new packages) + `metacheck` (`llm_batch()`), `haven`, `readxl`, `jsonlite` — all already installed (023-sentinel-aggregate-revamp)
+- CSV files on local filesystem — `outputs/<paper_id>/structure.csv`, `ground_truth/<paper_id>.csv` (023-sentinel-aggregate-revamp)
 
 - R (base R, no new packages) + `helper.R` (`classify_col_type_rules()`), `0_index.R` (`COLUMN_TYPE_PROMPT`, `run_index()`) (004-reduce-unknown-coltypes)
 
@@ -56,9 +58,9 @@ tests/
 R (base R, no new packages): Follow standard conventions
 
 ## Recent Changes
+- 023-sentinel-aggregate-revamp: Added R (base R only — no new packages) + `metacheck` (`llm_batch()`), `haven`, `readxl`, `jsonlite` — all already installed
 - 022-file-type-taxonomy-refactor: Added R (base R, no new packages) + `metacheck` (`llm_batch()`), `haven`, `readxl`, `jsonlite` — all already installed
 - 022-file-type-taxonomy-refactor: Added R (base R, no new packages) + `metacheck` (`llm_batch()`), `haven`, `readxl`, `jsonlite` — all already installed
-- 021-psychds-conversion: Added R 4.5 (base R only — no new packages) + `haven`, `readxl`, `jsonlite`, `xml2`, `pdftools`, `officer` — all already installed
 
 
 <!-- MANUAL ADDITIONS START -->

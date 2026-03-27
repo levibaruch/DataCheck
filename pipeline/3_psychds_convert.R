@@ -497,16 +497,16 @@ build_dataset_description <- function(paper_id, study_group, property_values,
 
 # ── Internal: build_sidecar ───────────────────────────────────────────────────
 
-build_sidecar <- function(rel_path, format, size_bytes, is_raw, method,
+build_sidecar <- function(rel_path, format, size_bytes, data_granularity, method,
                           file_cols_df, labels_df) {
   file_pvs <- build_property_values(file_cols_df, labels_df, NULL)
   list(
     `schema:variableMeasured`  = file_pvs,
     `metacheck:original_file`  = Filter(Negate(is.null), list(
-      rel_path  = rel_path,
-      format    = format,
-      size_bytes = as.integer(size_bytes),
-      is_raw    = as.logical(is_raw)
+      rel_path         = rel_path,
+      format           = format,
+      size_bytes       = as.integer(size_bytes),
+      data_granularity = data_granularity
     )),
     `metacheck:conversion` = Filter(Negate(is.null), list(
       method                 = method,
@@ -528,14 +528,14 @@ build_provenance <- function(file_records) {
       original_format       = r$original_format,
       pipeline_type         = r$pipeline_type,
       pipeline_group        = r$pipeline_group,
-      pipeline_is_raw       = as.logical(r$pipeline_is_raw),
+      pipeline_data_granularity = r$pipeline_data_granularity,
       ground_truth_validated = as.logical(r$ground_truth_validated)
     )
     if (isTRUE(r$ground_truth_validated)) {
       rec[["ground_truth"]] <- Filter(Negate(is.null), list(
         type_gt      = r$gt_type_gt,
         group_gt     = r$gt_group_gt,
-        is_raw_gt    = r$gt_is_raw_gt,
+        data_granularity_gt = r$gt_data_granularity_gt,
         validated_at = r$gt_validated_at,
         annotator    = r$gt_annotator
       ))
@@ -668,7 +668,10 @@ convert_study <- function(paper_id, study_group, files_df, cols_df, labels_df,
     rel_path <- row$rel_path
     filename <- row$filename
     ext      <- tolower(tools::file_ext(filename))
-    is_raw   <- isTRUE(row$is_raw)
+    is_raw   <- if ("data_granularity" %in% names(row))
+                  identical(row$data_granularity, "individual")
+                else
+                  isTRUE(row$is_raw)  # backward compat with old structure.csv
     gt_val   <- isTRUE(row$ground_truth_validated)
 
     # Size check (FR-013, US4/T028)
@@ -685,11 +688,12 @@ convert_study <- function(paper_id, study_group, files_df, cols_df, labels_df,
       original_format        = ext,
       pipeline_type          = row$type,
       pipeline_group         = row$group,
-      pipeline_is_raw        = row$is_raw,
+      pipeline_data_granularity = if ("data_granularity" %in% names(row))
+                                    row$data_granularity else row$is_raw,
       ground_truth_validated = gt_val,
       gt_type_gt             = if (gt_val && "gt_type_gt" %in% names(row)) row$gt_type_gt else NULL,
       gt_group_gt            = if (gt_val && "gt_group_gt" %in% names(row)) row$gt_group_gt else NULL,
-      gt_is_raw_gt           = if (gt_val && "gt_is_raw_gt" %in% names(row)) row$gt_is_raw_gt else NULL,
+      gt_data_granularity_gt = if (gt_val && "gt_data_granularity_gt" %in% names(row)) row$gt_data_granularity_gt else NULL,
       gt_validated_at        = if (gt_val && "gt_validated_at" %in% names(row)) row$gt_validated_at else NULL,
       gt_annotator           = if (gt_val && "gt_annotator" %in% names(row)) row$gt_annotator else NULL
     )
@@ -762,7 +766,8 @@ convert_study <- function(paper_id, study_group, files_df, cols_df, labels_df,
       write_res <- write_data_csv(sh$df, csv_dest)
       n_data_files <- n_data_files + 1L
 
-      sidecar <- build_sidecar(rel_path, ext, size_bytes, is_raw,
+      sidecar <- build_sidecar(rel_path, ext, size_bytes,
+                               if (is_raw) "individual" else "combined",
                                sh$method, file_cols, file_lbls)
       sidecar[["metacheck:conversion"]][["rows_written"]]    <- write_res$rows_written
       sidecar[["metacheck:conversion"]][["columns_written"]] <- write_res$columns_written
@@ -809,7 +814,8 @@ convert_study <- function(paper_id, study_group, files_df, cols_df, labels_df,
       original_format           = tolower(tools::file_ext(row$filename)),
       pipeline_type             = row$type,
       pipeline_group            = row$group,
-      pipeline_is_raw           = row$is_raw,
+      pipeline_data_granularity = if ("data_granularity" %in% names(row))
+                                    row$data_granularity else row$is_raw,
       ground_truth_validated    = isTRUE(row$ground_truth_validated),
       # TXT extraction fields (NULL when no extraction attempted)
       txt_extraction_attempted  = if (!is.null(txt_info)) txt_info$attempted else NULL,

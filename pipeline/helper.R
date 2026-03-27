@@ -930,9 +930,10 @@ match_column_labels <- function(columns_df, codebook_vars_df,
 
 # Apply ground-truth overrides to a structure data frame.
 # Reads ground_truth/<paper_id>.csv if present; for each validated row whose
-# rel_path matches, overwrites type/group/is_raw with type_gt/group_gt/is_raw_gt
-# and sets ground_truth_validated = TRUE.  Returns structure_df unchanged (with
-# ground_truth_validated = FALSE for all rows) when no GT file exists.
+# rel_path matches, overwrites type/group/data_granularity with
+# type_gt/group_gt/data_granularity_gt and sets ground_truth_validated = TRUE.
+# Returns structure_df unchanged (with ground_truth_validated = FALSE for all
+# rows) when no GT file exists.
 # paper_id must be a character string (leading zeros are meaningful).
 apply_ground_truth <- function(structure_df, paper_id) {
   structure_df$ground_truth_validated <- FALSE
@@ -949,20 +950,25 @@ apply_ground_truth <- function(structure_df, paper_id) {
     }
   )
   if (is.null(gt) || nrow(gt) == 0) return(structure_df)
+  # Migrate legacy is_raw_gt → data_granularity_gt in old GT files
+  if ("is_raw_gt" %in% names(gt) && !"data_granularity_gt" %in% names(gt)) {
+    gt$data_granularity_gt <- ifelse(isTRUE(gt$is_raw_gt), "individual", NA_character_)
+  }
   for (i in seq_len(nrow(gt))) {
     idx <- which(structure_df$rel_path == gt$rel_path[i])
     if (length(idx) == 0) next
-    if (!is.na(gt$type_gt[i])    && nzchar(gt$type_gt[i]))
-      structure_df$type[idx]   <- gt$type_gt[i]
-    if (!is.na(gt$group_gt[i])   && nzchar(gt$group_gt[i]))
-      structure_df$group[idx]  <- gt$group_gt[i]
-    if (!is.na(gt$is_raw_gt[i]))
-      structure_df$is_raw[idx] <- as.logical(gt$is_raw_gt[i])
+    if (!is.na(gt$type_gt[i])  && nzchar(gt$type_gt[i]))
+      structure_df$type[idx]  <- gt$type_gt[i]
+    if (!is.na(gt$group_gt[i]) && nzchar(gt$group_gt[i]))
+      structure_df$group[idx] <- gt$group_gt[i]
+    if ("data_granularity_gt" %in% names(gt) && !is.na(gt$data_granularity_gt[i]))
+      structure_df$data_granularity[idx] <- gt$data_granularity_gt[i]
     structure_df$ground_truth_validated[idx] <- TRUE
     # Store raw GT fields for provenance output
-    structure_df$gt_type_gt[idx]       <- gt$type_gt[i]
-    structure_df$gt_group_gt[idx]      <- gt$group_gt[i]
-    structure_df$gt_is_raw_gt[idx]     <- gt$is_raw_gt[i]
+    structure_df$gt_type_gt[idx]              <- gt$type_gt[i]
+    structure_df$gt_group_gt[idx]             <- gt$group_gt[i]
+    structure_df$gt_data_granularity_gt[idx]  <- if ("data_granularity_gt" %in% names(gt))
+                                                   gt$data_granularity_gt[i] else NA_character_
     if ("validated_at" %in% names(gt))
       structure_df$gt_validated_at[idx] <- gt$validated_at[i]
     if ("annotator" %in% names(gt))
@@ -1010,5 +1016,107 @@ extract_plain_text <- function(path) {
       }
     ),
     error = function(e) NULL
+  )
+}
+
+# ── Aggregate series detection ────────────────────────────────────────────────
+
+# detect_series: group files within an aggregate folder by common filename prefix.
+#
+# Algorithm:
+#   1. Strip extension, then strip trailing variable suffix starting at the first
+#      separator ([-_]) before a segment that contains at least one digit.
+#   2. Files whose prefix equals their full stem (no suffix stripped), or whose
+#      prefix is < 2 characters, are singletons → returned for Phase 1 processing.
+#   3. Files whose stripped prefix appears only once (no pair) → singletons.
+#   4. Remaining groups of 2+ files form series, each collapsing to one sub-sentinel.
+#   5. If no series are found, the entire folder becomes ONE fallback sentinel
+#      (is_series = FALSE), and singletons is returned empty.
+#
+# Arguments:
+#   rel_paths_in_folder  character vector of relative paths of all files in the
+#                        aggregate folder (may span subdirectories for participant
+#                        aggregates).
+#
+# Returns a list:
+#   $sub_sentinels  data.frame with one row per series (or one fallback row):
+#                     prefix, file_count, dominant_ext,
+#                     sample_files (list-column of up to 5 basenames),
+#                     folder_members (list-column of all rel_paths in this series),
+#                     is_series (TRUE = detected series, FALSE = fallback sentinel)
+#   $singletons     character vector of rel_paths routed back to Phase 1
+
+detect_series <- function(rel_paths_in_folder) {
+  if (length(rel_paths_in_folder) == 0) {
+    return(list(
+      sub_sentinels = data.frame(
+        prefix         = character(0),
+        file_count     = integer(0),
+        dominant_ext   = character(0),
+        sample_files   = I(list()),
+        folder_members = I(list()),
+        is_series      = logical(0),
+        stringsAsFactors = FALSE
+      ),
+      singletons = character(0)
+    ))
+  }
+
+  basenames <- basename(rel_paths_in_folder)
+  exts      <- tolower(tools::file_ext(basenames))
+  stems     <- tools::file_path_sans_ext(basenames)
+
+  # Strip trailing variable suffix: first separator ([-_]) before a segment
+  # that contains at least one digit, through to end-of-string.
+  prefixes <- sub("([-_])[A-Za-z0-9]*[0-9][A-Za-z0-9]*([-_].*)?$", "",
+                  stems, perl = TRUE)
+
+  # Mark singletons: prefix unchanged (no suffix stripped) or too short
+  singleton_mask <- (prefixes == stems) | (nchar(prefixes) < 2L)
+
+  # Also mark as singleton if the prefix group would have only one member
+  if (any(!singleton_mask)) {
+    pfx_counts      <- table(prefixes[!singleton_mask])
+    lone_pfx        <- names(pfx_counts[pfx_counts < 2L])
+    singleton_mask  <- singleton_mask | (!singleton_mask & prefixes %in% lone_pfx)
+  }
+
+  series_prefixes <- unique(prefixes[!singleton_mask])
+
+  if (length(series_prefixes) == 0) {
+    # No series found — single fallback sentinel for the whole folder
+    dom_ext <- names(sort(table(exts), decreasing = TRUE))[1]
+    sub_sentinels <- data.frame(
+      prefix         = "mixed",
+      file_count     = length(rel_paths_in_folder),
+      dominant_ext   = dom_ext,
+      sample_files   = I(list(head(basenames, 5L))),
+      folder_members = I(list(rel_paths_in_folder)),
+      is_series      = FALSE,
+      stringsAsFactors = FALSE
+    )
+    return(list(sub_sentinels = sub_sentinels, singletons = character(0)))
+  }
+
+  # Build one sub-sentinel per detected series
+  sentinel_rows <- lapply(series_prefixes, function(pfx) {
+    idx         <- which(!singleton_mask & prefixes == pfx)
+    members     <- rel_paths_in_folder[idx]
+    member_exts <- exts[idx]
+    dom_ext     <- names(sort(table(member_exts), decreasing = TRUE))[1]
+    data.frame(
+      prefix         = pfx,
+      file_count     = length(members),
+      dominant_ext   = dom_ext,
+      sample_files   = I(list(head(basename(members), 5L))),
+      folder_members = I(list(members)),
+      is_series      = TRUE,
+      stringsAsFactors = FALSE
+    )
+  })
+
+  list(
+    sub_sentinels = do.call(rbind, sentinel_rows),
+    singletons    = rel_paths_in_folder[singleton_mask]
   )
 }

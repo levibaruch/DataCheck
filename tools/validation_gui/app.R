@@ -140,12 +140,12 @@ document.addEventListener("DOMContentLoaded", function() {
     window.xmlSetColumns(msg.terms || []);
   });
 
-  // Custom message: enable/disable the is_raw checkbox
-  Shiny.addCustomMessageHandler("set_is_raw_disabled", function(msg) {
-    var el = document.getElementById("is_raw_val");
+  // Custom message: enable/disable the data_granularity selector
+  Shiny.addCustomMessageHandler("set_data_granularity_disabled", function(msg) {
+    var el = document.getElementById("data_granularity_val");
     if (!el) return;
     el.disabled = msg.disabled;
-    var wrap = el.closest(".form-check") || el.parentElement;
+    var wrap = el.closest(".form-group") || el.parentElement;
     if (wrap) wrap.style.opacity = msg.disabled ? "0.35" : "1";
   });
 
@@ -495,8 +495,10 @@ ui <- page_sidebar(
         div(style = "flex:1; min-width:120px; max-width:220px;",
             textInput("group_val", tags$small("Group"), value = "",
                       placeholder = "ex1, shared, na …")),
-        div(style = "padding-bottom:7px;",
-            checkboxInput("is_raw_val", tags$small("is_raw"), value = FALSE)),
+        div(style = "min-width:110px;",
+            selectInput("data_granularity_val", tags$small("data_granularity"),
+                        choices = c("(unset)" = "", "individual", "combined"),
+                        selected = "", width = "100%")),
         div(
           style = "margin-left:auto; display:flex; gap:6px; padding-bottom:4px;",
           actionButton("btn_back", "\u2190 Prev",      class = "btn-sm btn-outline-secondary"),
@@ -520,8 +522,8 @@ server <- function(input, output, session) {
     gt            = empty_gt(),
     current_idx   = 1L,
     status        = character(0),  # named: "unvisited"/"validated"/"skipped"
-    selected_type = NA_character_,
-    is_raw_val    = FALSE,
+    selected_type         = NA_character_,
+    data_granularity_val  = "",
     skipped       = integer(0),
     xml           = NULL,          # list(title, abstract, body) or NULL
     col_names     = character(0)
@@ -604,32 +606,35 @@ server <- function(input, output, session) {
     row    <- rv$structure[idx, ]
     gt_row <- rv$gt[rv$gt$rel_path == row$rel_path, ]
     if (nrow(gt_row) > 0) {
-      rv$selected_type <- gt_row$type_gt[1]
-      rv$is_raw_val    <- isTRUE(gt_row$is_raw_gt[1])
-      updateTextInput(session,     "group_val",   value = gt_row$group_gt[1])
-      updateCheckboxInput(session, "is_raw_val",  value = rv$is_raw_val)
+      rv$selected_type        <- gt_row$type_gt[1]
+      rv$data_granularity_val <- if (!is.na(gt_row$data_granularity_gt[1]))
+                                   gt_row$data_granularity_gt[1] else ""
+      updateTextInput(session,  "group_val",            value = gt_row$group_gt[1])
+      updateSelectInput(session, "data_granularity_val", selected = rv$data_granularity_val)
     } else {
-      rv$selected_type <- if (!is.na(row$type)) row$type else "other"
-      rv$is_raw_val    <- isTRUE(row$is_raw)
-      updateTextInput(session,     "group_val",   value = row$group)
-      updateCheckboxInput(session, "is_raw_val",  value = rv$is_raw_val)
+      rv$selected_type        <- if (!is.na(row$type)) row$type else "other"
+      rv$data_granularity_val <- if ("data_granularity" %in% names(row) &&
+                                      !is.na(row$data_granularity))
+                                   row$data_granularity else ""
+      updateTextInput(session,  "group_val",            value = row$group)
+      updateSelectInput(session, "data_granularity_val", selected = rv$data_granularity_val)
     }
   }
 
-  # ── T012: is_raw sync + disable for non-data types ──────────────────────────
+  # ── T012: data_granularity sync + disable for non-data types ────────────────
 
-  observeEvent(input$is_raw_val, {
-    rv$is_raw_val <- input$is_raw_val
+  observeEvent(input$data_granularity_val, {
+    rv$data_granularity_val <- input$data_granularity_val
   })
 
   observe({
     sel     <- isolate(rv$selected_type)
     is_data <- !is.na(sel) && sel == "data"
-    if (!is_data && isTRUE(isolate(rv$is_raw_val))) {
-      rv$is_raw_val <- FALSE
-      updateCheckboxInput(session, "is_raw_val", value = FALSE)
+    if (!is_data && nzchar(isolate(rv$data_granularity_val))) {
+      rv$data_granularity_val <- ""
+      updateSelectInput(session, "data_granularity_val", selected = "")
     }
-    session$sendCustomMessage("set_is_raw_disabled", list(disabled = !is_data))
+    session$sendCustomMessage("set_data_granularity_disabled", list(disabled = !is_data))
   }) |> bindEvent(rv$selected_type, ignoreInit = FALSE)
 
   # ── T009/T010: File list click + type button clicks ──────────────────────────
@@ -667,9 +672,12 @@ server <- function(input, output, session) {
       "7" = { rv$selected_type <- "other" },
       "r" = {
         if (!is.na(rv$selected_type) && rv$selected_type == "data") {
-          new_val <- !rv$is_raw_val
-          rv$is_raw_val <- new_val
-          updateCheckboxInput(session, "is_raw_val", value = new_val)
+          new_val <- switch(rv$data_granularity_val,
+                            ""           = "individual",
+                            "individual" = "combined",
+                            "combined"   = "")
+          rv$data_granularity_val <- new_val
+          updateSelectInput(session, "data_granularity_val", selected = new_val)
         }
       },
       "g"           = { session$sendCustomMessage("focus_group", list()) },
@@ -688,17 +696,18 @@ server <- function(input, output, session) {
     if (idx < 1L || idx > nrow(rv$structure)) return()
     row <- rv$structure[idx, ]
 
-    is_raw_save <- if (rv$selected_type == "data") rv$is_raw_val else FALSE
+    dg_save <- if (rv$selected_type == "data" && nzchar(rv$data_granularity_val))
+                 rv$data_granularity_val else NA_character_
 
     new_row <- data.frame(
-      paper_id     = rv$paper_id,
-      rel_path     = row$rel_path,
-      type_gt      = rv$selected_type,
-      group_gt     = trimws(input$group_val),
-      is_raw_gt    = is_raw_save,
-      validated_at = format(Sys.time(), "%Y-%m-%dT%H:%M:%S"),
-      annotator    = rv$annotator,
-      stringsAsFactors = FALSE
+      paper_id             = rv$paper_id,
+      rel_path             = row$rel_path,
+      type_gt              = rv$selected_type,
+      group_gt             = trimws(input$group_val),
+      data_granularity_gt  = dg_save,
+      validated_at         = format(Sys.time(), "%Y-%m-%dT%H:%M:%S"),
+      annotator            = rv$annotator,
+      stringsAsFactors     = FALSE
     )
 
     rv$gt <- upsert_gt(rv$gt, new_row)
@@ -783,7 +792,7 @@ server <- function(input, output, session) {
           tags$tr(tags$td(HTML("<kbd>1</kbd>\u2013<kbd>8</kbd>")),
                   tags$td("Select type: data / code / codebook / supplemental / readme / asset / other")),
           tags$tr(tags$td(HTML("<kbd>R</kbd>")),
-                  tags$td("Toggle is_raw (active only when type = data)")),
+                  tags$td("Cycle data_granularity: (unset) \u2192 individual \u2192 combined (active only when type = data)")),
           tags$tr(tags$td(HTML("<kbd>G</kbd>")),
                   tags$td("Move focus to the group text input")),
           tags$tr(tags$td(HTML("<kbd>\u2318\u23ce</kbd>")),
@@ -972,11 +981,11 @@ server <- function(input, output, session) {
           style = "padding:2px 7px; font-size:0.78em; border-radius:3px; font-weight:700; background:rgba(128,128,128,0.12); color:inherit; opacity:0.7;",
           paste("grp:", row$group)
         ),
-        if (isTRUE(row$is_raw))
+        if (!is.na(row$data_granularity) && row$data_granularity == "individual")
           tags$span(
             class = "file-row__type tbadge-codebook",
             style = "padding:2px 7px; font-size:0.78em;",
-            "raw"
+            "individual"
           )
       )
     )
@@ -1099,7 +1108,8 @@ server <- function(input, output, session) {
     corr <- 0L
     if (nrow(gt) > 0) {
       m <- merge(gt,
-                 struct[, c("rel_path", "type", "group", "is_raw")],
+                 struct[, intersect(c("rel_path", "type", "group", "data_granularity"),
+                                    names(struct))],
                  by = "rel_path", all.x = TRUE)
       corr <- sum(!is.na(m$type_gt) & !is.na(m$type) & m$type_gt != m$type,
                   na.rm = TRUE)

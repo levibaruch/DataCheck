@@ -296,65 +296,163 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
   is_aggregate <- (top_dirs %in% flat_agg_dirs) | is_under_participant_agg
   aggregate_df <- NULL
 
+  # ── 5b. Sub-group aggregate folders into series-based sub-sentinels ──────────
+  # Each aggregate folder is split by detect_series() into:
+  #   - Sub-sentinels (one per series, or one fallback sentinel for the whole folder)
+  #   - Singletons (unique files routed back to Phase 1 for individual classification)
+  # Descriptor strings carry the series prefix, file count, extension, and sample
+  # filenames so Phase 2 LLM can assign accurate group labels per condition.
+
+  extra_singletons <- character(0)
+
   if (any(is_aggregate)) {
-    agg_sentinels <- lapply(agg_dirs, function(d) {
+    agg_all <- lapply(agg_dirs, function(d) {
       if (d %in% participant_agg_dirs) {
         members <- rel_paths[startsWith(rel_paths, paste0(d, "/"))]
       } else {
         members <- rel_paths[top_dirs == d]
       }
-      exts         <- tolower(tools::file_ext(members))
-      dominant_ext <- names(sort(table(exts), decreasing = TRUE))[1]
-      data.frame(
-        rel_path     = file.path(d, paste0("[", length(members),
-                                           "_files.", dominant_ext, "]")),
-        is_sentinel  = TRUE,
-        member_count = length(members),
-        stringsAsFactors = FALSE
-      )
+
+      sr <- detect_series(members)
+
+      # Singletons from this folder go to Phase 1
+      extra_singletons <<- c(extra_singletons, sr$singletons)
+
+      if (nrow(sr$sub_sentinels) == 0) return(NULL)
+
+      ss <- sr$sub_sentinels
+
+      # FR-011: diagnostic per aggregate folder
+      message("── Aggregate folder: ", d, " → ", nrow(ss), " sub-sentinel(s)")
+      for (j in seq_len(nrow(ss))) {
+        message(sprintf("   [%s] %d files, .%s",
+                        ss$prefix[j], ss$file_count[j], ss$dominant_ext[j]))
+      }
+
+      # Build descriptor strings (sent to Phase 2 LLM)
+      ss$descriptor <- vapply(seq_len(nrow(ss)), function(j) {
+        samp <- paste(ss$sample_files[[j]], collapse = ", ")
+        if (ss$is_series[j]) {
+          sprintf('%s/[prefix: "%s", %d files, .%s, samples: %s]',
+                  d, ss$prefix[j], ss$file_count[j], ss$dominant_ext[j], samp)
+        } else {
+          sprintf('%s/[mixed, %d files, .%s, samples: %s]',
+                  d, ss$file_count[j], ss$dominant_ext[j], samp)
+        }
+      }, character(1))
+
+      ss$folder <- d
+      ss
     })
-    aggregate_df <- do.call(rbind, agg_sentinels)
-    message("── Detected ", length(agg_dirs), " aggregate folder(s): ",
-            paste(agg_dirs, collapse = ", "))
+
+    agg_list <- Filter(Negate(is.null), agg_all)
+
+    if (length(agg_list) > 0) {
+      aggregate_df <- do.call(rbind, agg_list)
+
+      # Pre-resolve type for sub-sentinels whose dominant extension is unambiguous
+      ext_resolved <- AGGREGATE_EXT_OVERRIDE[tolower(aggregate_df$dominant_ext)]
+      aggregate_df$type_resolved <- ifelse(!is.na(ext_resolved),
+                                           ext_resolved, NA_character_)
+    }
   }
 
-  non_agg_relpaths <- rel_paths[!is_aggregate]
-  # If every file fell into an aggregate folder there is nothing left to process
-  # individually — sentinel offers no benefit here and would leave non_agg empty.
-  # Cancel the sentinel and process all paths normally; the MAX_LLM_CALLS guard
-  # still prevents runaway for genuinely oversized repos.
-  if (length(non_agg_relpaths) == 0) {
-    aggregate_df     <- NULL
-    non_agg_relpaths <- rel_paths
-  }
-  llm_paths        <- c(non_agg_relpaths,
-                        if (!is.null(aggregate_df)) aggregate_df$rel_path)
+  non_agg_relpaths <- c(rel_paths[!is_aggregate], extra_singletons)
 
-  # ── 6. LLM: understand repository structure ──────────────────────────────────
+  # Phase 1 paths: non-aggregate files + singletons routed back from aggregates.
+  # Phase 2 paths: aggregate sub-sentinels (descriptor strings).
+  # If aggregate_df is NULL (no aggregate dirs found), only Phase 1 runs.
+  llm_paths <- non_agg_relpaths
+
+  # ── 6. LLM: understand repository structure (two-phase classification) ────────
+  #
+  # Phase 1: classify all non-aggregate paths (llm_paths = non_agg_relpaths).
+  # Phase 2: classify aggregate sub-sentinels using Phase 1 results as context.
+  # Both phases count toward MAX_LLM_CALLS.
 
   t_download <- proc.time()[["elapsed"]] - t_download_start
 
   t_llm_start <- proc.time()[["elapsed"]]
-  MAX_LLM_CALLS <- 10
-  n_llm_calls   <- ceiling(length(llm_paths) / LLM_BATCH_SIZE)
+  MAX_LLM_CALLS  <- 10
+  n_phase1_calls <- ceiling(length(llm_paths) / LLM_BATCH_SIZE)
+  n_phase2_calls <- if (!is.null(aggregate_df) && nrow(aggregate_df) > 0)
+                      ceiling(nrow(aggregate_df) / LLM_BATCH_SIZE) else 0L
+  n_llm_calls    <- n_phase1_calls + n_phase2_calls
   if (!FULL_RUN && n_llm_calls > MAX_LLM_CALLS) {
-    stop("too_large: ", length(llm_paths), " paths would require ",
-         n_llm_calls, " LLM calls (max ", MAX_LLM_CALLS, ")")
+    stop("too_large: ", length(llm_paths), " non-aggregate paths + ",
+         if (!is.null(aggregate_df)) nrow(aggregate_df) else 0L,
+         " sub-sentinels would require ", n_llm_calls, " LLM calls (max ",
+         MAX_LLM_CALLS, ")")
   }
 
   # Build a compact experiment-map summary from prior batch results to pass as
   # context to subsequent batches, improving cross-batch group label consistency.
-  build_structure_summary <- function(exp_map) {
-    if (length(exp_map) == 0) return("Classify this repository tree:")
-    lines <- vapply(names(exp_map), function(grp) {
-      tokens <- unique(exp_map[[grp]])
-      paste0("- ", grp, ': "', paste(head(tokens, 3L), collapse = '", "'), '"')
-    }, character(1))
+  build_structure_summary <- function(exp_map, type_map, last_entry = NULL) {
+    sections <- character(0)
+
+    if (!is.null(last_entry)) {
+      sections <- c(sections,
+        paste0("Last classified file (continue consistently from here):\n",
+               '- "', last_entry$path, '" → type: ', last_entry$type,
+               ', group: ', last_entry$group))
+    }
+
+    if (length(type_map) > 0) {
+      type_lines <- vapply(names(type_map), function(tp) {
+        examples <- unique(type_map[[tp]])
+        paste0("- ", tp, ': "', paste(head(examples, 2L), collapse = '", "'), '"')
+      }, character(1))
+      sections <- c(sections,
+        paste0("Known type classifications from prior batches:\n",
+               paste(type_lines, collapse = "\n")))
+    }
+
+    if (length(exp_map) > 0) {
+      grp_lines <- vapply(names(exp_map), function(grp) {
+        tokens <- unique(exp_map[[grp]])
+        paste0("- ", grp, ': "', paste(head(tokens, 3L), collapse = '", "'), '"')
+      }, character(1))
+      sections <- c(sections,
+        paste0("Known experiment structure from prior batches:\n",
+               paste(grp_lines, collapse = "\n")))
+    }
+
+    if (length(sections) == 0) return("Classify this repository tree:")
     paste0(
-      "Known experiment structure from prior batches:\n",
-      paste(lines, collapse = "\n"),
-      "\nUse these group assignments to classify the following paths consistently.\n\n",
+      paste(sections, collapse = "\n\n"),
+      "\nApply these classifications consistently to the following paths.\n\n",
       "Classify this repository tree:"
+    )
+  }
+
+  build_sentinel_summary <- function(exp_map, type_map) {
+    sections <- character(0)
+
+    if (length(type_map) > 0) {
+      type_lines <- vapply(names(type_map), function(tp) {
+        examples <- unique(type_map[[tp]])
+        paste0("- ", tp, ': "', paste(head(examples, 2L), collapse = '", "'), '"')
+      }, character(1))
+      sections <- c(sections,
+        paste0("Known type classifications from Phase 1:\n",
+               paste(type_lines, collapse = "\n")))
+    }
+
+    if (length(exp_map) > 0) {
+      grp_lines <- vapply(names(exp_map), function(grp) {
+        tokens <- unique(exp_map[[grp]])
+        paste0("- ", grp, ': "', paste(head(tokens, 3L), collapse = '", "'), '"')
+      }, character(1))
+      sections <- c(sections,
+        paste0("Known experiment structure from Phase 1 classification:\n",
+               paste(grp_lines, collapse = "\n")))
+    }
+
+    if (length(sections) == 0) return("Classify these aggregate folder series:")
+    paste0(
+      paste(sections, collapse = "\n\n"),
+      "\nUse these assignments when classifying the following aggregate series.\n\n",
+      "Classify these aggregate folder series:"
     )
   }
 
@@ -362,7 +460,7 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
     grp_values <- batch_result$group
     for (i in seq_along(grp_values)) {
       grp <- grp_values[i]
-      if (!is.na(grp) && grepl("^(ex|pilot)", grp)) {
+      if (!is.na(grp) && grepl("^(ex|pilot|shared)", grp)) {
         token <- basename(dirname(batch_result$path[i]))
         if (nchar(token) == 0 || token == ".") token <- basename(batch_result$path[i])
         exp_map[[grp]] <- unique(c(exp_map[[grp]], token))
@@ -371,76 +469,185 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
     exp_map
   }
 
-  chunks         <- split(llm_paths, ceiling(seq_along(llm_paths) / LLM_BATCH_SIZE))
-  experiment_map <- list()
-  structure_parsed <- NULL
-
-  for (i in seq_along(chunks)) {
-    prefix       <- if (i == 1) "Classify this repository tree:" else
-                      build_structure_summary(experiment_map)
-    batch_result <- llm_batch(
-      paths         = chunks[[i]],
-      system_prompt = STRUCTURE_PROMPT,
-      user_prefix   = prefix,
-      key_col       = "path",
-      extra_cols    = c("type", "group"),
-      fallback_vals = list(type = "other", group = "shared")
-    )
-    structure_parsed <- rbind(structure_parsed, batch_result)
-    experiment_map   <- update_experiment_map(experiment_map, batch_result)
+  update_type_map <- function(type_map, batch_result) {
+    for (i in seq_along(batch_result$type)) {
+      tp <- batch_result$type[i]
+      if (!is.na(tp)) {
+        example <- basename(batch_result$path[i])
+        type_map[[tp]] <- unique(c(type_map[[tp]], example))
+      }
+    }
+    type_map
   }
 
-  # ── 7. Expand sentinels back to individual files ─────────────────────────────
+  # ── Phase 1: classify non-aggregate + singleton paths ─────────────────────
 
-  if (!is.null(aggregate_df)) {
-    sentinel_results <- merge(aggregate_df, structure_parsed,
-                              by.x = "rel_path", by.y = "path", all.x = TRUE)
+  experiment_map   <- list()
+  type_map         <- list()
+  last_entry       <- NULL
+  structure_parsed <- NULL
 
-    agg_expanded <- lapply(seq_len(nrow(sentinel_results)), function(i) {
-      row        <- sentinel_results[i, ]
-      parent_dir <- sub("/\\[.*\\]$", "", row$rel_path)
-      if (parent_dir %in% participant_agg_dirs) {
-        members <- rel_paths[startsWith(rel_paths, paste0(parent_dir, "/"))]
-      } else {
-        members <- rel_paths[top_dirs == parent_dir]
+  if (length(llm_paths) > 0) {
+    chunks <- split(llm_paths, ceiling(seq_along(llm_paths) / LLM_BATCH_SIZE))
+
+    for (i in seq_along(chunks)) {
+      prefix       <- if (i == 1) "Classify this repository tree:" else
+                        build_structure_summary(experiment_map, type_map, last_entry)
+      batch_result <- llm_batch(
+        paths         = chunks[[i]],
+        system_prompt = STRUCTURE_PROMPT,
+        user_prefix   = prefix,
+        key_col       = "path",
+        extra_cols    = c("type", "group"),
+        fallback_vals = list(type = "other", group = "shared")
+      )
+      batch_result$prompt_nr <- i
+      structure_parsed <- rbind(structure_parsed, batch_result)
+      experiment_map   <- update_experiment_map(experiment_map, batch_result)
+      type_map         <- update_type_map(type_map, batch_result)
+      last_entry       <- batch_result[nrow(batch_result), ]
+    }
+  }
+  n_phase1_batches <- if (!is.null(structure_parsed)) max(structure_parsed$prompt_nr) else 0L
+
+  # ── Phase 2: classify aggregate sub-sentinels with Phase 1 context ─────────
+
+  sentinel_parsed <- NULL
+
+  if (!is.null(aggregate_df) && nrow(aggregate_df) > 0) {
+    sentinel_type_map <- list()
+    s_chunks <- split(aggregate_df$descriptor,
+                      ceiling(seq_along(aggregate_df$descriptor) / LLM_BATCH_SIZE))
+
+    for (i in seq_along(s_chunks)) {
+      pfx          <- build_sentinel_summary(experiment_map, type_map)
+      if (i > 1) {
+        pfx        <- build_sentinel_summary(experiment_map,
+                                             update_type_map(type_map, sentinel_parsed))
       }
+      batch_result <- llm_batch(
+        paths         = s_chunks[[i]],
+        system_prompt = SENTINEL_PROMPT,
+        user_prefix   = pfx,
+        key_col       = "path",
+        extra_cols    = c("type", "group"),
+        fallback_vals = list(type = "other", group = "shared")
+      )
+      batch_result$prompt_nr <- n_phase1_batches + i
+      sentinel_parsed   <- rbind(sentinel_parsed, batch_result)
+      sentinel_type_map <- update_type_map(sentinel_type_map, batch_result)
+    }
+
+    # Merge Phase 2 results back into aggregate_df; apply type_resolved override
+    agg_merged <- merge(aggregate_df, sentinel_parsed,
+                        by.x = "descriptor", by.y = "path", all.x = TRUE)
+    # Where type was already resolved by extension rule, use that; else use LLM type
+    agg_merged$final_type  <- ifelse(!is.na(agg_merged$type_resolved),
+                                     agg_merged$type_resolved,
+                                     agg_merged$type)
+    agg_merged$final_group <- agg_merged$group
+    agg_merged$final_type[is.na(agg_merged$final_type)]   <- "other"
+    agg_merged$final_group[is.na(agg_merged$final_group)] <- "shared"
+
+    # FR-011: post-Phase-2 diagnostic per aggregate folder
+    for (d in unique(agg_merged$folder)) {
+      rows <- agg_merged[agg_merged$folder == d, ]
+      message(sprintf("── Aggregate [%s]: Phase 2 assigned %d sub-sentinel(s)",
+                      d, nrow(rows)))
+      for (j in seq_len(nrow(rows))) {
+        message(sprintf("   [%s] type=%s, group=%s",
+                        rows$prefix[j], rows$final_type[j], rows$final_group[j]))
+      }
+    }
+
+    aggregate_df <- agg_merged
+  }
+
+  # ── 7. Expand sub-sentinels back to individual files ─────────────────────────
+  # Each sub-sentinel row in aggregate_df carries:
+  #   folder_members (list-col) — rel_paths of all files in this series
+  #   final_type / final_group  — Phase 2 LLM result + extension override applied
+  #   type_resolved             — non-NA when extension override was used for type
+  #   is_series                 — TRUE = detected series, FALSE = fallback sentinel
+  #
+  # Per-file type resolution:
+  #   1. Check per-file extension against AGGREGATE_EXT_OVERRIDE.
+  #   2. If override hit → type = override value, type_source = "extension_rule"
+  #   3. If no override  → type = sub-sentinel's final_type (Phase 2 LLM result),
+  #                         type_source = "sentinel_llm"
+  #
+  # data_granularity:
+  #   "individual" — file is part of a detected series (is_series = TRUE)
+  #   "combined"   — fallback sentinel file (is_series = FALSE) or Phase 1 file
+
+  if (!is.null(aggregate_df) && nrow(aggregate_df) > 0) {
+    agg_expanded <- lapply(seq_len(nrow(aggregate_df)), function(i) {
+      row     <- aggregate_df[i, ]
+      members <- row$folder_members[[1]]
       if (length(members) == 0) {
-        warning("Aggregate sentinel has no members: ", parent_dir)
+        warning("Sub-sentinel has no members: ", row$folder, "/", row$prefix)
         return(NULL)
       }
+
+      # Per-file extension override
+      member_exts  <- tolower(tools::file_ext(members))
+      ext_override <- AGGREGATE_EXT_OVERRIDE[member_exts]
+      has_override <- !is.na(ext_override)
+
+      types       <- ifelse(has_override, ext_override, row$final_type)
+      type_source <- ifelse(has_override, "extension_rule", "sentinel_llm")
+
+      # data_granularity: "individual" for detected-series members; "combined" for fallback
+      is_data        <- types == "data"
+      data_gran      <- ifelse(is_data & isTRUE(row$is_series), "individual",
+                               ifelse(is_data, "combined", NA_character_))
+
       data.frame(
-        path        = file.path(norm_base, members),
-        rel_path    = members,
-        type        = row$type,
-        group       = row$group,
-        is_raw      = NA,
-        is_sentinel = FALSE,
+        path             = file.path(norm_base, members),
+        rel_path         = members,
+        type             = types,
+        group            = row$final_group,
+        aggregate_folder = row$folder,
+        type_source      = type_source,
+        data_granularity = data_gran,
+        is_sentinel      = FALSE,
+        prompt_nr        = if ("prompt_nr" %in% names(row)) row$prompt_nr else NA_integer_,
         stringsAsFactors = FALSE
       )
     })
     agg_expanded_df <- do.call(rbind, Filter(Negate(is.null), agg_expanded))
-    # Apply extension-based type correction for files expanded from aggregates.
-    # Files with unambiguous extensions (e.g. .R → code, .jpeg → asset) get the
-    # correct type regardless of what the LLM assigned to the sentinel.
-    if (!is.null(agg_expanded_df) && nrow(agg_expanded_df) > 0) {
-      agg_ext  <- tolower(tools::file_ext(agg_expanded_df$rel_path))
-      override <- AGGREGATE_EXT_OVERRIDE[agg_ext]
-      to_override <- !is.na(override)
-      agg_expanded_df$type[to_override]        <- override[to_override]
-      agg_expanded_df$type_source              <- ifelse(to_override, "rule", "llm")
-    }
   } else {
     agg_expanded_df <- NULL
   }
 
+  # Phase 1 rows: all non-aggregate files + singletons routed from aggregates.
+  # data_granularity = "combined" for data files; NA for non-data.
+  p1_types <- if (!is.null(structure_parsed))
+    structure_parsed$type[match(non_agg_relpaths, structure_parsed$path)]
+  else
+    rep(NA_character_, length(non_agg_relpaths))
+  p1_groups <- if (!is.null(structure_parsed))
+    structure_parsed$group[match(non_agg_relpaths, structure_parsed$path)]
+  else
+    rep(NA_character_, length(non_agg_relpaths))
+  p1_prompt_nrs <- if (!is.null(structure_parsed))
+    structure_parsed$prompt_nr[match(non_agg_relpaths, structure_parsed$path)]
+  else
+    rep(NA_integer_, length(non_agg_relpaths))
+  p1_types[is.na(p1_types)]   <- "other"
+  p1_groups[is.na(p1_groups)] <- "shared"
+
+  p1_is_data <- p1_types == "data"
   non_agg_df <- data.frame(
-    path        = file.path(norm_base, non_agg_relpaths),
-    rel_path    = non_agg_relpaths,
-    type        = structure_parsed$type[match(non_agg_relpaths, structure_parsed$path)],
-    group       = structure_parsed$group[match(non_agg_relpaths, structure_parsed$path)],
-    is_raw      = NA,
-    is_sentinel = FALSE,
-    type_source = "llm",
+    path             = file.path(norm_base, non_agg_relpaths),
+    rel_path         = non_agg_relpaths,
+    type             = p1_types,
+    group            = p1_groups,
+    aggregate_folder = NA_character_,
+    type_source      = "llm",
+    data_granularity = ifelse(p1_is_data, "combined", NA_character_),
+    is_sentinel      = FALSE,
+    prompt_nr        = p1_prompt_nrs,
     stringsAsFactors = FALSE
   )
 
@@ -649,15 +856,6 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
            p25 = p25, p75 = p75, iqr = p75 - p25, skewness = skew, kurtosis = kurt)
     })
 
-    raw_folder <- grepl("(^|/)(raw|raw_data)(/|$)", rel_path, ignore.case = TRUE, perl = TRUE)
-    processed_folder <- grepl(
-      "(^|/)(processed|processed_data|clean|cleaned|output|results|derived|interim)(/|$)",
-      rel_path, ignore.case = TRUE, perl = TRUE)
-    stem <- tools::file_path_sans_ext(basename(path))
-    participant_filename <- grepl("(^|[_\\-])[0-9]{2,}([_\\-]|$)", stem, perl = TRUE)
-    combined_filename    <- grepl("clean|combined|merged|full|all[_\\-]|aggregat", stem, ignore.case = TRUE)
-    file_is_raw <- (raw_folder || participant_filename) && !processed_folder && !combined_filename
-
     stats_mat <- do.call(rbind, lapply(col_stats, as.data.frame, stringsAsFactors = FALSE))
 
     list(
@@ -676,8 +874,7 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
         is_numeric           = is_numeric_vec,
         stringsAsFactors = FALSE,
         row.names     = NULL
-      ),
-      is_raw = file_is_raw
+      )
     )
   }
 
@@ -685,7 +882,7 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
                          path = data_files$path, rel_path = data_files$rel_path,
                          group = data_files$group, SIMPLIFY = FALSE)
   column_list  <- Filter(Negate(is.null), column_list)
-  columns_df   <- do.call(rbind, lapply(column_list, `[[`, "columns"))
+  columns_df   <- do.call(rbind, lapply(column_list, function(x) x$columns))
 
   # ── LLM classification for ambiguous columns ──────────────────────────────
   if (!is.null(columns_df) && nrow(columns_df) > 0 && any(is.na(columns_df$col_type))) {
@@ -743,21 +940,15 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
     columns_df$is_numeric           <- NULL
   }
 
-  is_raw_flags <- setNames(
-    vapply(column_list, `[[`, logical(1), "is_raw"),
-    vapply(column_list, function(x) x$columns$source_file[1], character(1))
-  )
-
-  file_df$is_raw[match(names(is_raw_flags), file_df$rel_path)] <- is_raw_flags
-  file_df$is_raw[is.na(file_df$is_raw)] <- FALSE
-
-  n_raw    <- sum(file_df$type == "data" & file_df$is_raw  & !file_df$is_sentinel)
-  n_nonraw <- sum(file_df$type == "data" & !file_df$is_raw & !file_df$is_sentinel)
-  message("── is_raw detection: ", n_raw, " raw, ", n_nonraw, " non-raw data file(s)")
+  n_individual <- sum(file_df$data_granularity == "individual", na.rm = TRUE)
+  n_combined   <- sum(file_df$data_granularity == "combined",   na.rm = TRUE)
+  message("── data_granularity: ", n_individual, " individual, ",
+          n_combined, " combined data file(s)")
 
   write.csv(
     file_df[, c("paper_id", "path", "rel_path", "filename", "ext",
-                "type", "group", "is_raw", "is_sentinel")],
+                "type", "type_source", "group", "aggregate_folder",
+                "data_granularity", "is_sentinel", "prompt_nr")],
     structure_out, row.names = FALSE
   )
   message("── Saved structure → ", structure_out)
@@ -793,8 +984,8 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
     n_files        = nrow(file_df),
     n_data_files   = nrow(data_files),
     n_agg_dirs     = length(agg_dirs),
-    n_raw          = n_raw,
-    n_nonraw       = n_nonraw,
+    n_individual   = n_individual,
+    n_combined     = n_combined,
     n_columns      = if (!is.null(columns_df)) nrow(columns_df) else 0L,
     n_source_files = if (!is.null(columns_df)) length(unique(columns_df$source_file)) else 0L,
     type_counts    = table(file_df$type),

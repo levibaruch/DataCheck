@@ -13,7 +13,7 @@ FULL_RUN    <- TRUE         # TRUE = no LLM call caps (file classification + col
 N_RUNS      <- Inf          # Inf = all papers; set an integer to cap
 SEED        <- NULL         # set an integer for reproducibility, or NULL
 SUMMARY_CSV <- "./data_check/results/bulk_summary.csv"
-DOWNLOAD    <- FALSE         # Whether the script should attempt downloads or not
+DOWNLOAD    <- TRUE         # Whether the script should attempt downloads or not
 
 LLM_BATCH_SIZE         <- 20L  # paths sent per LLM call for file classification
 MAX_COL_TYPE_LLM_CALLS <- 5L   # max LLM calls for column type classification per paper
@@ -101,8 +101,8 @@ append_summary_row <- function(r) {
     n_files      = na_fallback(r$n_files, NA_integer_),
     n_data_files = na_fallback(r$n_data_files, NA_integer_),
     n_agg_dirs   = na_fallback(r$n_agg_dirs, NA_integer_),
-    n_raw        = na_fallback(r$n_raw, NA_integer_),
-    n_nonraw     = na_fallback(r$n_nonraw, NA_integer_),
+    n_individual = na_fallback(r$n_individual, NA_integer_),
+    n_combined   = na_fallback(r$n_combined, NA_integer_),
     n_columns    = na_fallback(r$n_columns, NA_integer_),
     n_src_files  = na_fallback(r$n_source_files, NA_integer_),
     stringsAsFactors = FALSE
@@ -155,8 +155,8 @@ for (i in seq_along(remaining_ids)) {
                 n_files        = NA_integer_,
                 n_data_files   = NA_integer_,
                 n_agg_dirs     = NA_integer_,
-                n_raw          = NA_integer_,
-                n_nonraw       = NA_integer_,
+                n_individual   = NA_integer_,
+                n_combined     = NA_integer_,
                 n_columns      = NA_integer_,
                 n_source_files = NA_integer_
               )
@@ -172,8 +172,8 @@ for (i in seq_along(remaining_ids)) {
             n_files        = NA_integer_,
             n_data_files   = NA_integer_,
             n_agg_dirs     = NA_integer_,
-            n_raw          = NA_integer_,
-            n_nonraw       = NA_integer_,
+            n_individual   = NA_integer_,
+            n_combined     = NA_integer_,
             n_columns      = NA_integer_,
             n_source_files = NA_integer_
           )

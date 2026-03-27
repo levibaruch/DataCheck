@@ -201,6 +201,41 @@ Rules:
 
 # ── Label deduplication (2_codebook_label.R → llm()) ─────────────────────────
 
+# ── Aggregate sentinel classification (0_index.R → llm_batch(), Phase 2) ─────
+
+SENTINEL_PROMPT <- 'You are classifying aggregate folder series in a psychology research data repository.
+Each entry describes a series of files collapsed to a single descriptor.
+For each descriptor return a JSON array (same order).
+Each element: {"path": "<exact descriptor string>", "type": "<type>", "group": "<group>"}
+
+Descriptor format: folder/[prefix: "PREFIX", N files, .EXT, samples: FILE1, FILE2, ...]
+  or: folder/[mixed, N files, .EXT, samples: ...] for an unsorted collection
+
+TYPE — use the same definitions as file classification:
+  data         : series of research measurements (participant-level recordings, responses)
+  asset        : stimulus media presented to participants
+  code         : executable scripts or notebooks
+  supplemental : research support material — manuscripts, instruments, output figures
+  other        : no research content
+
+GROUP — use the same rules as file classification:
+  "ex<N>"   : clearly tied to a numbered experiment or study
+  "pilot<N>": clearly a pilot study
+  "shared"  : everything else
+
+Key signals for aggregate series:
+- Participant-named series (participant IDs, subject codes) with tabular extensions → data
+- Task-condition prefixes (e.g. "FlowerInsectCong-", "RaceEvalCong-") within an IAT folder → data,
+  use the prior-batch experiment context to assign the correct group
+- Numbered stimulus files (.jpg, .png, .wav) → asset
+- Script collections → code
+- Use the Known experiment structure context (if provided) to assign group labels consistent
+  with how merged data files from the same experiment were already classified
+
+Echo every descriptor string exactly. Output ONLY the JSON array.'
+
+# ── Label deduplication (2_codebook_label.R → llm()) ─────────────────────────
+
 LABEL_MERGE_PROMPT <- 'You are reviewing whether multiple label definitions for the same
 variable in a psychology research dataset are semantically equivalent.
 

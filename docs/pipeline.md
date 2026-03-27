@@ -19,6 +19,7 @@ contents using an LLM, and extracts column-level statistics into structured CSVs
 | `runners/run_psychds_single.R` | Convert one paper to PsychDS format. Dev/smoke-test entry point. Accepts `paper_id` as CLI arg or pre-set variable; falls back to random paper from `results/bulk_summary.csv`. |
 | `runners/run_psychds_bulk.R` | Batch-convert all successfully indexed papers to PsychDS format. Crash-resilient, auto-resumes from `psychds/conversion_summary.csv`. |
 | `pipeline/3_psychds_convert.R` (`convert_psychds()`) | Convert a single paper by ID to PsychDS format. Returns list of per-study result rows. |
+| `runners/run_validation_gui.R` | Launch the Shiny validation GUI for manual ground-truth annotation of file type, group, and `is_raw`. Writes `ground_truth/<paper_id>.csv`. These override pipeline classifications in the PsychDS conversion step. |
 
 ---
 
@@ -48,24 +49,33 @@ Paper ID (character string)
            ▼
 ┌─────────────────────┐
 │  4. Build file      │  Walk directory tree, collect all paths
-│     tree            │  Sentinel collapse: folders with >50 files → single placeholder row
-│                     │  Exception: if ALL files fall into aggregate folders (no non-aggregate
-│                     │  paths remain), sentinel is cancelled and all files are processed
-│                     │  individually — the 10-call limit still guards runaway repos
+│     tree +          │  Aggregate detection: folders with >50 direct files (flat) or >50
+│     series detect   │  numeric subdirs (participant) → sub-grouped via detect_series().
+│                     │  detect_series() strips trailing ID/date suffix to find common prefix;
+│                     │  files sharing a prefix (≥2 chars) form a series → one sub-sentinel.
+│                     │  Folders with no series → single fallback sentinel.
+│                     │  Singleton files (unique names) routed back to Phase 1.
+│                     │  Sub-sentinels carry: prefix, file_count, dominant_ext, 5 samples.
+│                     │  Unambiguous-extension sub-sentinels pre-resolved by AGGREGATE_EXT_OVERRIDE.
 └──────────┬──────────┘
-           │  >300 paths (10 LLM calls × 30 batch size) → error: too_large
+           │  Phase 1 paths + Phase 2 sub-sentinels combined > 10 calls → error: too_large
            ▼
 ┌─────────────────────┐
-│  5. LLM file        │  llm_batch() in helper.R, called in a chunk loop in run_index()
-│     classification  │  Assigns: type (data/codebook/code/supplemental/doc/readme/asset/other)
-│                     │           group (ex1/ex2/pilot1/shared/na)
-│                     │  Batches 2+: user_prefix includes a compact experiment-map summary
-│                     │  built from prior batch responses, improving cross-batch group
-│                     │  label consistency for large repos.
-│                     │  Post-expansion override: after aggregate sentinels are expanded back
-│                     │  to individual files, AGGREGATE_EXT_OVERRIDE (0_index.R) corrects
-│                     │  inherited types for unambiguous extensions (.R→code, .jpg→asset, etc.)
-│                     │  type_source column records "rule" (override applied) or "llm".
+│  5. Two-phase LLM   │  Phase 1: llm_batch(non-aggregate paths, STRUCTURE_PROMPT)
+│     classification  │    Assigns type/group for all individual (non-aggregate) files.
+│                     │    Batches 2+: user_prefix includes compact experiment-map summary
+│                     │    for cross-batch group label consistency.
+│                     │  Phase 2: llm_batch(sub-sentinel descriptors, SENTINEL_PROMPT)
+│                     │    Runs after Phase 1; receives full Phase 1 experiment map as context.
+│                     │    Assigns type/group per sub-sentinel series.
+│                     │    type_resolved sub-sentinels (unambiguous ext): only group assigned.
+│                     │  Expansion: each sub-sentinel → per-file rows.
+│                     │    Per-file extension override (AGGREGATE_EXT_OVERRIDE) applied first.
+│                     │    Fallback to sub-sentinel LLM type for ambiguous extensions.
+│                     │  type_source: "llm" (Phase 1) | "extension_rule" (override) |
+│                     │              "sentinel_llm" (Phase 2 inheritance)
+│                     │  aggregate_folder: relative path of aggregate parent (NA otherwise)
+│                     │  data_granularity: "individual" (series member) | "combined" |  NA
 └──────────┬──────────┘
            │  only files with type = "data" continue
            ▼
@@ -112,6 +122,14 @@ Paper ID (character string)
 │  10. Write outputs  │  outputs/<paper_id>/structure.csv  (one row per file)
 │                     │  outputs/<paper_id>/columns.csv   (one row per column)
 └──────────┬──────────┘
+           │                    ┌─────────────────────────┐
+           │   (optional,       │  [V] Validation GUI      │  runners/run_validation_gui.R
+           ├──────────────────► │       (manual review)    │  Shiny app: annotator reviews
+           │    any time        │                          │  type/group/data_granularity
+           │    after step 10)  │                          │  per file; writes
+           │                    │                          │  ground_truth/<paper_id>.csv
+           │                    └─────────────────────────┘
+           │                         │ overrides feed into step 13
            ▼
 ┌─────────────────────┐
 │  11. Append to      │  bulk_summary.csv  (one row per paper, appended immediately)
@@ -157,7 +175,7 @@ Paper ID (character string)
 │                     │  Oversized files (>500 MB): raw copy only, no CSV conversion
 │                     │  Sentinel expansion: aggregate placeholder rows replaced with
 │                     │  individual file records before conversion
-│                     │  Ground truth: ground_truth/<paper_id>.csv overrides type/group/is_raw
+│                     │  Ground truth: ground_truth/<paper_id>.csv overrides type/group/data_granularity
 │                     │  Paper metadata: populated from GROBID TEI XML if present (xml2)
 │                     │  Plaintext extraction: doc/codebook files with .pdf/.docx/.rtf
 │                     │  extension produce a .txt copy in documentation/txt/ via
