@@ -22,6 +22,7 @@
 
 library(metacheck)
 source("data_check/pipeline/helper.R")
+source("data_check/pipeline/prompts.R")
 
 llm_use(TRUE)
 llm_model("ollama/gpt-oss:20b-cloud")
@@ -35,46 +36,6 @@ if (!exists("FULL_RUN")) FULL_RUN <- FALSE
 MAX_CODEBOOK_FILE_MB      <- 100   # codebook files larger than this (MB) are skipped
 CODEBOOK_HEADER_LOOKAHEAD <- 5L    # max rows to scan for header in multi-level CSV codebooks
 CODEBOOK_TYPES         <- c("codebook", "readme")
-
-CODEBOOK_PARSE_PROMPT <- 'You are extracting variable definitions from a psychology research codebook or README.
-Return a JSON array — one object per variable found.
-Each object: {"variable_name": "<exact variable name>", "label": "<verbatim description text copied from the codebook>", "experiment_context": "<experiment or study name if stated, else null>"}
-
-Rules:
-- variable_name: the exact code/name used in the data file (e.g. "rt", "subj_id", "condition")
-- label: copy the description text exactly as it appears in the codebook — do NOT paraphrase, summarise, or infer; preserve the original wording
-- Do NOT rephrase or summarise; if no description text is present for a variable, omit that variable entirely
-- experiment_context: if the variable is described under a heading like "Experiment 1" or "Study 2a", include that heading verbatim; otherwise null
-- Only include variables that have both a name and a description present in the source text
-- If the text contains no variable definitions, return an empty array: []
-- Output ONLY the JSON array. No notes, no text outside the array.'
-
-COLUMN_MATCH_PROMPT <- 'You are matching data column names to codebook variable names for a psychology research dataset.
-You will receive two lists: unlabelled data column names and unmatched codebook variable names.
-Return a JSON array of confident pairings only.
-Each object: {"column_name": "<exact column name from the data list>", "codebook_variable": "<exact variable name from the codebook list>"}
-
-Rules:
-- Only include pairs you are confident refer to the same construct (e.g. abbreviations, naming conventions, underscores vs spaces)
-- Do NOT guess — if unsure, omit the pair
-- Both column_name and codebook_variable must appear verbatim from the lists provided
-- If no confident matches exist, return an empty array: []
-- Output ONLY the JSON array. No notes, no text outside the array.'
-
-LABEL_MERGE_PROMPT <- 'You are reviewing whether multiple label definitions for the same
-variable in a psychology research dataset are semantically equivalent.
-
-You will receive a JSON array of objects, each with "column" and "labels" fields.
-Return a JSON array — one object per input variable.
-Each object: {"column": "<column_name>", "equivalent": true/false, "canonical": "<best label or null>"}
-
-Rules:
-- equivalent: true if all listed labels describe the same construct (synonyms, different
-  phrasings, or value-coding notation for the same concept as a semantic label)
-- canonical: if equivalent=true, return the most human-readable, informative single label;
-  if equivalent=false, set to null
-- Do NOT mark as equivalent if labels describe genuinely different constructs or scales
-- Output ONLY the JSON array. No notes, no text outside the array.'
 
 # ── Pipeline function ─────────────────────────────────────────────────────────
 

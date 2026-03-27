@@ -23,14 +23,14 @@ source(file.path(getOption("dc_root"), "tools", "validation_gui", "preview.R"))
 # ── Constants ─────────────────────────────────────────────────────────────────
 
 TYPE_MAP <- c(
-  "1" = "data", "2" = "code",   "3" = "codebook", "4" = "supplemental",
-  "5" = "doc",  "6" = "readme", "7" = "asset",    "8" = "other"
+  "1" = "data", "2" = "code", "3" = "codebook", "4" = "supplemental",
+  "5" = "readme", "6" = "asset", "7" = "other"
 )
 VALID_TYPES <- unname(TYPE_MAP)
 
 TYPE_ABBREV <- c(
   data = "dat", code = "cod", codebook = "cbk", supplemental = "sup",
-  doc  = "doc", readme = "rdm", asset = "ast", other = "oth"
+  readme = "rdm", asset = "ast", other = "oth"
 )
 
 # ── JavaScript ────────────────────────────────────────────────────────────────
@@ -276,7 +276,6 @@ details > summary { font-size:0.75em; font-weight:700; letter-spacing:0.05em;
 .tbadge-code         { background:#e3f2fd; color:#1565c0; }
 .tbadge-codebook     { background:#fff8e1; color:#e65100; }
 .tbadge-supplemental { background:#f3e5f5; color:#6a1b9a; }
-.tbadge-doc          { background:#fbe9e7; color:#bf360c; }
 .tbadge-readme       { background:#e0f2f1; color:#00695c; }
 .tbadge-asset        { background:#fce4ec; color:#880e4f; }
 .tbadge-other        { background:#eceff1; color:#455a64; }
@@ -289,7 +288,6 @@ details > summary { font-size:0.75em; font-weight:700; letter-spacing:0.05em;
 .tbtn-code.tbtn-active         { border-color:#1565c0 !important; background:rgba(21,101,192,0.1) !important;  color:#0d47a1 !important; box-shadow:0 0 8px rgba(21,101,192,0.2) !important; }
 .tbtn-codebook.tbtn-active     { border-color:#e65100 !important; background:rgba(230,81,0,0.1) !important;    color:#bf360c !important; box-shadow:0 0 8px rgba(230,81,0,0.2) !important; }
 .tbtn-supplemental.tbtn-active { border-color:#6a1b9a !important; background:rgba(106,27,154,0.1) !important;  color:#4a148c !important; box-shadow:0 0 8px rgba(106,27,154,0.2) !important; }
-.tbtn-doc.tbtn-active          { border-color:#bf360c !important; background:rgba(191,54,12,0.1) !important;   color:#8d1f07 !important; box-shadow:0 0 8px rgba(191,54,12,0.2) !important; }
 .tbtn-readme.tbtn-active       { border-color:#00695c !important; background:rgba(0,105,92,0.1) !important;    color:#004d40 !important; box-shadow:0 0 8px rgba(0,105,92,0.2) !important; }
 .tbtn-asset.tbtn-active        { border-color:#880e4f !important; background:rgba(136,14,79,0.1) !important;   color:#560027 !important; box-shadow:0 0 8px rgba(136,14,79,0.2) !important; }
 .tbtn-other.tbtn-active        { border-color:#455a64 !important; background:rgba(69,90,100,0.1) !important;   color:#263238 !important; box-shadow:0 0 8px rgba(69,90,100,0.2) !important; }
@@ -378,7 +376,6 @@ hr { border-color:#dee2e6 !important; margin:8px 0 !important; }
 [data-theme='dark'] .tbadge-code         { background:rgba(100,181,246,0.22); color:#90caf9; }
 [data-theme='dark'] .tbadge-codebook     { background:rgba(255,202,40,0.22);  color:#ffd54f; }
 [data-theme='dark'] .tbadge-supplemental { background:rgba(206,147,216,0.22); color:#e1bee7; }
-[data-theme='dark'] .tbadge-doc          { background:rgba(255,138,101,0.22); color:#ffab91; }
 [data-theme='dark'] .tbadge-readme       { background:rgba(77,208,225,0.22);  color:#80deea; }
 [data-theme='dark'] .tbadge-asset        { background:rgba(244,143,177,0.22); color:#fce4ec; }
 [data-theme='dark'] .tbadge-other        { background:rgba(144,164,174,0.22); color:#b0bec5; }
@@ -391,7 +388,6 @@ hr { border-color:#dee2e6 !important; margin:8px 0 !important; }
 [data-theme='dark'] .tbtn-code.tbtn-active         { border-color:#64b5f6 !important; background:rgba(100,181,246,0.22) !important; color:#90caf9 !important; box-shadow:0 0 10px rgba(100,181,246,0.25) !important; }
 [data-theme='dark'] .tbtn-codebook.tbtn-active     { border-color:#ffca28 !important; background:rgba(255,202,40,0.22) !important;  color:#ffd54f !important; box-shadow:0 0 10px rgba(255,202,40,0.25) !important; }
 [data-theme='dark'] .tbtn-supplemental.tbtn-active { border-color:#ce93d8 !important; background:rgba(206,147,216,0.22) !important; color:#e1bee7 !important; box-shadow:0 0 10px rgba(206,147,216,0.25) !important; }
-[data-theme='dark'] .tbtn-doc.tbtn-active          { border-color:#ff8a65 !important; background:rgba(255,138,101,0.22) !important; color:#ffab91 !important; box-shadow:0 0 10px rgba(255,138,101,0.25) !important; }
 [data-theme='dark'] .tbtn-readme.tbtn-active       { border-color:#4dd0e1 !important; background:rgba(77,208,225,0.22) !important;  color:#80deea !important; box-shadow:0 0 10px rgba(77,208,225,0.25) !important; }
 [data-theme='dark'] .tbtn-asset.tbtn-active        { border-color:#f48fb1 !important; background:rgba(244,143,177,0.22) !important; color:#fce4ec !important; box-shadow:0 0 10px rgba(244,143,177,0.25) !important; }
 [data-theme='dark'] .tbtn-other.tbtn-active        { border-color:#90a4ae !important; background:rgba(144,164,174,0.22) !important; color:#b0bec5 !important; box-shadow:0 0 10px rgba(144,164,174,0.25) !important; }
@@ -498,7 +494,7 @@ ui <- page_sidebar(
         style = "display:flex; align-items:flex-end; gap:12px; margin-top:6px;",
         div(style = "flex:1; min-width:120px; max-width:220px;",
             textInput("group_val", tags$small("Group"), value = "",
-                      placeholder = "ex1, other, na …")),
+                      placeholder = "ex1, shared, na …")),
         div(style = "padding-bottom:7px;",
             checkboxInput("is_raw_val", tags$small("is_raw"), value = FALSE)),
         div(
@@ -666,10 +662,9 @@ server <- function(input, output, session) {
       "2" = { rv$selected_type <- "code" },
       "3" = { rv$selected_type <- "codebook" },
       "4" = { rv$selected_type <- "supplemental" },
-      "5" = { rv$selected_type <- "doc" },
-      "6" = { rv$selected_type <- "readme" },
-      "7" = { rv$selected_type <- "asset" },
-      "8" = { rv$selected_type <- "other" },
+      "5" = { rv$selected_type <- "readme" },
+      "6" = { rv$selected_type <- "asset" },
+      "7" = { rv$selected_type <- "other" },
       "r" = {
         if (!is.na(rv$selected_type) && rv$selected_type == "data") {
           new_val <- !rv$is_raw_val
@@ -786,7 +781,7 @@ server <- function(input, output, session) {
         tags$thead(tags$tr(tags$th("Key"), tags$th("Action"))),
         tags$tbody(
           tags$tr(tags$td(HTML("<kbd>1</kbd>\u2013<kbd>8</kbd>")),
-                  tags$td("Select type: data / code / codebook / supplemental / doc / readme / asset / other")),
+                  tags$td("Select type: data / code / codebook / supplemental / readme / asset / other")),
           tags$tr(tags$td(HTML("<kbd>R</kbd>")),
                   tags$td("Toggle is_raw (active only when type = data)")),
           tags$tr(tags$td(HTML("<kbd>G</kbd>")),

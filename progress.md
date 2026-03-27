@@ -1,5 +1,26 @@
 # Progress Log
 
+## 2026-03-27
+
+### Completed ✅
+
+**022** — file-type-taxonomy-refactor (branch: `022-file-type-taxonomy-refactor`)
+- Full pre-validation audit and refactor of the file taxonomy used in `STRUCTURE_PROMPT`
+- Removed `doc` type entirely — merged into `supplemental`; text extraction in PsychDS now triggered by filename heuristic (`manuscript`, `preregistr`, `thesis`, etc.) rather than type field
+- Removed `na` group entirely — all files now use `shared`, `ex<N>`, or `pilot<N>`; readme/asset/other files use `shared`
+- Rewrote `STRUCTURE_PROMPT` from a rule-based extension catalogue to a semantic-focused classification guide: type definitions describe intent rather than enumerate extensions; explicit framing that extension alone is insufficient; "hard cases" section replaces disambiguation rules
+- Added `.spv` → `supplemental` disambiguation (SPSS Viewer output ≠ SPSS syntax)
+- Added `.do`, `.sas`, `.sps`, `.ipynb` to `code` type; removed `.sps` from `supplemental`
+- Expanded `codebook` keyword list; restricted `"variables"` trigger to filename start/end only
+- Previous rule-based prompt preserved as commented block for comparison
+- Updated `TYPE_TO_SUBDIR` and `AGGREGATE_EXT_OVERRIDE` in `3_psychds_convert.R`: doc entries → supplemental; `na` group checks → `shared`
+- Updated `fallback_vals` in `0_index.R`: `group = "na"` → `group = "shared"`
+- Updated `resolve_shared_files()` in `3_psychds_convert.R`: group check updated from `c("na", "other")` → `"shared"`
+- Removed `doc` type and `na` group from `tools/validation_gui/app.R`: TYPE_MAP renumbered (7 types), CSS rules removed, keyboard shortcuts updated
+- Updated `docs/output-schemas.md`: removed `doc` from File Types, removed `na` from Groups, updated `supplemental` and `shared` descriptions, updated TXT extraction trigger description
+
+---
+
 ## 2026-03-25
 
 ### Completed ✅

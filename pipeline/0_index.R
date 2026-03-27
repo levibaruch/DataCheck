@@ -13,6 +13,7 @@
 
 library(metacheck)
 source("data_check/pipeline/helper.R")
+source("data_check/pipeline/prompts.R")
 
 llm_use(TRUE)
 llm_model("ollama/gpt-oss:20b-cloud")
@@ -28,7 +29,7 @@ ARCHIVE_EXTS    <- c("zip", "gz", "tar", "tgz", "bz2", "xz")
 # inherited type unchanged.
 AGGREGATE_EXT_OVERRIDE <- c(
   r = "code", rmd = "code", qmd = "code", py = "code", m = "code",
-  do = "code", sps = "code", jl = "code", js = "code", sh = "code",
+  do = "code", sps = "supplemental", jl = "code", js = "code", sh = "code",
   bash = "code", pl = "code", rb = "code", cpp = "code", c = "code",
   h = "code", java = "code", scala = "code", sql = "code",
   jpg = "asset", jpeg = "asset", png = "asset", gif = "asset",
@@ -38,7 +39,7 @@ AGGREGATE_EXT_OVERRIDE <- c(
   csv = "data", sav = "data", dta = "data", sas7bdat = "data",
   xlsx = "data", xls = "data", rds = "data"
 )
-if (!exists("LLM_BATCH_SIZE"))  LLM_BATCH_SIZE  <- 20
+if (!exists("LLM_BATCH_SIZE"))  LLM_BATCH_SIZE  <- 30
 N_DATA_READ     <- 5
 MAX_TOTAL_DATA_MB <- 10 * 1024  # 10 GB total data read cap per paper across all data files
 MAX_FILE_READ_SEC <- 5 * 60    # per-file read timeout (seconds); file is skipped if exceeded
@@ -58,78 +59,6 @@ MAX_DIR_WORDS   <- 5
 XML_DIR <- "/Volumes/Models/expanded_xml" #"./data-raw/psychsci/grobid_0.8.2-full"
 
 BADGE_REPOS <- c("tvyxz", "osf.io/tvyxz/", "osf.io/tvyxz")
-
-STRUCTURE_PROMPT <- 'You are analysing a psychology research data repository.
-You will receive a file tree. For each path return a JSON array (same order).
-Each element: {"path": "<exact path>", "type": "<type>", "group": "<group>"}
-
-type — pick one:
-  data         : tabular data file intended for statistical analysis (rows = observations)
-  codebook     : variable descriptions / data dictionary / key
-  code         : analysis or processing script
-  supplemental : supporting materials that are NOT raw data — includes survey
-                 instruments (e.g. .qsf Qualtrics files), questionnaire PDFs,
-                 scale items, consent forms, syntax/output files showing results,
-                 preregistrations, supporting info appendices, saved plot objects
-                 (e.g. .Rdata/.rda files containing ggplot/plot objects), and any
-                 file labelled "supplemental/supporting"
-  doc          : manuscript, report, general notes, project proposals, changelogs
-  readme       : readme file
-  asset        : image, audio, video, stimulus material used in the study
-  other        : anything that does not fit above
-
-group — pick one:
-  "ex<N>"     : belongs to a main numbered experiment/study (e.g. "ex1", "ex2")
-                Infer from folder name OR filename (e.g. "Study 2.csv" → "ex2")
-                If the study has a letter suffix (e.g. "Study 4a", "Experiment 1b"),
-                preserve it exactly: "ex4a", "ex1b". NEVER collapse "4a"/"4b" → "4".
-  "pilot<N>"  : belongs to a pilot study (e.g. "pilot1", "pilot2")
-                Same letter-suffix rule applies: "Pilot 1a" → "pilot1a".
-                Use this whenever the folder or filename contains "pilot", "pre-pilot",
-                "prepilot", or "preliminary study" — even if it also has a number.
-                Number pilots independently from experiments (pilot1, pilot2, …).
-  "other"     : not tied to a specific numbered experiment or pilot (shared files,
-                meta-analyses, previous versions, project proposals, etc.)
-  "na"        : type is readme, asset, supplemental, or other — group not applicable
-
-Rules:
-- "Supplemental Experiment N" or "Supplemental Study N" folders are NOT main
-  experiments. Files inside them get group "other", NOT "ex<N>".
-  The word "Supplemental" before "Experiment/Study" overrides the number.
-- Pilots are NEVER "ex<N>" — if something is a pilot it is always "pilot<N>".
-- Number pilots and experiments independently: a repo can have ex1, ex2, pilot1.
-- Preserve letter suffixes exactly as written: "4a" stays "4a", never becomes "4".
-- "Previous versions" and archive folders → type of their contents, group "other"
-- Daily training verbatim scripts (e.g. "D23_verbatims.docx") → supplemental
-- Syntax and output files (e.g. SPSS .sps, HTML output) → supplemental
-- Sentinel paths like "[236_files.csv]" represent many identical files in that
-  folder — classify the folder as a whole.
-- You MUST echo back the exact path string provided. NEVER shorten, truncate,
-  or abbreviate paths with "..." or any other placeholder. Every character of
-  every path must appear verbatim in the output.
-- Output ONLY the JSON array. Do not add any notes, comments, or explanatory
-  text before or after the array.'
-
-COLUMN_TYPE_PROMPT <- 'You are classifying columns in psychology research data.
-For each column descriptor return a JSON array (same order).
-Each element: {"descriptor": "<exact descriptor>", "col_type": "<type>"}
-
-col_type — pick one:
-  continuous  : numeric measurement — reaction time, age, VAS rating (0–10), Likert-scale
-                mean, subscale score, count, percentage, any column with decimal values
-  ordinal     : ordered integer scale with few levels — 1–5 Likert item, 1–10 attention
-                rating, bounded compliance or distress score, ranked preference, grade
-  categorical : unordered group or category code with few levels (condition, gender, language)
-  binary      : exactly two possible values (yes/no, 0/1, treatment/control)
-  id          : row or participant identifier — unique or nearly-unique integer per row
-  unknown     : ONLY when name AND values together give no numeric signal — e.g. fully
-                redacted data, meaningless all-constant codes. Do NOT use for any column
-                whose samples look like numbers.
-
-IMPORTANT: Prefer "continuous" or "ordinal" over "unknown". When in doubt between
-"continuous" and "ordinal" for a numeric column, choose "continuous".
-
-Output ONLY the JSON array. No notes, no text outside the array.'
 
 # ── Pipeline function ─────────────────────────────────────────────────────────
 
@@ -413,14 +342,53 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
          n_llm_calls, " LLM calls (max ", MAX_LLM_CALLS, ")")
   }
 
-  structure_parsed <- llm_batch(
-    paths         = llm_paths,
-    system_prompt = STRUCTURE_PROMPT,
-    user_prefix   = "Classify this repository tree:",
-    key_col       = "path",
-    extra_cols    = c("type", "group"),
-    fallback_vals = list(type = "other", group = "na")
-  )
+  # Build a compact experiment-map summary from prior batch results to pass as
+  # context to subsequent batches, improving cross-batch group label consistency.
+  build_structure_summary <- function(exp_map) {
+    if (length(exp_map) == 0) return("Classify this repository tree:")
+    lines <- vapply(names(exp_map), function(grp) {
+      tokens <- unique(exp_map[[grp]])
+      paste0("- ", grp, ': "', paste(head(tokens, 3L), collapse = '", "'), '"')
+    }, character(1))
+    paste0(
+      "Known experiment structure from prior batches:\n",
+      paste(lines, collapse = "\n"),
+      "\nUse these group assignments to classify the following paths consistently.\n\n",
+      "Classify this repository tree:"
+    )
+  }
+
+  update_experiment_map <- function(exp_map, batch_result) {
+    grp_values <- batch_result$group
+    for (i in seq_along(grp_values)) {
+      grp <- grp_values[i]
+      if (!is.na(grp) && grepl("^(ex|pilot)", grp)) {
+        token <- basename(dirname(batch_result$path[i]))
+        if (nchar(token) == 0 || token == ".") token <- basename(batch_result$path[i])
+        exp_map[[grp]] <- unique(c(exp_map[[grp]], token))
+      }
+    }
+    exp_map
+  }
+
+  chunks         <- split(llm_paths, ceiling(seq_along(llm_paths) / LLM_BATCH_SIZE))
+  experiment_map <- list()
+  structure_parsed <- NULL
+
+  for (i in seq_along(chunks)) {
+    prefix       <- if (i == 1) "Classify this repository tree:" else
+                      build_structure_summary(experiment_map)
+    batch_result <- llm_batch(
+      paths         = chunks[[i]],
+      system_prompt = STRUCTURE_PROMPT,
+      user_prefix   = prefix,
+      key_col       = "path",
+      extra_cols    = c("type", "group"),
+      fallback_vals = list(type = "other", group = "shared")
+    )
+    structure_parsed <- rbind(structure_parsed, batch_result)
+    experiment_map   <- update_experiment_map(experiment_map, batch_result)
+  }
 
   # ── 7. Expand sentinels back to individual files ─────────────────────────────
 
@@ -458,7 +426,8 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
       agg_ext  <- tolower(tools::file_ext(agg_expanded_df$rel_path))
       override <- AGGREGATE_EXT_OVERRIDE[agg_ext]
       to_override <- !is.na(override)
-      agg_expanded_df$type[to_override] <- override[to_override]
+      agg_expanded_df$type[to_override]        <- override[to_override]
+      agg_expanded_df$type_source              <- ifelse(to_override, "rule", "llm")
     }
   } else {
     agg_expanded_df <- NULL
@@ -471,6 +440,7 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
     group       = structure_parsed$group[match(non_agg_relpaths, structure_parsed$path)],
     is_raw      = NA,
     is_sentinel = FALSE,
+    type_source = "llm",
     stringsAsFactors = FALSE
   )
 

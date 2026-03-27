@@ -15,8 +15,9 @@ One row per file discovered in the paper's OSF repository.
 | `rel_path` | character | Path relative to the paper's download directory |
 | `filename` | character | Basename of the file |
 | `ext` | character | File extension (lowercase) |
-| `type` | character | LLM-assigned file type — see [File Types](#file-types) |
+| `type` | character | File type — see [File Types](#file-types) |
 | `group` | character | Experiment/study group — see [Groups](#groups) |
+| `type_source` | character | How `type` was determined: `rule` (extension override applied) or `llm` (LLM assignment accepted) |
 | `is_raw` | logical | `TRUE` if file appears to be raw (unprocessed) data |
 | `is_sentinel` | logical | `TRUE` if row represents a collapsed folder (>50 files) |
 
@@ -24,23 +25,21 @@ One row per file discovered in the paper's OSF repository.
 
 | Value | Meaning |
 |---|---|
-| `data` | Tabular data file intended for statistical analysis |
-| `codebook` | Variable descriptions / data dictionary |
-| `code` | Analysis or processing script |
-| `supplemental` | Supporting materials — survey instruments, consent forms, saved plots, SPSS output, etc. |
-| `doc` | Manuscript, report, general notes |
-| `readme` | README file |
-| `asset` | Image, audio, video, stimulus material |
-| `other` | Does not fit any above category |
+| `data` | Any file containing research measurements for analysis — tabular (CSV, SAV, XLSX, RDS, DTA, etc.) or non-tabular (EEG/physiological recordings `.edf`/`.acq`/`.bdf`, MATLAB matrices `.mat`, nested JSON survey exports). Column extraction skips non-parseable formats; file remains `data`. |
+| `codebook` | File whose primary purpose is describing what variables mean — variable dictionary, data dictionary, coding key. Determined by semantic inference from filename. |
+| `code` | Executable source file: R, Python, MATLAB, Julia, SQL, shell scripts, `.Rmd`/`.qmd` notebooks (always `code` regardless of narrative content). |
+| `supplemental` | Any research-related document or material that is not data, code, or a codebook — manuscripts, articles, reports, proposals, theses, preregistrations, registered reports, survey instruments, consent forms, SPSS `.sps` syntax, HTML output files, saved plot objects, result figures and output graphs, supporting appendices, experiment scripts. |
+| `readme` | Files named `README.*`, `LICENSE.*`, or `CONTRIBUTING.*` only. Classified by filename. |
+| `asset` | Participant-facing sensory material presented to participants during the study — stimulus images, audio clips, video stimuli. Result figures and output graphs → `supplemental`. |
+| `other` | No research content: OS metadata (`.DS_Store`, `Thumbs.db`), lock files, environment config, executables, installers. Not a catch-all. |
 
 ### Groups
 
 | Value | Meaning |
 |---|---|
-| `ex<N>` | Main numbered experiment/study (e.g. `ex1`, `ex2`, `ex4a`) |
-| `pilot<N>` | Pilot study (e.g. `pilot1`, `pilot2`) |
-| `other` | Not tied to a specific experiment (shared files, previous versions) |
-| `na` | Not applicable (readme, asset, supplemental, other) |
+| `ex<N>` | Main numbered experiment/study (e.g. `ex1`, `ex2`, `ex4a`). Letter suffixes preserved exactly. |
+| `pilot<N>` | Pilot study (e.g. `pilot1`, `pilot1a`). Alphanumeric suffixes preserved exactly (`pilot1a` ≠ `pilot1`). Unnumbered pilots use `pilot1`. |
+| `shared` | All files not tied to a specific numbered experiment or pilot — combined datasets, project-wide scripts, cross-experiment files, archive folders, and all `readme`, `asset`, and `other` files regardless of location. |
 
 ---
 
@@ -151,7 +150,7 @@ One row per study group per paper, appended immediately after each paper complet
 
 ### TXT extraction fields in `provenance.json`
 
-Present only on entries where TXT extraction was attempted (i.e., files with `pipeline_type` of `"doc"` or `"codebook"` and extension `.pdf`, `.docx`, or `.rtf`):
+Present only on entries where TXT extraction was attempted (i.e., files with `pipeline_type` of `"codebook"`, or `"supplemental"` files whose filename matches a narrative-document pattern — manuscript, preregistration, thesis, report, etc. — with extension `.pdf`, `.docx`, or `.rtf`):
 
 | Field | Type | Description |
 |---|---|---|

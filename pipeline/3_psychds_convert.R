@@ -36,7 +36,6 @@ ERR_NO_DATA_FILES   <- "no_data_files"
 TYPE_TO_SUBDIR <- list(
   code        = "analysis",
   codebook    = "documentation",
-  doc         = "documentation",
   supplemental = "documentation",
   other       = "documentation",
   asset       = "materials"
@@ -52,9 +51,9 @@ AGGREGATE_EXT_OVERRIDE <- list(
   gif  = "asset", bmp = "asset", tif = "asset", tiff = "asset",
   mp4  = "asset", avi = "asset", mov = "asset", wav = "asset", mp3 = "asset",
   svg  = "asset",
-  pdf  = "doc",
-  docx = "doc", doc = "doc", txt = "doc", rtf = "doc",
-  md   = "doc",
+  pdf  = "supplemental",
+  docx = "supplemental", doc = "supplemental", txt = "supplemental", rtf = "supplemental",
+  md   = "supplemental",
   xlsx = "data", xls = "data",
   csv  = "data", tsv = "data", dat = "data",
   sav  = "data", dta = "data", sas7bdat = "data",
@@ -793,9 +792,13 @@ convert_study <- function(paper_id, study_group, files_df, cols_df, labels_df,
     )
     if (is.null(psychds_path)) next
 
-    # Attempt plaintext extraction for doc/codebook files (US6)
+    # Attempt plaintext extraction for codebook files and narrative supplemental
+    # documents (manuscript, preregistration, thesis, report, etc.)
     txt_info <- NULL
-    if (file_type %in% c("doc", "codebook") &&
+    is_narrative <- grepl(
+      "manuscript|preregistr|registered.report|thesis|dissertation|_report\\.|_report_|report\\.pdf|proposal|protocol",
+      tolower(row$filename), perl = FALSE)
+    if ((file_type == "codebook" || (file_type == "supplemental" && is_narrative)) &&
         tolower(tools::file_ext(row$filename)) %in% c("pdf", "docx", "rtf")) {
       txt_info <- write_doc_txt(row$path, out_dir)
     }
@@ -894,12 +897,12 @@ expand_sentinel_rows <- function(structure_df) {
 
 # ── Internal: co-location heuristic ──────────────────────────────────────────
 
-# For files with group %in% c("na","other") in a multi-study paper,
+# For files with group == "shared" in a multi-study paper,
 # try to assign them to a specific study via directory co-location.
 # Returns files_df with updated group values.
 resolve_shared_files <- function(files_df, studies) {
   unscoped_mask <- !is.na(files_df$group) &
-    files_df$group %in% c("na", "other")
+    files_df$group == "shared"
   if (!any(unscoped_mask)) return(files_df)
 
   study_vals <- studies  # e.g. c("ex1","ex2")
@@ -917,7 +920,7 @@ resolve_shared_files <- function(files_df, studies) {
     if (length(unique(sibling_groups)) == 1) {
       files_df$group[i] <- unique(sibling_groups)
     }
-    # else: leave as "other"/"na" → will go to shared/
+    # else: leave as "shared" → will go to shared/
   }
   files_df
 }
@@ -1054,9 +1057,9 @@ convert_psychds <- function(paper_id) {
     # Resolve unscoped files via co-location heuristic
     structure_df <- resolve_shared_files(structure_df, studies)
 
-    # Collect shared files (still group %in% c("na","other") after heuristic)
+    # Collect shared files (still group == "shared" after heuristic)
     shared_mask  <- !is.na(structure_df$group) &
-      structure_df$group %in% c("na", "other")
+      structure_df$group == "shared"
     shared_files_df <- structure_df[shared_mask, ]
     shared_rel_paths <- character(0)
 

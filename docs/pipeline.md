@@ -53,15 +53,19 @@ Paper ID (character string)
 │                     │  paths remain), sentinel is cancelled and all files are processed
 │                     │  individually — the 10-call limit still guards runaway repos
 └──────────┬──────────┘
-           │  >200 paths (10 LLM calls × 20 batch size) → error: too_large
+           │  >300 paths (10 LLM calls × 30 batch size) → error: too_large
            ▼
 ┌─────────────────────┐
-│  5. LLM file        │  llm_batch() in helper.R
+│  5. LLM file        │  llm_batch() in helper.R, called in a chunk loop in run_index()
 │     classification  │  Assigns: type (data/codebook/code/supplemental/doc/readme/asset/other)
-│                     │           group (ex1/ex2/pilot1/other/na)
+│                     │           group (ex1/ex2/pilot1/shared/na)
+│                     │  Batches 2+: user_prefix includes a compact experiment-map summary
+│                     │  built from prior batch responses, improving cross-batch group
+│                     │  label consistency for large repos.
 │                     │  Post-expansion override: after aggregate sentinels are expanded back
 │                     │  to individual files, AGGREGATE_EXT_OVERRIDE (0_index.R) corrects
 │                     │  inherited types for unambiguous extensions (.R→code, .jpg→asset, etc.)
+│                     │  type_source column records "rule" (override applied) or "llm".
 └──────────┬──────────┘
            │  only files with type = "data" continue
            ▼
@@ -169,7 +173,7 @@ Paper ID (character string)
 | Constant | Value | Script | Purpose |
 |---|---|---|---|
 | `OUTPUT_DIR` | `./data_check/outputs` | `0_index.R`, `2_codebook_label.R` | Root directory for per-paper output subdirectories |
-| `LLM_BATCH_SIZE` | 20 | `0_index.R`, `2_codebook_label.R` | Paths per LLM call |
+| `LLM_BATCH_SIZE` | 30 | `0_index.R`, `2_codebook_label.R` | Paths per LLM call (file classification); 30 improves cross-batch group consistency |
 | `N_DATA_READ` | 5 | `0_index.R` | Rows sampled per data file |
 | `MAX_COL_TYPE_LLM_CALLS` | 5 | `0_index.R` | Max LLM calls for column classification (= 100 columns max) |
 | `AGGREGATE_THRESHOLD` | 50 | `0_index.R` | Files per folder above which a sentinel row replaces individual paths |
@@ -192,7 +196,7 @@ Paper ID (character string)
 ## LLM Model
 
 All LLM calls use `ollama/gpt-oss:20b-cloud` via `llm_batch()` in `helper.R`.
-Batch size is always `LLM_BATCH_SIZE = 20`.
+Batch size is `LLM_BATCH_SIZE = 30` for file classification.
 
 ---
 
