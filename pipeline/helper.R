@@ -324,7 +324,7 @@ llm_batch <- function(paths, system_prompt, user_prefix, key_col, extra_cols,
     names(chunk_fallback)[1] <- key_col
 
     all_parsed[[i]] <- tryCatch({
-      result <- clean_llm_values(jsonlite::fromJSON(extract_json(raw$answer)))
+      result <- clean_llm_values(jsonlite::fromJSON(extract_json(raw$answer), flatten = TRUE))
       if (!all(needed_cols %in% names(result))) {
         stop("Response missing fields: ",
              paste(setdiff(needed_cols, names(result)), collapse = ", "))

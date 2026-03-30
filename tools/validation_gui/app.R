@@ -140,6 +140,20 @@ document.addEventListener("DOMContentLoaded", function() {
     window.xmlSetColumns(msg.terms || []);
   });
 
+  // Re-apply highlighting whenever #xml_text_content appears (renderUI is async)
+  (function() {
+    var _observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(m) {
+        m.addedNodes.forEach(function(node) {
+          if (!node.querySelector) return;
+          var el = node.id === "xml_text_content" ? node : node.querySelector("#xml_text_content");
+          if (el) xmlRender();
+        });
+      });
+    });
+    _observer.observe(document.body, { childList: true, subtree: true });
+  })();
+
   // Custom message: enable/disable the data_granularity selector
   Shiny.addCustomMessageHandler("set_data_granularity_disabled", function(msg) {
     var el = document.getElementById("data_granularity_val");

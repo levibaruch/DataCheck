@@ -821,7 +821,7 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
 
       # Determine which numeric vector to use for statistics
       x_for_stats <- cls$numeric_values
-      if (is.null(x_for_stats) && isTRUE(cls$ambiguous)) {
+      if (is.null(x_for_stats) && isTRUE(cls$ambiguous) && isTRUE(cls$is_numeric)) {
         x_for_stats <- df[[col]]  # ambiguous numeric — compute tentative stats
       }
 

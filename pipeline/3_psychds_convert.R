@@ -43,7 +43,7 @@ TYPE_TO_SUBDIR <- list(
 )
 
 # Extension override for sentinel directories (aggregate repos)
-AGGREGATE_EXT_OVERRIDE <- list(
+AGGREGATE_EXT_OVERRIDE <- c(
   r    = "code", R = "code",
   py   = "code", jl = "code", m = "code",
   sps  = "code", do = "code", sas = "code",
