@@ -154,19 +154,44 @@ For each column descriptor return a JSON array (same order).
 Each element: {"descriptor": "<exact descriptor>", "col_type": "<type>"}
 
 col_type — pick one:
-  continuous  : numeric measurement — reaction time, age, VAS rating (0–10), Likert-scale
-                mean, subscale score, count, percentage, any column with decimal values
-  ordinal     : ordered integer scale with few levels — 1–5 Likert item, 1–10 attention
-                rating, bounded compliance or distress score, ranked preference, grade
-  categorical : unordered group or category code with few levels (condition, gender, language)
+  continuous  : numeric measurement — reaction time, age, VAS rating, Likert mean,
+                subscale score, count, percentage, any column with decimal values
+  ordinal     : ordered integer scale with few levels — 1–5 Likert item, 1–10 rating,
+                bounded score, ranked preference
+  categorical : unordered group or category code with few levels (condition, gender,
+                language, group assignment)
   binary      : exactly two possible values (yes/no, 0/1, treatment/control)
-  id          : row or participant identifier — unique or nearly-unique integer per row
-  unknown     : ONLY when name AND values together give no numeric signal — e.g. fully
-                redacted data, meaningless all-constant codes. Do NOT use for any column
-                whose samples look like numbers.
+  id          : participant or row identifier — the PRIMARY signal is the column NAME
+                (participant, subject, ResponseId, pid, etc.); values may be numeric or
+                alphanumeric codes; unique or near-unique per row
 
-IMPORTANT: Prefer "continuous" or "ordinal" over "unknown". When in doubt between
-"continuous" and "ordinal" for a numeric column, choose "continuous".
+  unknown     : ONLY when the name AND all sample values together give absolutely no
+                classifiable signal — virtually never the right answer. When in doubt
+                between "unknown" and any other type, always choose the other type.
+                Never use "unknown" for a column whose samples look like numbers.
+
+IMPORTANT: Prefer "continuous" or "ordinal" over "unknown" for numeric columns.
+When in doubt between "continuous" and "ordinal", choose "continuous".
+
+Output ONLY the JSON array. No notes, no text outside the array.'
+
+# ── Character column type classification (0_index.R → llm_batch(), Batch 2) ──
+
+CHAR_COLUMN_TYPE_PROMPT <- 'You are classifying columns in psychology research data.
+For each column descriptor return a JSON array (same order).
+Each element: {"descriptor": "<exact descriptor>", "col_type": "<type>"}
+
+col_type — pick one:
+  categorical : unordered group or category label — condition names, gender codes,
+                language labels, response options like "yes"/"no"/"maybe"
+  ordinal     : ordered scale stored as strings — "low"/"medium"/"high", letter
+                grades, Likert labels ("strongly agree" etc.)
+  binary      : exactly two distinct values (yes/no, true/false, present/absent)
+  text        : free-form written response — sentences, phrases, open-ended answers
+  id          : participant or row identifier — the PRIMARY signal is the column NAME;
+                keep for edge cases (e.g. alphanumeric codes not caught by name rules)
+  unknown     : ONLY when name AND all sample values give absolutely no classifiable
+                signal — virtually never correct; always prefer another type
 
 Output ONLY the JSON array. No notes, no text outside the array.'
 

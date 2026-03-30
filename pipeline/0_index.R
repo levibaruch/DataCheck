@@ -45,9 +45,10 @@ MAX_TOTAL_DATA_MB <- 10 * 1024  # 10 GB total data read cap per paper across all
 MAX_FILE_READ_SEC <- 5 * 60    # per-file read timeout (seconds); file is skipped if exceeded
 VALID_COL_TYPES <- c("continuous", "binary", "categorical", "ordinal", "date", "id",
                      "text", "continuous_comma_decimal", "continuous_outliers_excluded",
-                     "empty", "unknown")
-if (!exists("MAX_COL_TYPE_LLM_CALLS")) MAX_COL_TYPE_LLM_CALLS <- 5L
-if (!exists("FULL_RUN"))              FULL_RUN               <- FALSE
+                     "empty", "constant", "unknown")
+if (!exists("MAX_COL_TYPE_LLM_CALLS"))      MAX_COL_TYPE_LLM_CALLS      <- 5L
+if (!exists("MAX_CHAR_COL_TYPE_LLM_CALLS")) MAX_CHAR_COL_TYPE_LLM_CALLS <- 3L
+if (!exists("FULL_RUN"))                    FULL_RUN                    <- FALSE
 # Folders with more than this many files are treated as aggregate datasets
 AGGREGATE_THRESHOLD <- 50
 # Max rows to scan below row 1 for a usable sub-header in multi-level CSV files
@@ -809,7 +810,8 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
       if (!ambiguous_idx[i]) return(NA_character_)
       x_noNA <- df[[names(df)[i]]]
       x_noNA <- x_noNA[!is.na(x_noNA)]
-      uniq_v <- unique(x_noNA)[seq_len(min(10, length(unique(x_noNA))))]
+      cap    <- if (isTRUE(is_numeric_vec[i])) 10L else 20L
+      uniq_v <- unique(x_noNA)[seq_len(min(cap, length(unique(x_noNA))))]
       paste(as.character(uniq_v), collapse = ", ")
     }, character(1))
 
@@ -833,7 +835,8 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
                     p25 = NA, p75 = NA, iqr = NA, skewness = NA, kurtosis = NA))
       }
 
-      x_comp <- as.numeric(x_for_stats[!is.na(x_for_stats)])
+      x_comp <- as.numeric(x_for_stats)
+      x_comp <- x_comp[!is.na(x_comp) & !is.nan(x_comp)]
       n      <- length(x_comp)
       n_miss <- sum(is.na(x_for_stats))
       if (n == 0) {
@@ -884,45 +887,98 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
   column_list  <- Filter(Negate(is.null), column_list)
   columns_df   <- do.call(rbind, lapply(column_list, function(x) x$columns))
 
-  # ── LLM classification for ambiguous columns ──────────────────────────────
-  if (!is.null(columns_df) && nrow(columns_df) > 0 && any(is.na(columns_df$col_type))) {
-    ambig_rows <- which(is.na(columns_df$col_type))
-    max_cols   <- MAX_COL_TYPE_LLM_CALLS * LLM_BATCH_SIZE
-    if (!FULL_RUN && length(ambig_rows) > max_cols) ambig_rows <- ambig_rows[seq_len(max_cols)]
-    descriptors <- paste0('"', columns_df$column_name[ambig_rows], '"',
-                          " (samples: ", columns_df$sample_values_unique[ambig_rows], ")")
-    message("── LLM col_type: classifying ", length(ambig_rows), " ambiguous column(s)")
-    llm_result <- tryCatch(
-      llm_batch(
-        paths         = descriptors,
-        system_prompt = COLUMN_TYPE_PROMPT,
-        user_prefix   = "Classify each column:",
-        key_col       = "descriptor",
-        extra_cols    = "col_type",
-        fallback_vals = list(col_type = "unknown")
-      ),
-      error = function(e) {
-        warning("LLM col_type batch failed: ", conditionMessage(e))
-        data.frame(descriptor = descriptors,
-                   col_type   = rep("unknown", length(descriptors)),
-                   stringsAsFactors = FALSE)
+  # ── Batch 1: numeric-ambiguous columns (COLUMN_TYPE_PROMPT) ──────────────
+  if (!is.null(columns_df) && nrow(columns_df) > 0) {
+    num_ambig_rows <- which(is.na(columns_df$col_type) & columns_df$is_numeric)
+    if (length(num_ambig_rows) > 0) {
+      max_num_cols <- MAX_COL_TYPE_LLM_CALLS * LLM_BATCH_SIZE
+      if (!FULL_RUN && length(num_ambig_rows) > max_num_cols)
+        num_ambig_rows <- num_ambig_rows[seq_len(max_num_cols)]
+      descriptors <- paste0('"', columns_df$column_name[num_ambig_rows], '"',
+                            " (samples: ", columns_df$sample_values_unique[num_ambig_rows], ")")
+      message("── LLM col_type Batch 1 (numeric): classifying ",
+              length(num_ambig_rows), " column(s)")
+      llm_result <- tryCatch(
+        llm_batch(
+          paths         = descriptors,
+          system_prompt = COLUMN_TYPE_PROMPT,
+          user_prefix   = "Classify each column:",
+          key_col       = "descriptor",
+          extra_cols    = "col_type",
+          fallback_vals = list(col_type = "unknown")
+        ),
+        error = function(e) {
+          warning("LLM col_type Batch 1 failed: ", conditionMessage(e))
+          data.frame(descriptor = descriptors,
+                     col_type   = rep("unknown", length(descriptors)),
+                     stringsAsFactors = FALSE)
+        }
+      )
+      returned_types <- llm_result$col_type
+      invalid_mask   <- !returned_types %in% VALID_COL_TYPES
+      if (any(invalid_mask)) {
+        bad_types <- unique(returned_types[invalid_mask])
+        message("── col_type Batch 1: ", sum(invalid_mask),
+                " invalid type(s) remapped to unknown: ",
+                paste(bad_types, collapse = ", "))
+        returned_types[invalid_mask] <- "unknown"
       }
-    )
-    returned_types <- llm_result$col_type
-    returned_types[!returned_types %in% VALID_COL_TYPES] <- "unknown"
-    columns_df$col_type[ambig_rows] <- returned_types
+      columns_df$col_type[num_ambig_rows] <- returned_types
 
-    # Fallback: LLM "unknown" for a confirmed-numeric column → "continuous".
-    # is_numeric is TRUE only for Rule 6 (integer numeric, 3–20 unique values);
-    # NOT for Rule 3 ID columns, which must stay as "id" or "unknown".
-    if ("is_numeric" %in% names(columns_df)) {
-      num_unknown <- ambig_rows[
-        columns_df$is_numeric[ambig_rows] & columns_df$col_type[ambig_rows] == "unknown"
-      ]
+      # Fallback: LLM "unknown" for a confirmed-numeric column → "continuous".
+      num_unknown <- num_ambig_rows[columns_df$col_type[num_ambig_rows] == "unknown"]
       if (length(num_unknown) > 0) {
         columns_df$col_type[num_unknown] <- "continuous"
         message("── col_type fallback: ", length(num_unknown),
                 " numeric column(s) reclassified from unknown \u2192 continuous")
+      }
+    }
+  }
+
+  # ── Batch 2: character-ambiguous columns (CHAR_COLUMN_TYPE_PROMPT) ────────
+  if (!is.null(columns_df) && nrow(columns_df) > 0) {
+    char_ambig_rows <- which(is.na(columns_df$col_type) & !columns_df$is_numeric)
+    if (length(char_ambig_rows) > 0) {
+      max_char_cols <- MAX_CHAR_COL_TYPE_LLM_CALLS * LLM_BATCH_SIZE
+      if (!FULL_RUN && length(char_ambig_rows) > max_char_cols)
+        char_ambig_rows <- char_ambig_rows[seq_len(max_char_cols)]
+      descriptors <- paste0('"', columns_df$column_name[char_ambig_rows], '"',
+                            " (samples: ", columns_df$sample_values_unique[char_ambig_rows], ")")
+      message("── LLM col_type Batch 2 (character): classifying ",
+              length(char_ambig_rows), " column(s)")
+      llm_result <- tryCatch(
+        llm_batch(
+          paths         = descriptors,
+          system_prompt = CHAR_COLUMN_TYPE_PROMPT,
+          user_prefix   = "Classify each column:",
+          key_col       = "descriptor",
+          extra_cols    = "col_type",
+          fallback_vals = list(col_type = "text")
+        ),
+        error = function(e) {
+          warning("LLM col_type Batch 2 failed: ", conditionMessage(e))
+          data.frame(descriptor = descriptors,
+                     col_type   = rep("text", length(descriptors)),
+                     stringsAsFactors = FALSE)
+        }
+      )
+      returned_types <- llm_result$col_type
+      invalid_mask   <- !returned_types %in% VALID_COL_TYPES
+      if (any(invalid_mask)) {
+        bad_types <- unique(returned_types[invalid_mask])
+        message("── col_type Batch 2: ", sum(invalid_mask),
+                " invalid type(s) remapped to text: ",
+                paste(bad_types, collapse = ", "))
+        returned_types[invalid_mask] <- "text"
+      }
+      columns_df$col_type[char_ambig_rows] <- returned_types
+
+      # Fallback: LLM "unknown" for a character column → "text".
+      char_unknown <- char_ambig_rows[columns_df$col_type[char_ambig_rows] == "unknown"]
+      if (length(char_unknown) > 0) {
+        columns_df$col_type[char_unknown] <- "text"
+        message("── col_type fallback: ", length(char_unknown),
+                " character column(s) reclassified from unknown \u2192 text")
       }
     }
   }

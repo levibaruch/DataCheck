@@ -83,22 +83,24 @@ One row per column in each data file classified as `type = "data"`.
 | `kurtosis` | numeric | Excess kurtosis (normal distribution = 0) |
 
 Statistics are populated only for numeric column types (`continuous`,
-`continuous_comma_decimal`, `continuous_outliers_excluded`). All other types
-have `NA` for the 12 stat columns.
+`continuous_comma_decimal`, `continuous_outliers_excluded`). All other types —
+including `binary`, `constant`, `categorical`, `ordinal`, `date`, `id`, `text`,
+`empty`, and `unknown` — have `NA` for the 12 stat columns.
 
 ### Column Types
 
 | Value | Assigned by | Meaning |
 |---|---|---|
-| `continuous` | Rule 6a / Rule 6 / LLM / fallback | Numeric measurement (decimal or integer with >20 unique values, or LLM-confirmed) |
+| `continuous` | Rule 7a / Rule 7 / LLM / fallback | Numeric measurement (decimal or integer with >20 unique values, or LLM-confirmed) |
 | `ordinal` | LLM | Ordered integer scale with few levels (Likert, rating) |
-| `binary` | Rule 2 | Exactly two unique non-NA values |
-| `categorical` | Rule 8 | Unordered group code with few short levels |
-| `date` | Rule 4 | Date-parseable values |
-| `id` | LLM | Row or participant identifier |
-| `text` | Rule 5 / Rule 9 | Free-text or long string values |
-| `continuous_comma_decimal` | Rule 7 | Numeric with comma as decimal separator (≥95% convertible) |
-| `continuous_outliers_excluded` | Rule 7 | Numeric with comma separator but some non-convertible values (80–95%) |
+| `binary` | Rule 4 | Exactly two unique non-NA values |
+| `constant` | Rule 3 | Exactly one unique non-NA value (degenerate or placeholder column) |
+| `categorical` | LLM Batch 2 | Unordered group or category label — condition names, gender codes, language labels |
+| `date` | Rule 5 | Date-parseable values |
+| `id` | Rule 2 | Participant or row identifier — classified by column name pattern (participant, subject, ResponseId, sub-01, pid, etc.); value type is not a factor |
+| `text` | Rule 6 / LLM Batch 2 / fallback | Free-text or long string values; also fallback for character columns where LLM returns `unknown` |
+| `continuous_comma_decimal` | Rule 8 | Numeric with comma as decimal separator (≥95% convertible) |
+| `continuous_outliers_excluded` | Rule 8 | Numeric with comma separator but some non-convertible values (80–95%) |
 | `empty` | Rule 1 | All values are `NA` |
 | `unknown` | LLM / fallback | Cannot be determined (genuinely uninformative name and values) |
 

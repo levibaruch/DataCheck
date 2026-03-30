@@ -12,6 +12,7 @@ source("data_check/pipeline/0_index.R")
 FULL_RUN    <- TRUE         # TRUE = no LLM call caps (file classification + col_type)
 N_RUNS      <- Inf          # Inf = all papers; set an integer to cap
 SEED        <- NULL         # set an integer for reproducibility, or NULL
+SHUFFLE     <- TRUE         # TRUE = randomise paper order; FALSE = process in discovery order
 SUMMARY_CSV <- "./data_check/results/bulk_summary.csv"
 DOWNLOAD    <- TRUE         # Whether the script should attempt downloads or not
 
@@ -28,7 +29,6 @@ FROM_LOCAL  <- TRUE
 RESUME      <- FALSE
 
 if (FROM_LOCAL) DOWNLOAD <- FALSE
-if (!is.null(SEED)) set.seed(SEED)
 
 # ── Discover all papers ──────────────────────────────────────────────────────
 
@@ -67,7 +67,8 @@ if (file.exists(SUMMARY_CSV)) {
 # ── Determine papers to run ─────────────────────────────────────────────────
 
 remaining_ids <- setdiff(all_ids, done_ids)
-if (!is.null(SEED)) {
+if (SHUFFLE) {
+  if (!is.null(SEED)) set.seed(SEED)
   remaining_ids <- sample(remaining_ids)
 }
 if (is.finite(N_RUNS) && N_RUNS < length(remaining_ids)) {

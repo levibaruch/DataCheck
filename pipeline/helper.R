@@ -190,23 +190,33 @@ classify_col_type_rules <- function(col_name, values) {
 
   n_unique <- length(unique(x_noNA))
 
-  # Rule 2: binary (≤ 2 unique non-NA values)
-  if (n_unique <= 2)
-    return(list(col_type = "binary", ambiguous = FALSE, numeric_values = NULL,
+  # Rule 2: ID column — name matches common psychology/survey/BIDS identifier patterns.
+  #         Hard-classified directly; no LLM routing; no value-type constraint.
+  #         Name pattern takes precedence over all value-based rules below.
+  id_pat <- paste0(
+    "(?i)(",
+    "^(participant|subject|subj|respondent|pp|ppt|pid|sub)$",          # standalone root words
+    "|^id$",                                                             # standalone "id"
+    "|[_\\-\\.](id|number|num|nr|no|code)$",                           # ends with id/number/nr suffix
+    "|^(subjectid|subjectnumber|responseid|recordid|participantid|",    # compound forms (no separator)
+    "subjectno|subjectnum|subjectcode|participantno|participantnum)$",
+    "|^sub[_\\-]\\d",                                                   # BIDS: sub-01, sub_01
+    "|^(participant|subject|subj|pp|sub)[_\\-]?\\d+$",                 # root + numeric suffix
+    ")"
+  )
+  if (grepl(id_pat, col_name, perl = TRUE))
+    return(list(col_type = "id", ambiguous = FALSE, numeric_values = NULL,
                 n_coerced = NA_integer_, is_numeric = FALSE))
 
-  # Rule 3: possible ID column — name matches common ID patterns AND all non-NA
-  #         values are whole numbers.  Route to LLM rather than hard-classifying
-  #         because ID columns appear in too many forms to rule-classify reliably.
-  #         is_numeric = FALSE: LLM may correctly return "id"; do not fall back to "continuous".
-  id_pat <- "(?i)(^|\\b)(id|subj|subject|participant|pp|ppt|pid|respondent)(\\b|$|[_\\-]?\\d)"
-  if (grepl(id_pat, col_name, perl = TRUE)) {
-    vals_num <- suppressWarnings(as.numeric(as.character(x_noNA)))
-    if (!any(is.na(vals_num)) && all(vals_num == floor(vals_num)))
-      return(list(col_type = NA_character_, ambiguous = TRUE,
-                  numeric_values = suppressWarnings(as.numeric(as.character(values))),
-                  n_coerced = NA_integer_, is_numeric = FALSE))
-  }
+  # Rule 3: constant — exactly 1 unique non-NA value (degenerate/placeholder column)
+  if (n_unique == 1)
+    return(list(col_type = "constant", ambiguous = FALSE, numeric_values = NULL,
+                n_coerced = NA_integer_, is_numeric = FALSE))
+
+  # Rule 4: binary — exactly 2 unique non-NA values
+  if (n_unique == 2)
+    return(list(col_type = "binary", ambiguous = FALSE, numeric_values = NULL,
+                n_coerced = NA_integer_, is_numeric = FALSE))
 
   # Rule 4: date — try as.Date on a sample of up to 20 unique string values
   char_sample <- as.character(unique(x_noNA))[seq_len(min(20, n_unique))]
@@ -257,14 +267,9 @@ classify_col_type_rules <- function(col_name, values) {
                 numeric_values = num_vec, n_coerced = n_coerced, is_numeric = FALSE))
   }
 
-  # Rule 8: categorical (character, few short unique values)
-  if (n_unique <= 10 && median(nchar(as.character(x_noNA))) <= 20)
-    return(list(col_type = "categorical", ambiguous = FALSE, numeric_values = NULL,
-                n_coerced = NA_integer_, is_numeric = FALSE))
-
-  # Rule 9: text fallback for character columns
-  list(col_type = "text", ambiguous = FALSE, numeric_values = NULL,
-       n_coerced = NA_integer_, is_numeric = FALSE)
+  # Rule 9: char-ambiguous — all remaining character columns route to Batch 2 (character LLM)
+  return(list(col_type = NA_character_, ambiguous = TRUE, numeric_values = NULL,
+              n_coerced = NA_integer_, is_numeric = FALSE))
 }
 
 # ── LLM helpers ───────────────────────────────────────────────────────────────

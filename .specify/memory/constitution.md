@@ -1,12 +1,12 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 1.1.1 → 1.2.0 (MINOR — Principle IV materially expanded: all LLM prompt
-strings must now live in `prompts.R`; new sourcing rule added to centralisation principle)
+Version change: 1.2.0 → 1.3.0 (MINOR — Principle III resource limits expanded: new
+`MAX_CHAR_COL_TYPE_LLM_CALLS` constant added for character column LLM classification batch)
 
 Modified principles:
-  - Principle IV (Centralised Shared Helpers): added `prompts.R` as the canonical home for
-    all LLM prompt strings; added corresponding no-duplication rule and sourcing requirement
+  - Principle III (Conservative Resource Limits): added `MAX_CHAR_COL_TYPE_LLM_CALLS` (default 3)
+    for the character column LLM classification batch; updated constants table
 
 Added sections: None
 
@@ -50,7 +50,8 @@ The following hard limits MUST be enforced and MUST NOT be bypassed without expl
 - Maximum download size per paper: **10 GB**
 - Maximum data file size for column extraction: **500 MB**
 - Maximum LLM calls per paper (file classification): **10** (i.e., 300 paths at batch size 30)
-- Maximum LLM calls per paper (column classification): **5** (i.e., 100 columns at batch size 20)
+- Maximum LLM calls per paper (numeric column classification): **5** (i.e., 150 columns at batch size 30)
+- Maximum LLM calls per paper (character column classification): **3** (`MAX_CHAR_COL_TYPE_LLM_CALLS`, i.e., 90 columns at batch size 30)
 - Maximum LLM calls per paper (codebook text parsing): **3**
 - Maximum codebook file size: **100 MB** (larger files are skipped silently)
 
@@ -74,7 +75,8 @@ live in `prompts.R`. The following capabilities MUST NOT be duplicated across pi
 
 **`prompts.R`** — all LLM prompt strings:
 - `STRUCTURE_PROMPT` — file tree classification (used by `0_index.R` → `llm_batch()`)
-- `COLUMN_TYPE_PROMPT` — column type classification (used by `0_index.R` → `llm_batch()`)
+- `COLUMN_TYPE_PROMPT` — numeric column type classification (used by `0_index.R` → `llm_batch()`, Batch 1)
+- `CHAR_COLUMN_TYPE_PROMPT` — character column type classification (used by `0_index.R` → `llm_batch()`, Batch 2)
 - `CODEBOOK_PARSE_PROMPT` — codebook variable extraction (used by `2_codebook_label.R` → `llm()`)
 - `COLUMN_MATCH_PROMPT` — column–codebook matching (used by `2_codebook_label.R` → `llm()`)
 - `LABEL_MERGE_PROMPT` — label deduplication (used by `2_codebook_label.R` → `llm()`)
@@ -122,7 +124,8 @@ parsing free-form error messages.
 | `OUTPUT_DIR` | `./data_check/outputs` | `0_index.R`, `2_codebook_label.R` | Root for per-paper output subdirectories |
 | `LLM_BATCH_SIZE` | 30 | `0_index.R`, `2_codebook_label.R` | Paths/columns per LLM call |
 | `N_DATA_READ` | 5 | `0_index.R` | Rows sampled per data file |
-| `MAX_COL_TYPE_LLM_CALLS` | 5 | `0_index.R` | Max LLM calls for column classification |
+| `MAX_COL_TYPE_LLM_CALLS` | 5 | `0_index.R` | Max LLM calls for numeric column classification |
+| `MAX_CHAR_COL_TYPE_LLM_CALLS` | 3 | `0_index.R` | Max LLM calls for character column classification |
 | `AGGREGATE_THRESHOLD` | 50 | `0_index.R` | Files per folder above which a sentinel row replaces individual paths |
 | `MAX_DIR_WORDS` | 5 | `0_index.R` | Directory name word limit before truncation |
 | `MAX_CODEBOOK_LLM_CALLS` | 3 | `2_codebook_label.R` | Max LLM calls per paper for codebook text parsing |
@@ -153,8 +156,9 @@ The canonical processing order for a single paper is:
 6. Read data heads via `read_data_head()` for files classified as `data`
 7. Rule-based column classification via `classify_col_type_rules()` — assigns `col_type` where
    deterministic rules apply; ambiguous columns left for LLM
-8. LLM column classification via `llm_batch()` — resolves ambiguous `col_type` values;
-   numeric fallback: `unknown` → `continuous`
+8. LLM column classification — two sequential batches via `llm_batch()`:
+   - Batch 1 (numeric-ambiguous, `COLUMN_TYPE_PROMPT`): `unknown` → `continuous` fallback
+   - Batch 2 (character-ambiguous, `CHAR_COLUMN_TYPE_PROMPT`): `unknown`/invalid → `text` fallback
 9. Compute column statistics (numeric: mean/sd/se/median/min/max/range/p25/p75/iqr/skewness/
    kurtosis; non-numeric: n/n_missing only)
 10. Write `structure.csv` and `columns.csv` to `outputs/<paper_id>/`
@@ -187,4 +191,4 @@ require:
 
 All new features MUST be validated against Principles I–V before merging to `main`.
 
-**Version**: 1.2.0 | **Ratified**: TODO(RATIFICATION_DATE): set when first committed to main | **Last Amended**: 2026-03-27
+**Version**: 1.3.0 | **Ratified**: TODO(RATIFICATION_DATE): set when first committed to main | **Last Amended**: 2026-03-28

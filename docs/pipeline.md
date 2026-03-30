@@ -91,25 +91,34 @@ Paper ID (character string)
 ┌─────────────────────┐
 │  7. Rule-based      │  classify_col_type_rules() in helper.R
 │     column          │  Rules (in order):
-│     classification  │    1. all-NA          → empty
-│                     │    2. ≤2 unique        → binary
-│                     │    3. ID name pattern  → LLM (is_numeric=FALSE)
-│                     │    4. date-parseable   → date
-│                     │    5. long strings     → text
-│                     │    6a. any decimal     → continuous  ← no LLM needed
-│                     │    6. integer, 3–20 u  → LLM (is_numeric=TRUE)
-│                     │    6. integer, >20 u   → continuous
-│                     │    7. comma-decimal    → continuous_comma_decimal / _outliers_excluded
-│                     │    8. few short strs   → categorical
-│                     │    9. fallback         → text
+│     classification  │    1. all-NA              → empty
+│                     │    2. 1 unique non-NA      → constant
+│                     │    3. 2 unique non-NA      → binary
+│                     │    4. ID name pattern      → id  (hard-classify; no LLM)
+│                     │    5. date-parseable       → date
+│                     │    6. long strings         → text
+│                     │    7a. any decimal         → continuous  ← no LLM needed
+│                     │    7. integer, 3–20 unique → LLM Batch 1 (is_numeric=TRUE)
+│                     │    7. integer, >20 unique  → continuous
+│                     │    8. comma-decimal        → continuous_comma_decimal / _outliers_excluded
+│                     │    9. remaining char cols  → LLM Batch 2 (is_char_ambiguous=TRUE)
 └──────────┬──────────┘
-           │  ambiguous columns (NA col_type) sent to LLM
+           │  ambiguous columns (NA col_type) sent to LLM (two batches)
            ▼
 ┌─────────────────────┐
-│  8. LLM column      │  llm_batch() with COLUMN_TYPE_PROMPT
-│     classification  │  Classifies ambiguous columns as:
-│                     │  continuous / ordinal / categorical / binary / id / unknown
-│                     │  Fallback: if is_numeric=TRUE and LLM returns "unknown" → continuous
+│  8. LLM column      │  Batch 1 — numeric ambiguous (integer, 3–20 unique values):
+│     classification  │    llm_batch() with COLUMN_TYPE_PROMPT (prompts.R)
+│                     │    Types: continuous / ordinal / categorical / binary / id / unknown
+│                     │    Fallback: is_numeric=TRUE and LLM returns "unknown" → continuous
+│                     │    Cap: MAX_COL_TYPE_LLM_CALLS (default 5) when !FULL_RUN
+│                     │  Batch 2 — character ambiguous (rule 9 routing):
+│                     │    llm_batch() with CHAR_COLUMN_TYPE_PROMPT (prompts.R)
+│                     │    Types: categorical / ordinal / binary / text / id / unknown
+│                     │    Fallback: invalid type or "unknown" → text
+│                     │    Cap: MAX_CHAR_COL_TYPE_LLM_CALLS (default 3) when !FULL_RUN
+│                     │    Sample: up to 20 unique non-NA values per column (vs 10 for Batch 1)
+│                     │  VALID_COL_TYPES allowlist enforced after both batches; out-of-allowlist
+│                     │  responses logged and replaced with fallback before writing output
 └──────────┬──────────┘
            ▼
 ┌─────────────────────┐
@@ -193,7 +202,8 @@ Paper ID (character string)
 | `OUTPUT_DIR` | `./data_check/outputs` | `0_index.R`, `2_codebook_label.R` | Root directory for per-paper output subdirectories |
 | `LLM_BATCH_SIZE` | 30 | `0_index.R`, `2_codebook_label.R` | Paths per LLM call (file classification); 30 improves cross-batch group consistency |
 | `N_DATA_READ` | 5 | `0_index.R` | Rows sampled per data file |
-| `MAX_COL_TYPE_LLM_CALLS` | 5 | `0_index.R` | Max LLM calls for column classification (= 100 columns max) |
+| `MAX_COL_TYPE_LLM_CALLS` | 5 | `0_index.R` | Max LLM calls for numeric-ambiguous column classification (= 100 columns max) when `!FULL_RUN` |
+| `MAX_CHAR_COL_TYPE_LLM_CALLS` | 3 | `0_index.R` | Max LLM calls for character-ambiguous column classification (Batch 2, = 60 columns max) when `!FULL_RUN` |
 | `AGGREGATE_THRESHOLD` | 50 | `0_index.R` | Files per folder above which a sentinel row replaces individual paths |
 | `AGGREGATE_EXT_OVERRIDE` | named vector | `0_index.R` | Extension → type map applied after sentinel expansion to correct inherited types |
 | `MAX_DIR_WORDS` | 5 | `0_index.R` | Directory name word limit before truncation |

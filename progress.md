@@ -1,5 +1,20 @@
 # Progress Log
 
+## 2026-03-28
+
+### Completed ✅
+
+**024** — fix-col-type-detection (branch: `024-fix-col-type-detection`)
+- Expanded ID column detection: name-pattern rule now covers `participant`, `subject`, `subj`, `sub`, `respondent`, `pp`, `ppt`, `pid`, `ResponseId`, `subjectNumber`, BIDS `sub-01`, and suffix patterns (`_id`, `_number`, `_nr`, etc.). Hard-classifies as `id` directly — no LLM routing, no whole-number guard.
+- Added `constant` col_type for columns with exactly 1 unique non-NA value; fires after ID check and before binary rule.
+- Narrowed binary rule from `≤2` to `==2` unique non-NA values so constants are no longer absorbed into `binary`.
+- Narrowed `COLUMN_TYPE_PROMPT` to the 6 types the LLM actually resolves (`continuous`, `ordinal`, `categorical`, `binary`, `id`, `unknown`); removed types handled deterministically by rules; tightened `unknown` definition.
+- Added dedicated second LLM batch (Batch 2) for character-ambiguous columns using new `CHAR_COLUMN_TYPE_PROMPT`; replaces hardcoded categorical/text rules 8–9 in `classify_col_type_rules()`; up to 20 sampled unique values (vs 10 for numeric); independent cap `MAX_CHAR_COL_TYPE_LLM_CALLS = 3`; `unknown`/invalid → `"text"` fallback. Both batch caps are bypassed when `FULL_RUN = TRUE`.
+- Amended constitution to v1.3.0: added `MAX_CHAR_COL_TYPE_LLM_CALLS` to Principle III resource limits and constants table.
+- Added log message for invalid LLM type remapping so `"other"` leakage is visible in pipeline logs.
+- Updated `VALID_COL_TYPES` to include `constant`.
+- Updated `docs/output-schemas.md`: added `constant` to Column Types table, updated `binary` and `id` descriptions, updated stats-suppression footnote.
+
 ## 2026-03-27
 
 ### Completed ✅

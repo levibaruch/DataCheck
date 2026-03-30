@@ -672,10 +672,8 @@ server <- function(input, output, session) {
       "7" = { rv$selected_type <- "other" },
       "r" = {
         if (!is.na(rv$selected_type) && rv$selected_type == "data") {
-          new_val <- switch(rv$data_granularity_val,
-                            ""           = "individual",
-                            "individual" = "combined",
-                            "combined"   = "")
+          new_val <- if (rv$data_granularity_val == "") "individual" else
+                     if (rv$data_granularity_val == "individual") "combined" else ""
           rv$data_granularity_val <- new_val
           updateSelectInput(session, "data_granularity_val", selected = new_val)
         }
