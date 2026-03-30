@@ -1,6 +1,20 @@
 <!--
 SYNC IMPACT REPORT
 ==================
+Version change: 1.3.0 → 1.3.1 (PATCH — Technical Standards: ggplot/plot-object guidance
+updated from `supplemental` to `output` following addition of `output` file type in feature 026)
+
+Modified sections:
+  - Technical Standards: ggplot / plot objects guidance updated
+
+Added sections: None
+Removed sections: None
+
+Templates requiring updates: None
+
+---
+
+Previous report:
 Version change: 1.2.0 → 1.3.0 (MINOR — Principle III resource limits expanded: new
 `MAX_CHAR_COL_TYPE_LLM_CALLS` constant added for character column LLM classification batch)
 
@@ -115,7 +129,9 @@ parsing free-form error messages.
 - **Timing**: `run_index()` returns `elapsed_sec`, `download_sec`, `llm_sec`, `column_sec`;
   bulk CSV stores these as `*_ms` (milliseconds)
 - **ggplot / plot objects**: `read_data_head()` MUST return NULL for saved plot objects — this
-  is correct behaviour; LLM MUST classify them as `supplemental`
+  is correct behaviour; LLM MUST classify them as `output` when the filename contains "plot",
+  "figure", or "graph"; otherwise as `data` (classification deferred to empirical validation
+  per feature 026)
 
 ### Key Constants
 
@@ -191,4 +207,4 @@ require:
 
 All new features MUST be validated against Principles I–V before merging to `main`.
 
-**Version**: 1.3.0 | **Ratified**: TODO(RATIFICATION_DATE): set when first committed to main | **Last Amended**: 2026-03-28
+**Version**: 1.3.1 | **Ratified**: TODO(RATIFICATION_DATE): set when first committed to main | **Last Amended**: 2026-03-30

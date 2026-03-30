@@ -37,10 +37,23 @@ One row per file discovered in the paper's OSF repository.
 | `data` | Any file containing research measurements for analysis — tabular (CSV, SAV, XLSX, RDS, DTA, etc.) or non-tabular (EEG/physiological recordings `.edf`/`.acq`/`.bdf`, MATLAB matrices `.mat`, nested JSON survey exports). Column extraction skips non-parseable formats; file remains `data`. |
 | `codebook` | File whose primary purpose is describing what variables mean — variable dictionary, data dictionary, coding key. Determined by semantic inference from filename. |
 | `code` | Executable source file: R, Python, MATLAB, Julia, SQL, shell scripts, `.Rmd`/`.qmd` notebooks (always `code` regardless of narrative content). |
-| `supplemental` | Any research-related document or material that is not data, code, or a codebook — manuscripts, articles, reports, proposals, theses, preregistrations, registered reports, survey instruments, consent forms, SPSS `.sps` syntax, HTML output files, saved plot objects, result figures and output graphs, supporting appendices, experiment scripts. |
+| `output` | File produced by executing a script — rendered notebooks (`.html`, `.pdf`, `.docx` output from `.Rmd`/`.qmd`/`.ipynb`), script-generated figures and graphs, log files, and other computational byproducts. Not column-extracted. When provenance is ambiguous, `supplemental` is the fallback. |
+| `supplemental` | Human-authored research material that is not data, code, or a codebook — manuscripts, articles, reports, proposals, theses, preregistrations, registered reports, survey instruments, consent forms, SPSS `.spv` syntax, supporting appendices. Script-generated artefacts (figures, rendered notebooks, log files) → `output`. Fallback for ambiguous provenance. |
 | `readme` | Files named `README.*`, `LICENSE.*`, or `CONTRIBUTING.*` only. Classified by filename. |
-| `asset` | Participant-facing sensory material presented to participants during the study — stimulus images, audio clips, video stimuli. Result figures and output graphs → `supplemental`. |
+| `asset` | Participant-facing sensory material presented to participants during the study — stimulus images, audio clips, video stimuli. |
 | `other` | No research content: OS metadata (`.DS_Store`, `Thumbs.db`), lock files, environment config, executables, installers. Not a catch-all. |
+
+### File Type Consumers
+
+Any component that enumerates or displays file types must be updated whenever a type is added, removed, or renamed. Current consumers:
+
+| Consumer | Location | What to update |
+|---|---|---|
+| LLM classification prompt | `pipeline/prompts.R` — `STRUCTURE_PROMPT` | Add type to `TYPE —` block and relevant hard-case rules |
+| Sentinel classification prompt | `pipeline/prompts.R` — `SENTINEL_PROMPT` | Add type to `TYPE —` block and key signals |
+| Validation GUI type buttons | `tools/validation_gui/app.R` — `TYPE_MAP`, `TYPE_ABBREV` | Add entry; assign next available keyboard shortcut (1–8) |
+| Validation GUI CSS | `tools/validation_gui/app.R` — `APP_CSS` | Add `.tbadge-<type>` and `.tbtn-<type>.tbtn-active` for light and dark mode |
+| Validation GUI keyboard handler | `tools/validation_gui/app.R` — `observeEvent(input$key_press)` | Add `"N" = { rv$selected_type <- "<type>" }` |
 
 ### Groups
 
@@ -69,6 +82,7 @@ One row per column in each data file classified as `type = "data"`.
 | `n_coerced` | integer | Values excluded during comma-decimal normalisation; `NA` when not applicable |
 | `n` | integer | Count of non-missing values |
 | `n_missing` | integer | Count of missing (`NA`) values |
+| `n_unique` | integer | Count of distinct non-NA values; 0 for all-NA columns; populated for all `col_type` values |
 | `mean` | numeric | Arithmetic mean (numeric types only; `NA` otherwise) |
 | `sd` | numeric | Standard deviation |
 | `se` | numeric | Standard error of the mean |
@@ -82,10 +96,11 @@ One row per column in each data file classified as `type = "data"`.
 | `skewness` | numeric | Pearson moment skewness |
 | `kurtosis` | numeric | Excess kurtosis (normal distribution = 0) |
 
-Statistics are populated only for numeric column types (`continuous`,
+`n_unique` is populated for **all** column types. The 12 numeric statistics (`mean` through
+`kurtosis`) are populated only for numeric column types (`continuous`,
 `continuous_comma_decimal`, `continuous_outliers_excluded`). All other types —
 including `binary`, `constant`, `categorical`, `ordinal`, `date`, `id`, `text`,
-`empty`, and `unknown` — have `NA` for the 12 stat columns.
+`empty`, and `unknown` — have `NA` for those 12 columns.
 
 ### Column Types
 

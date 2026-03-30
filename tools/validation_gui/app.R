@@ -10,11 +10,13 @@ library(bslib)
 # ── Locate data_check root ────────────────────────────────────────────────────
 
 local({
-  root <- normalizePath(file.path(getwd(), "../.."))
-  if (!dir.exists(file.path(root, "outputs"))) {
-    stop("Cannot locate outputs/ directory. Expected at: ", file.path(root, "outputs"))
+  if (is.null(getOption("dc_root"))) {
+    root <- normalizePath(file.path(getwd(), "../.."))
+    if (!dir.exists(file.path(root, "outputs"))) {
+      stop("Cannot locate outputs/ directory. Expected at: ", file.path(root, "outputs"))
+    }
+    options(dc_root = root)
   }
-  options(dc_root = root)
 })
 
 source(file.path(getOption("dc_root"), "tools", "validation_gui", "gt_store.R"))
@@ -24,13 +26,13 @@ source(file.path(getOption("dc_root"), "tools", "validation_gui", "preview.R"))
 
 TYPE_MAP <- c(
   "1" = "data", "2" = "code", "3" = "codebook", "4" = "supplemental",
-  "5" = "readme", "6" = "asset", "7" = "other"
+  "5" = "readme", "6" = "asset", "7" = "output", "8" = "other"
 )
 VALID_TYPES <- unname(TYPE_MAP)
 
 TYPE_ABBREV <- c(
   data = "dat", code = "cod", codebook = "cbk", supplemental = "sup",
-  readme = "rdm", asset = "ast", other = "oth"
+  readme = "rdm", asset = "ast", other = "oth", output = "out"
 )
 
 # ── JavaScript ────────────────────────────────────────────────────────────────
@@ -67,6 +69,13 @@ document.addEventListener("DOMContentLoaded", function() {
     var el = document.getElementById("group_val");
     if (el) { el.focus(); el.select(); }
   });
+
+  // File row click — passes idx + modifier keys to server
+  window.fileRowClick = function(e, idx) {
+    Shiny.setInputValue("file_click",
+      {idx: idx, shift: e.shiftKey, meta: e.metaKey || e.ctrlKey},
+      {priority: "event"});
+  };
 
   // ── XML search + column highlight (fully client-side) ─────────────────────
   var _xmlColTerms = [];
@@ -154,13 +163,12 @@ document.addEventListener("DOMContentLoaded", function() {
     _observer.observe(document.body, { childList: true, subtree: true });
   })();
 
-  // Custom message: enable/disable the data_granularity selector
+  // Custom message: enable/disable the data_granularity buttons
   Shiny.addCustomMessageHandler("set_data_granularity_disabled", function(msg) {
-    var el = document.getElementById("data_granularity_val");
-    if (!el) return;
-    el.disabled = msg.disabled;
-    var wrap = el.closest(".form-group") || el.parentElement;
-    if (wrap) wrap.style.opacity = msg.disabled ? "0.35" : "1";
+    var wrap = document.getElementById("data_granularity_ui");
+    if (!wrap) return;
+    wrap.querySelectorAll("button").forEach(function(btn) { btn.disabled = msg.disabled; });
+    wrap.style.opacity = msg.disabled ? "0.35" : "1";
   });
 
   document.addEventListener("focusin", function(e) {
@@ -190,6 +198,11 @@ document.addEventListener("DOMContentLoaded", function() {
       Shiny.setInputValue("key_press", {key: "cmd_slash",   ts: Date.now()}, {priority: "event"});
       return;
     }
+    if (e.key === "Escape") {
+      e.preventDefault();
+      Shiny.setInputValue("key_press", {key: "escape", ts: Date.now()}, {priority: "event"});
+      return;
+    }
     var inText = document.activeElement &&
       (document.activeElement.tagName === "INPUT" ||
        document.activeElement.tagName === "TEXTAREA");
@@ -201,7 +214,7 @@ document.addEventListener("DOMContentLoaded", function() {
       return;
     }
     var k = e.key.toLowerCase();
-    if (["1","2","3","4","5","6","7","8","r","g"].indexOf(k) !== -1) {
+    if (["1","2","3","4","5","6","7","8","i","c","g"].indexOf(k) !== -1) {
       e.preventDefault();
       Shiny.setInputValue("key_press", {key: k, ts: Date.now()}, {priority: "event"});
     }
@@ -283,7 +296,8 @@ details > summary { font-size:0.75em; font-weight:700; letter-spacing:0.05em;
 #file_list_ui .file-row.is-unvisited   { background:transparent; }
 #file_list_ui .file-row.is-validated   { background:rgba(46,125,50,0.07); border-left-color:#4caf50; color:rgba(0,0,0,0.58); }
 #file_list_ui .file-row.is-skipped     { background:rgba(230,81,0,0.05);  border-left-color:#ff8f00; color:rgba(0,0,0,0.48); }
-#file_list_ui .file-row.is-current     { background:rgba(21,101,192,0.09) !important; border-left-color:#1565c0 !important; color:#0d1117 !important; font-weight:600; }
+#file_list_ui .file-row.is-current        { background:rgba(21,101,192,0.09) !important; border-left-color:#1565c0 !important; color:#0d1117 !important; font-weight:600; }
+#file_list_ui .file-row.is-bulk-selected  { background:rgba(21,101,192,0.05); border-left-color:#90caf9; color:rgba(0,0,0,0.62); }
 
 /* Type badges — light */
 .tbadge-data         { background:#e8f5e9; color:#2e7d32; }
@@ -293,6 +307,7 @@ details > summary { font-size:0.75em; font-weight:700; letter-spacing:0.05em;
 .tbadge-readme       { background:#e0f2f1; color:#00695c; }
 .tbadge-asset        { background:#fce4ec; color:#880e4f; }
 .tbadge-other        { background:#eceff1; color:#455a64; }
+.tbadge-output       { background:#e0f7fa; color:#006064; }
 
 /* Type buttons — light */
 .tbtn { border:1.5px solid rgba(0,0,0,0.13) !important; background:rgba(0,0,0,0.02) !important; color:rgba(0,0,0,0.45) !important; }
@@ -305,6 +320,7 @@ details > summary { font-size:0.75em; font-weight:700; letter-spacing:0.05em;
 .tbtn-readme.tbtn-active       { border-color:#00695c !important; background:rgba(0,105,92,0.1) !important;    color:#004d40 !important; box-shadow:0 0 8px rgba(0,105,92,0.2) !important; }
 .tbtn-asset.tbtn-active        { border-color:#880e4f !important; background:rgba(136,14,79,0.1) !important;   color:#560027 !important; box-shadow:0 0 8px rgba(136,14,79,0.2) !important; }
 .tbtn-other.tbtn-active        { border-color:#455a64 !important; background:rgba(69,90,100,0.1) !important;   color:#263238 !important; box-shadow:0 0 8px rgba(69,90,100,0.2) !important; }
+.tbtn-output.tbtn-active       { border-color:#006064 !important; background:rgba(0,96,100,0.1) !important;    color:#004d40 !important; box-shadow:0 0 8px rgba(0,96,100,0.2) !important; }
 
 /* File header — light */
 .file-hdr         { padding:11px 16px 10px; border-bottom:1px solid #dee2e6; background:#f8f9fa; margin-bottom:10px; }
@@ -383,7 +399,8 @@ hr { border-color:#dee2e6 !important; margin:8px 0 !important; }
 [data-theme='dark'] #file_list_ui .file-row:hover        { background:rgba(255,255,255,0.07) !important; color:rgba(255,255,255,0.8) !important; }
 [data-theme='dark'] #file_list_ui .file-row.is-validated { background:rgba(76,175,80,0.07); border-left-color:#4caf50; color:rgba(255,255,255,0.55); }
 [data-theme='dark'] #file_list_ui .file-row.is-skipped   { background:rgba(255,202,40,0.06); border-left-color:#ffca28; color:rgba(255,255,255,0.45); }
-[data-theme='dark'] #file_list_ui .file-row.is-current   { background:rgba(255,255,255,0.1) !important; border-left-color:#64b5f6 !important; color:#ffffff !important; font-weight:600; }
+[data-theme='dark'] #file_list_ui .file-row.is-current        { background:rgba(255,255,255,0.1) !important; border-left-color:#64b5f6 !important; color:#ffffff !important; font-weight:600; }
+[data-theme='dark'] #file_list_ui .file-row.is-bulk-selected  { background:rgba(100,181,246,0.1); border-left-color:#64b5f6; color:rgba(255,255,255,0.7); }
 
 /* Type badges — dark */
 [data-theme='dark'] .tbadge-data         { background:rgba(76,175,80,0.22);   color:#81c784; }
@@ -393,6 +410,7 @@ hr { border-color:#dee2e6 !important; margin:8px 0 !important; }
 [data-theme='dark'] .tbadge-readme       { background:rgba(77,208,225,0.22);  color:#80deea; }
 [data-theme='dark'] .tbadge-asset        { background:rgba(244,143,177,0.22); color:#fce4ec; }
 [data-theme='dark'] .tbadge-other        { background:rgba(144,164,174,0.22); color:#b0bec5; }
+[data-theme='dark'] .tbadge-output       { background:rgba(0,188,212,0.22);   color:#80deea; }
 
 /* Type buttons — dark */
 [data-theme='dark'] .tbtn { border-color:rgba(255,255,255,0.13) !important; background:rgba(255,255,255,0.04) !important; color:rgba(255,255,255,0.45) !important; }
@@ -405,6 +423,17 @@ hr { border-color:#dee2e6 !important; margin:8px 0 !important; }
 [data-theme='dark'] .tbtn-readme.tbtn-active       { border-color:#4dd0e1 !important; background:rgba(77,208,225,0.22) !important;  color:#80deea !important; box-shadow:0 0 10px rgba(77,208,225,0.25) !important; }
 [data-theme='dark'] .tbtn-asset.tbtn-active        { border-color:#f48fb1 !important; background:rgba(244,143,177,0.22) !important; color:#fce4ec !important; box-shadow:0 0 10px rgba(244,143,177,0.25) !important; }
 [data-theme='dark'] .tbtn-other.tbtn-active        { border-color:#90a4ae !important; background:rgba(144,164,174,0.22) !important; color:#b0bec5 !important; box-shadow:0 0 10px rgba(144,164,174,0.25) !important; }
+[data-theme='dark'] .tbtn-output.tbtn-active       { border-color:#00bcd4 !important; background:rgba(0,188,212,0.22) !important;  color:#80deea !important; box-shadow:0 0 10px rgba(0,188,212,0.25) !important; }
+
+/* Granularity buttons — light */
+.dg-btn { border:1.5px solid rgba(0,0,0,0.13) !important; background:rgba(0,0,0,0.02) !important; color:rgba(0,0,0,0.45) !important; font-size:0.8em !important; padding:3px 10px !important; }
+.dg-btn:hover { background:rgba(0,0,0,0.06) !important; color:rgba(0,0,0,0.75) !important; border-color:rgba(0,0,0,0.25) !important; }
+.dg-btn.dg-active { border-color:#2e7d32 !important; background:rgba(46,125,50,0.1) !important; color:#1b5e20 !important; font-weight:700; box-shadow:0 0 8px rgba(46,125,50,0.2) !important; }
+
+/* Granularity buttons — dark */
+[data-theme='dark'] .dg-btn { border-color:rgba(255,255,255,0.13) !important; background:rgba(255,255,255,0.04) !important; color:rgba(255,255,255,0.45) !important; }
+[data-theme='dark'] .dg-btn:hover { background:rgba(255,255,255,0.1) !important; color:rgba(255,255,255,0.85) !important; border-color:rgba(255,255,255,0.28) !important; }
+[data-theme='dark'] .dg-btn.dg-active { border-color:#4caf50 !important; background:rgba(76,175,80,0.22) !important; color:#a5d6a7 !important; box-shadow:0 0 10px rgba(76,175,80,0.25) !important; }
 
 /* File header — dark */
 [data-theme='dark'] .file-hdr         { background:rgba(255,255,255,0.025); border-bottom-color:rgba(255,255,255,0.09); }
@@ -437,6 +466,28 @@ hr { border-color:#dee2e6 !important; margin:8px 0 !important; }
 
 /* XML panel — dark */
 [data-theme='dark'] #xml_text_content { background:rgba(0,0,0,0.3) !important; border-color:rgba(255,255,255,0.09) !important; color:rgba(255,255,255,0.72) !important; }
+
+/* Bulk selection banner */
+.bulk-banner { display:flex; align-items:center; gap:8px; padding:5px 10px; margin-bottom:6px;
+               border-radius:5px; font-size:0.8em; border:1px solid;
+               background:rgba(21,101,192,0.07); border-color:rgba(21,101,192,0.3); color:#1565c0; }
+[data-theme='dark'] .bulk-banner { background:rgba(100,181,246,0.1); border-color:rgba(100,181,246,0.3); color:#90caf9; }
+.bulk-banner__count { font-weight:700; }
+.bulk-banner__hint  { opacity:0.6; font-size:0.9em; }
+.btn-select-uv { background:transparent !important; border:none !important; box-shadow:none !important;
+                 font-size:0.72em; cursor:pointer; padding:0 !important;
+                 text-decoration:underline; opacity:0.55; }
+.btn-select-uv:hover { opacity:1 !important; }
+[data-theme='dark'] .btn-select-uv { color:rgba(255,255,255,0.55) !important; }
+[data-theme='dark'] .btn-select-uv:hover { color:rgba(255,255,255,0.9) !important; }
+
+/* Open-folder button */
+.btn-open-folder { background:transparent !important; border:none !important; box-shadow:none !important;
+                   font-size:1em; cursor:pointer; opacity:0.35; padding:0 !important; line-height:1;
+                   transition:opacity 0.15s; margin-top:4px; display:block; }
+.btn-open-folder:hover { opacity:0.85 !important; }
+[data-theme='dark'] .btn-open-folder { opacity:0.3; }
+[data-theme='dark'] .btn-open-folder:hover { opacity:0.8 !important; }
 "
 
 # ── UI ────────────────────────────────────────────────────────────────────────
@@ -466,6 +517,12 @@ ui <- page_sidebar(
     selectInput("paper_id", "Paper", choices = character(0)),
     uiOutput("progress_bar_ui"),
     tags$hr(),
+    div(
+      style = "display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;",
+      uiOutput("bulk_count_ui"),
+      actionButton("btn_select_uv", "Select all unvalidated",
+                   class = "btn-select-uv")
+    ),
     div(style = "overflow-y:auto; flex:1; min-height:0;",
         uiOutput("file_list_ui"))
   ),
@@ -502,6 +559,7 @@ ui <- page_sidebar(
     # Label controls — anchored at bottom
     div(
       class = "dc-ctrl-bar",
+      uiOutput("bulk_banner_ui"),
       uiOutput("prediction_note_ui"),
       uiOutput("type_buttons_ui"),
       div(
@@ -509,10 +567,7 @@ ui <- page_sidebar(
         div(style = "flex:1; min-width:120px; max-width:220px;",
             textInput("group_val", tags$small("Group"), value = "",
                       placeholder = "ex1, shared, na …")),
-        div(style = "min-width:110px;",
-            selectInput("data_granularity_val", tags$small("data_granularity"),
-                        choices = c("(unset)" = "", "individual", "combined"),
-                        selected = "", width = "100%")),
+        uiOutput("data_granularity_ui"),
         div(
           style = "margin-left:auto; display:flex; gap:6px; padding-bottom:4px;",
           actionButton("btn_back", "\u2190 Prev",      class = "btn-sm btn-outline-secondary"),
@@ -538,9 +593,12 @@ server <- function(input, output, session) {
     status        = character(0),  # named: "unvisited"/"validated"/"skipped"
     selected_type         = NA_character_,
     data_granularity_val  = "",
-    skipped       = integer(0),
-    xml           = NULL,          # list(title, abstract, body) or NULL
-    col_names     = character(0)
+    skipped            = integer(0),
+    xml                = NULL,     # list(title, abstract, body) or NULL
+    col_names          = character(0),
+    paper_completion   = logical(0),  # named logical: paper_id → complete?
+    label_update_only  = FALSE,       # TRUE = updateSelectInput is label-only, skip paper reload
+    bulk_selected      = integer(0)   # indices of files selected for bulk labelling
   )
 
   # ── T019: Startup annotator dialog ──────────────────────────────────────────
@@ -560,16 +618,22 @@ server <- function(input, output, session) {
     }
     rv$annotator <- name
     removeModal()
-    papers <- discover_papers()
-    rv$papers <- papers
+    papers     <- discover_papers()
+    completion <- paper_is_complete(papers)
+    rv$papers           <- papers
+    rv$paper_completion <- completion
     updateSelectInput(session, "paper_id",
-                      choices  = papers,
+                      choices  = make_paper_choices(papers, completion),
                       selected = if (length(papers) > 0) papers[1] else NULL)
   })
 
   # ── T008: Paper selection ────────────────────────────────────────────────────
 
   observeEvent(input$paper_id, {
+    if (isTRUE(rv$label_update_only)) {
+      rv$label_update_only <- FALSE
+      return()
+    }
     req(nchar(trimws(input$paper_id)) > 0)
     pid <- input$paper_id
     struct <- tryCatch(load_structure(pid), error = function(e) {
@@ -583,7 +647,7 @@ server <- function(input, output, session) {
     rv$structure <- struct
     rv$xml       <- load_paper_xml(pid)
 
-    col_path  <- file.path(getOption("dc_root", "."), "outputs", pid, "columns.csv")
+    col_path  <- file.path(get_outputs_dir(), pid, "columns.csv")
     col_names <- character(0)
     if (file.exists(col_path)) {
       tryCatch({
@@ -607,7 +671,7 @@ server <- function(input, output, session) {
     rv$skipped <- integer(0)
 
     first_uv <- which(st != "validated")
-    rv$current_idx <- if (length(first_uv) > 0) first_uv[1] else 1L
+    rv$current_idx <- if (length(first_uv) > 0) unname(first_uv[1]) else 1L
 
     load_file(rv$current_idx)
   })
@@ -623,31 +687,23 @@ server <- function(input, output, session) {
       rv$selected_type        <- gt_row$type_gt[1]
       rv$data_granularity_val <- if (!is.na(gt_row$data_granularity_gt[1]))
                                    gt_row$data_granularity_gt[1] else ""
-      updateTextInput(session,  "group_val",            value = gt_row$group_gt[1])
-      updateSelectInput(session, "data_granularity_val", selected = rv$data_granularity_val)
+      updateTextInput(session, "group_val", value = gt_row$group_gt[1])
     } else {
       rv$selected_type        <- if (!is.na(row$type)) row$type else "other"
       rv$data_granularity_val <- if ("data_granularity" %in% names(row) &&
                                       !is.na(row$data_granularity))
                                    row$data_granularity else ""
-      updateTextInput(session,  "group_val",            value = row$group)
-      updateSelectInput(session, "data_granularity_val", selected = rv$data_granularity_val)
+      updateTextInput(session, "group_val", value = row$group)
     }
   }
 
-  # ── T012: data_granularity sync + disable for non-data types ────────────────
-
-  observeEvent(input$data_granularity_val, {
-    rv$data_granularity_val <- input$data_granularity_val
-  })
+  # ── T012: data_granularity disable for non-data types ───────────────────────
 
   observe({
     sel     <- isolate(rv$selected_type)
     is_data <- !is.na(sel) && sel == "data"
-    if (!is_data && nzchar(isolate(rv$data_granularity_val))) {
+    if (!is_data && nzchar(isolate(rv$data_granularity_val)))
       rv$data_granularity_val <- ""
-      updateSelectInput(session, "data_granularity_val", selected = "")
-    }
     session$sendCustomMessage("set_data_granularity_disabled", list(disabled = !is_data))
   }) |> bindEvent(rv$selected_type, ignoreInit = FALSE)
 
@@ -655,9 +711,28 @@ server <- function(input, output, session) {
 
   observeEvent(input$file_click, {
     req(!is.null(rv$structure))
-    idx <- suppressWarnings(as.integer(input$file_click))
-    if (!is.na(idx) && idx >= 1L && idx <= nrow(rv$structure)) {
-      rv$current_idx <- idx
+    click <- input$file_click
+    idx   <- suppressWarnings(as.integer(click$idx))
+    if (is.na(idx) || idx < 1L || idx > nrow(rv$structure)) return()
+
+    if (isTRUE(click$shift)) {
+      # Range select: anchor at current_idx, extend to clicked idx
+      lo <- min(rv$current_idx, idx)
+      hi <- max(rv$current_idx, idx)
+      rv$bulk_selected <- seq.int(lo, hi)
+      rv$current_idx   <- idx
+      load_file(idx)
+    } else if (isTRUE(click$meta)) {
+      # Toggle individual file without navigating
+      if (idx %in% rv$bulk_selected) {
+        rv$bulk_selected <- rv$bulk_selected[rv$bulk_selected != idx]
+      } else {
+        rv$bulk_selected <- sort(unique(c(rv$bulk_selected, idx)))
+      }
+    } else {
+      # Normal click: clear selection, navigate
+      rv$bulk_selected <- integer(0)
+      rv$current_idx   <- idx
       load_file(idx)
     }
   })
@@ -683,20 +758,22 @@ server <- function(input, output, session) {
       "4" = { rv$selected_type <- "supplemental" },
       "5" = { rv$selected_type <- "readme" },
       "6" = { rv$selected_type <- "asset" },
-      "7" = { rv$selected_type <- "other" },
-      "r" = {
-        if (!is.na(rv$selected_type) && rv$selected_type == "data") {
-          new_val <- if (rv$data_granularity_val == "") "individual" else
-                     if (rv$data_granularity_val == "individual") "combined" else ""
-          rv$data_granularity_val <- new_val
-          updateSelectInput(session, "data_granularity_val", selected = new_val)
-        }
+      "7" = { rv$selected_type <- "output" },
+      "8" = { rv$selected_type <- "other" },
+      "i" = {
+        if (!is.na(rv$selected_type) && rv$selected_type == "data")
+          rv$data_granularity_val <- if (rv$data_granularity_val == "individual") "" else "individual"
+      },
+      "c" = {
+        if (!is.na(rv$selected_type) && rv$selected_type == "data")
+          rv$data_granularity_val <- if (rv$data_granularity_val == "combined") "" else "combined"
       },
       "g"           = { session$sendCustomMessage("focus_group", list()) },
       "tab"         = { do_skip() },
       "cmd_enter"   = { do_save() },
       "cmd_bracket" = { do_back() },
-      "cmd_slash"   = { show_kb_help() }
+      "cmd_slash"   = { show_kb_help() },
+      "escape"      = { rv$bulk_selected <- integer(0) }
     )
   })
 
@@ -704,29 +781,36 @@ server <- function(input, output, session) {
 
   do_save <- function() {
     req(!is.null(rv$structure), !is.na(rv$selected_type), nchar(rv$annotator) > 0)
-    idx <- rv$current_idx
-    if (idx < 1L || idx > nrow(rv$structure)) return()
-    row <- rv$structure[idx, ]
 
-    dg_save <- if (rv$selected_type == "data" && nzchar(rv$data_granularity_val))
-                 rv$data_granularity_val else NA_character_
+    # Targets: bulk selection (if active) or just the current file
+    targets <- if (length(rv$bulk_selected) > 1) rv$bulk_selected else rv$current_idx
+    targets  <- targets[targets >= 1L & targets <= nrow(rv$structure)]
+    if (length(targets) == 0L) return()
 
-    new_row <- data.frame(
-      paper_id             = rv$paper_id,
-      rel_path             = row$rel_path,
-      type_gt              = rv$selected_type,
-      group_gt             = trimws(input$group_val),
-      data_granularity_gt  = dg_save,
-      validated_at         = format(Sys.time(), "%Y-%m-%dT%H:%M:%S"),
-      annotator            = rv$annotator,
-      stringsAsFactors     = FALSE
-    )
+    dg_save  <- if (rv$selected_type == "data" && nzchar(rv$data_granularity_val))
+                  rv$data_granularity_val else NA_character_
+    now      <- format(Sys.time(), "%Y-%m-%dT%H:%M:%S")
+    grp      <- trimws(input$group_val)
 
-    rv$gt <- upsert_gt(rv$gt, new_row)
+    for (i in targets) {
+      row     <- rv$structure[i, ]
+      new_row <- data.frame(
+        paper_id             = rv$paper_id,
+        rel_path             = row$rel_path,
+        type_gt              = rv$selected_type,
+        group_gt             = grp,
+        data_granularity_gt  = dg_save,
+        validated_at         = now,
+        annotator            = rv$annotator,
+        stringsAsFactors     = FALSE
+      )
+      rv$gt <- upsert_gt(rv$gt, new_row)
+      rv$status[row$rel_path] <- "validated"
+    }
+
     write_gt(rv$paper_id, rv$gt)
-
-    rv$status[row$rel_path] <- "validated"
-    rv$skipped <- rv$skipped[rv$skipped != idx]
+    rv$skipped       <- rv$skipped[!rv$skipped %in% targets]
+    rv$bulk_selected <- integer(0)
 
     advance_to_next()
   }
@@ -759,6 +843,27 @@ server <- function(input, output, session) {
 
   observeEvent(input$btn_back, { do_back() })
 
+  # ── Bulk selection actions ───────────────────────────────────────────────────
+
+  observeEvent(input$btn_clear_selection, {
+    rv$bulk_selected <- integer(0)
+  })
+
+  observeEvent(input$btn_select_uv, {
+    req(!is.null(rv$structure))
+    rv$bulk_selected <- which(rv$status != "validated")
+  })
+
+  # ── Open current file's folder in Finder ─────────────────────────────────────
+
+  observeEvent(input$btn_open_folder, {
+    req(!is.null(rv$structure))
+    idx <- rv$current_idx
+    if (idx < 1L || idx > nrow(rv$structure)) return()
+    folder <- dirname(rv$structure$path[idx])
+    system2("open", folder)
+  })
+
   # ── Advance to next unvalidated file ────────────────────────────────────────
 
   advance_to_next <- function() {
@@ -768,11 +873,11 @@ server <- function(input, output, session) {
     forward    <- candidates[candidates > idx]
 
     if (length(forward) > 0) {
-      rv$current_idx <- forward[1]
-      load_file(forward[1])
+      rv$current_idx <- unname(forward[1])
+      load_file(unname(forward[1]))
     } else if (length(candidates) > 0) {
-      rv$current_idx <- candidates[1]
-      load_file(candidates[1])
+      rv$current_idx <- unname(candidates[1])
+      load_file(unname(candidates[1]))
     } else {
       papers     <- rv$papers
       cur_paper  <- rv$paper_id
@@ -780,12 +885,22 @@ server <- function(input, output, session) {
       next_paper <- if (!is.na(cur_pos) && cur_pos < length(papers))
         papers[cur_pos + 1L] else NULL
 
+      # Mark current paper complete and rebuild labeled choices
+      rv$paper_completion[cur_paper] <- TRUE
+      new_choices <- make_paper_choices(papers, rv$paper_completion)
+
       if (!is.null(next_paper)) {
         showNotification(paste0("Paper complete! Moving to ", next_paper),
                          type = "message", duration = 3)
-        updateSelectInput(session, "paper_id", selected = next_paper)
+        updateSelectInput(session, "paper_id",
+                          choices  = new_choices,
+                          selected = next_paper)
       } else {
         showNotification("All papers complete!", type = "message", duration = 5)
+        rv$label_update_only <- TRUE
+        updateSelectInput(session, "paper_id",
+                          choices  = new_choices,
+                          selected = cur_paper)
       }
     }
   }
@@ -802,9 +917,11 @@ server <- function(input, output, session) {
         tags$thead(tags$tr(tags$th("Key"), tags$th("Action"))),
         tags$tbody(
           tags$tr(tags$td(HTML("<kbd>1</kbd>\u2013<kbd>8</kbd>")),
-                  tags$td("Select type: data / code / codebook / supplemental / readme / asset / other")),
-          tags$tr(tags$td(HTML("<kbd>R</kbd>")),
-                  tags$td("Cycle data_granularity: (unset) \u2192 individual \u2192 combined (active only when type = data)")),
+                  tags$td("Select type: data / code / codebook / supplemental / readme / asset / other / output")),
+          tags$tr(tags$td(HTML("<kbd>I</kbd>")),
+                  tags$td("Toggle individual (active only when type = data)")),
+          tags$tr(tags$td(HTML("<kbd>C</kbd>")),
+                  tags$td("Toggle combined (active only when type = data)")),
           tags$tr(tags$td(HTML("<kbd>G</kbd>")),
                   tags$td("Move focus to the group text input")),
           tags$tr(tags$td(HTML("<kbd>\u2318\u23ce</kbd>")),
@@ -814,7 +931,13 @@ server <- function(input, output, session) {
           tags$tr(tags$td(HTML("<kbd>\u2318[</kbd>")),
                   tags$td("Go back to previous file")),
           tags$tr(tags$td(HTML("<kbd>\u2318/</kbd>")),
-                  tags$td("Show this keyboard reference"))
+                  tags$td("Show this keyboard reference")),
+          tags$tr(tags$td(HTML("<kbd>Shift</kbd>+click")),
+                  tags$td("Range-select files for bulk labelling")),
+          tags$tr(tags$td(HTML("<kbd>\u2318</kbd>+click")),
+                  tags$td("Toggle individual file into bulk selection")),
+          tags$tr(tags$td(HTML("<kbd>Esc</kbd>")),
+                  tags$td("Clear bulk selection"))
         )
       ),
       footer = modalButton("Close")
@@ -822,6 +945,32 @@ server <- function(input, output, session) {
   }
 
   # ── Rendered outputs ──────────────────────────────────────────────────────────
+
+  # Bulk selection count (sidebar, above file list)
+  output$bulk_count_ui <- renderUI({
+    n <- length(rv$bulk_selected)
+    if (n == 0L) return(NULL)
+    tags$span(
+      style = "font-size:0.72em; font-weight:600; color:#1565c0;",
+      sprintf("%d selected", n)
+    )
+  })
+
+  # Bulk banner (control bar, above type buttons)
+  output$bulk_banner_ui <- renderUI({
+    n <- length(rv$bulk_selected)
+    if (n <= 1L) return(NULL)
+    tags$div(
+      class = "bulk-banner",
+      tags$span(class = "bulk-banner__count", sprintf("%d files selected", n)),
+      tags$span(class = "bulk-banner__hint", "\u2014 type + Save applies to all"),
+      tags$span(style = "margin-left:auto;",
+        actionButton("btn_clear_selection", "Clear",
+                     class = "btn-sm btn-outline-secondary",
+                     style = "padding:1px 8px; font-size:0.8em;")
+      )
+    )
+  })
 
   # Progress bar
   output$progress_bar_ui <- renderUI({
@@ -848,14 +997,17 @@ server <- function(input, output, session) {
   output$file_list_ui <- renderUI({
     req(!is.null(rv$structure))
     cur  <- rv$current_idx
+    bulk <- rv$bulk_selected
     rows <- lapply(seq_len(nrow(rv$structure)), function(i) {
-      row    <- rv$structure[i, ]
-      stat   <- rv$status[row$rel_path]
-      is_cur <- identical(i, cur)
+      row      <- rv$structure[i, ]
+      stat     <- rv$status[row$rel_path]
+      is_cur   <- identical(i, cur)
+      is_bulk  <- !is_cur && i %in% bulk
 
       css_class <- paste(
         "file-row",
         if (is_cur)              "is-current",
+        if (is_bulk)             "is-bulk-selected",
         if (stat == "validated") "is-validated",
         if (stat == "skipped")   "is-skipped",
         if (stat == "unvisited") "is-unvisited"
@@ -883,7 +1035,7 @@ server <- function(input, output, session) {
 
       tags$div(
         class   = css_class,
-        onclick = sprintf("Shiny.setInputValue('file_click',%d,{priority:'event'})", i),
+        onclick = sprintf("fileRowClick(event,%d)", i),
         tags$span(class = "file-row__status", status_icon),
         tags$span(class = "file-row__name",   row$filename),
         if (!is.na(abbrev))
@@ -911,6 +1063,34 @@ server <- function(input, output, session) {
     })
     div(class = "type-btn-row", do.call(tagList, btns))
   })
+
+  # T011: Granularity buttons
+  output$data_granularity_ui <- renderUI({
+    val <- rv$data_granularity_val
+    mk_btn <- function(id, label, key, v) {
+      is_active <- !is.na(val) && val == v
+      actionButton(id,
+        HTML(sprintf('<span class="tbtn__key">%s</span><span class="tbtn__label">%s</span>',
+                     key, label)),
+        class = paste0("btn dg-btn", if (is_active) " dg-active" else "")
+      )
+    }
+    div(style = "display:flex; flex-direction:column; gap:3px;",
+      tags$small("data_granularity"),
+      div(style = "display:flex; gap:6px;",
+        mk_btn("btn_dg_individual", "individual", "I", "individual"),
+        mk_btn("btn_dg_combined",   "combined",   "C", "combined")
+      )
+    )
+  })
+
+  observeEvent(input$btn_dg_individual, {
+    rv$data_granularity_val <- if (rv$data_granularity_val == "individual") "" else "individual"
+  }, ignoreInit = TRUE)
+
+  observeEvent(input$btn_dg_combined, {
+    rv$data_granularity_val <- if (rv$data_granularity_val == "combined") "" else "combined"
+  }, ignoreInit = TRUE)
 
   # T034: Prediction mismatch note
   output$prediction_note_ui <- renderUI({
@@ -974,7 +1154,10 @@ server <- function(input, output, session) {
         tags$div(
           class = "file-hdr__counter",
           tags$span(class = "num", as.character(idx)),
-          tags$span(class = "denom", sprintf("/ %d", nrow(rv$structure)))
+          tags$span(class = "denom", sprintf("/ %d", nrow(rv$structure))),
+          actionButton("btn_open_folder", "\U0001f4c2",
+                       class = "btn-open-folder",
+                       title = "Open folder in Finder")
         )
       ),
       tags$div(
@@ -1126,8 +1309,7 @@ server <- function(input, output, session) {
       corr <- sum(!is.na(m$type_gt) & !is.na(m$type) & m$type_gt != m$type,
                   na.rm = TRUE)
     }
-    gt_path <- file.path(getOption("dc_root", "."), "ground_truth",
-                         paste0(pid, ".csv"))
+    gt_path <- file.path(get_gt_dir(), paste0(pid, ".csv"))
     cat("\n=== Validation session complete ===\n")
     cat(sprintf("  Annotator:   %s\n",  annotator))
     cat(sprintf("  Paper:       %s\n",  pid))

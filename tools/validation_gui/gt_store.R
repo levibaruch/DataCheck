@@ -1,6 +1,23 @@
 # gt_store.R
 # Ground-truth CSV read/write and paper discovery helpers.
 # Paths are resolved relative to the data_check/ root set by app.R.
+#
+# Override options (set before launching the app to change default directories):
+#   dc_outputs_dir   — override for outputs/<paper_id>/ root
+#   dc_gt_dir        — override for ground_truth/ root
+#   dc_papers_filter — character vector of paper IDs to expose (NULL = all)
+
+# ── Path helpers ──────────────────────────────────────────────────────────────
+
+get_outputs_dir <- function() {
+  getOption("dc_outputs_dir",
+            file.path(getOption("dc_root", "."), "outputs"))
+}
+
+get_gt_dir <- function() {
+  getOption("dc_gt_dir",
+            file.path(getOption("dc_root", "."), "ground_truth"))
+}
 
 # ── Canonical column order ────────────────────────────────────────────────────
 
@@ -24,12 +41,18 @@ empty_gt <- function() {
 
 # ── Paper discovery ───────────────────────────────────────────────────────────
 
-# Scan outputs/ for subdirectories containing structure.csv.
 # Returns a sorted character vector of paper IDs.
+# When dc_papers_filter is set, only those IDs (with a structure.csv present)
+# are returned; otherwise all subdirectories of outputs_dir are scanned.
 discover_papers <- function() {
-  outputs_dir <- file.path(getOption("dc_root", "."), "outputs")
+  outputs_dir <- get_outputs_dir()
   if (!dir.exists(outputs_dir)) return(character(0))
-  dirs <- list.dirs(outputs_dir, full.names = FALSE, recursive = FALSE)
+  filter <- getOption("dc_papers_filter", NULL)
+  dirs <- if (!is.null(filter)) {
+    filter[dir.exists(file.path(outputs_dir, filter))]
+  } else {
+    list.dirs(outputs_dir, full.names = FALSE, recursive = FALSE)
+  }
   has_structure <- dirs[file.exists(file.path(outputs_dir, dirs, "structure.csv"))]
   sort(has_structure)
 }
@@ -37,8 +60,7 @@ discover_papers <- function() {
 # ── Structure loading ─────────────────────────────────────────────────────────
 
 load_structure <- function(paper_id) {
-  outputs_dir <- file.path(getOption("dc_root", "."), "outputs")
-  path <- file.path(outputs_dir, paper_id, "structure.csv")
+  path <- file.path(get_outputs_dir(), paper_id, "structure.csv")
   read.csv(path,
            colClasses      = c(paper_id    = "character",
                                is_sentinel = "logical"),
@@ -48,8 +70,7 @@ load_structure <- function(paper_id) {
 # ── Ground-truth read ─────────────────────────────────────────────────────────
 
 read_gt <- function(paper_id) {
-  gt_dir <- file.path(getOption("dc_root", "."), "ground_truth")
-  path   <- file.path(gt_dir, paste0(paper_id, ".csv"))
+  path <- file.path(get_gt_dir(), paste0(paper_id, ".csv"))
   if (!file.exists(path)) return(empty_gt())
   tryCatch({
     df <- read.csv(path,
@@ -88,9 +109,36 @@ upsert_gt <- function(gt_df, new_row) {
 
 # Write the full GT data.frame to disk immediately (no batching).
 write_gt <- function(paper_id, gt_df) {
-  gt_dir <- file.path(getOption("dc_root", "."), "ground_truth")
+  gt_dir <- get_gt_dir()
   if (!dir.exists(gt_dir)) dir.create(gt_dir, recursive = TRUE)
   path <- file.path(gt_dir, paste0(paper_id, ".csv"))
   write.csv(gt_df[GT_COLS], path, row.names = FALSE)
   invisible(path)
+}
+
+# ── Paper completion helpers ──────────────────────────────────────────────────
+
+# Returns a named logical vector (paper_id → complete?).
+# A paper is complete if its GT file has at least as many rows as its structure.
+paper_is_complete <- function(papers) {
+  outputs_dir <- get_outputs_dir()
+  gt_dir      <- get_gt_dir()
+  result <- vapply(papers, function(pid) {
+    struct_path <- file.path(outputs_dir, pid, "structure.csv")
+    gt_path     <- file.path(gt_dir, paste0(pid, ".csv"))
+    if (!file.exists(struct_path) || !file.exists(gt_path)) return(FALSE)
+    tryCatch({
+      n_struct <- nrow(read.csv(struct_path, stringsAsFactors = FALSE))
+      n_gt     <- nrow(read.csv(gt_path, stringsAsFactors = FALSE))
+      n_struct > 0L && n_gt >= n_struct
+    }, error = function(e) FALSE)
+  }, logical(1L))
+  result
+}
+
+# Returns a named character vector suitable for selectInput choices.
+# Complete papers are prefixed with a checkmark in their display label.
+make_paper_choices <- function(papers, completion) {
+  labels <- ifelse(completion[papers], paste0("\u2713 ", papers), papers)
+  setNames(papers, labels)
 }

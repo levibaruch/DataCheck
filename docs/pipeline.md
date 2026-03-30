@@ -20,6 +20,7 @@ contents using an LLM, and extracts column-level statistics into structured CSVs
 | `runners/run_psychds_bulk.R` | Batch-convert all successfully indexed papers to PsychDS format. Crash-resilient, auto-resumes from `psychds/conversion_summary.csv`. |
 | `pipeline/3_psychds_convert.R` (`convert_psychds()`) | Convert a single paper by ID to PsychDS format. Returns list of per-study result rows. |
 | `runners/run_validation_gui.R` | Launch the Shiny validation GUI for manual ground-truth annotation of file type, group, and `is_raw`. Writes `ground_truth/<paper_id>.csv`. These override pipeline classifications in the PsychDS conversion step. |
+| `runners/run_test_validation_gui.R` | Launch the validation GUI in test mode. Reads from `tests/outputs/<paper_id>/`, writes to `tests/ground_truth/<paper_id>.csv`, and shows only the 13 papers in `tests/test_papers.csv`. |
 
 ---
 
@@ -74,10 +75,12 @@ Paper ID (character string)
 │                     │    Fallback to sub-sentinel LLM type for ambiguous extensions.
 │                     │  type_source: "llm" (Phase 1) | "extension_rule" (override) |
 │                     │              "sentinel_llm" (Phase 2 inheritance)
+│                     │  Valid types: data | codebook | code | output | supplemental |
+│                     │              readme | asset | other
 │                     │  aggregate_folder: relative path of aggregate parent (NA otherwise)
 │                     │  data_granularity: "individual" (series member) | "combined" |  NA
 └──────────┬──────────┘
-           │  only files with type = "data" continue
+           │  only files with type = "data" continue (output/supplemental/codebook/etc. excluded)
            ▼
 ┌─────────────────────┐
 │  6. Read data       │  read_data_head(path, n_rows = 5) in helper.R
@@ -233,3 +236,85 @@ Batch size is `LLM_BATCH_SIZE = 30` for file classification.
 The bulk runner (`run_index_bulk.R`) retries once if the error is `empty_repo`
 (deletes the empty downloaded folder and re-runs). All other errors are written
 to `bulk_summary.csv` without retry.
+
+---
+
+## Testing
+
+### Test runner
+
+`runners/run_tests.R` runs the full pipeline (index → codebook label → psychds)
+against a fixed set of 13 hard-dataset papers, then generates `results/test_report_<date>.md`.
+Set `REPORT_ONLY <- TRUE` at the top to regenerate the report from the last run
+without re-running the pipeline. There are **no automated assertions** — all
+output is for manual inspection.
+
+All papers must already be downloaded to `data_check/data/<paper_id>/`.
+
+**Usage**
+
+```r
+source("data_check/runners/run_tests.R")   # interactive
+Rscript data_check/runners/run_tests.R     # CLI
+```
+
+### Test outputs
+
+| Path | Contents |
+|---|---|
+| `tests/outputs/<paper_id>/` | Per-stage CSVs written by index + codebook label stages |
+| `tests/psychds/<paper_id>/` | PsychDS output written by the psychds stage |
+| `tests/test_log.csv` | One row per paper per run; appended each run |
+
+`convert_psychds()` reads from the production path `./data_check/outputs/<paper_id>/`.
+The test runner bridges this via a temporary symlink when the production path does
+not exist, then removes it after the stage completes.
+
+### Test log columns
+
+| Column | Description |
+|---|---|
+| `run_id` | Timestamp of the run (`YYYY-MM-DD_HH-MM-SS`) |
+| `paper_id` | Paper identifier (character string) |
+| `label` | Human-readable test case description |
+| `index_success` / `index_error` | Stage 1 pass/fail and error message |
+| `codebook_success` / `codebook_error` | Stage 2 pass/fail and error message |
+| `psychds_success` / `psychds_error` | Stage 3 pass/fail and error message |
+| `n_files`, `n_data_files`, `n_columns`, `n_agg_dirs` | Index-stage file counts |
+| `file_types`, `data_groups`, `col_types` | JSON count maps from index stage |
+| `index_elapsed_sec` | Wall-clock seconds for index stage |
+| `label_status`, `n_labelled`, `n_unlabelled`, `coverage` | Codebook label results |
+| `codebook_elapsed_sec` | Wall-clock seconds for codebook label stage |
+| `psychds_studies`, `psychds_vars`, `psychds_labelled` | PsychDS stage summary |
+| `psychds_elapsed_sec` | Wall-clock seconds for psychds stage |
+
+### Test paper catalogue
+
+| Paper ID | Label / Scenario |
+|---|---|
+| `0956797615620784` | Baseline — 1 CSV + RTF codebook + R script |
+| `0956797614523297` | Baseline — 2 clean CSVs, ex1/ex2 groups, no codebook |
+| `0956797614559543` | Baseline — readme.txt codebook, all-continuous columns |
+| `0956797614536738` | Column type: numeric ID columns (risk of `unknown` instead of `id`) |
+| `0956797614557867` | Column type: alphanumeric IDs + 2 codebook files |
+| `0956797614533802` | Multilevel headers + comma decimals + parentheses in filenames |
+| `0956797614534695` | Comma decimals + multi-experiment CSV |
+| `0956797614524581` | Multi-study (ex1/ex2/ex3) + CSV+SAV mix + DOCX codebook |
+| `0956797614553121` | Multi-format: 10 data files + 6 codebook files across populations |
+| `0956797614543801` | Codebook: 5 codebook files + 7 data files + LIWC output columns |
+| `0956797614559730` | Codebook: CSV codebook in same folder as data (misclassification risk) |
+| `0956797614547916` | Per-participant: 142 `.dat` files across 8 experiment groups |
+| `0956797614561045` | Large repo: 99 data files + 1 codebook (near `too_large` limit) |
+
+### Adding new test papers
+
+When a new edge case is found that a new implementation must handle:
+1. Add the paper to `tests/test_papers.csv` with a descriptive `label`.
+2. Ensure the paper's data is downloaded to `data_check/data/<paper_id>/`.
+3. Update this table.
+
+### Update rules
+
+- When a new pipeline stage is added → verify it runs correctly against all 13 test papers before merging.
+- When a new `col_type`, file `type`, or `group` is introduced → check the test log `file_types`, `data_groups`, `col_types` columns to confirm the new value appears where expected.
+- When a new test paper is added → add it to the catalogue table above.

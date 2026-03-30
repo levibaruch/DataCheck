@@ -7,6 +7,9 @@
 # ── File structure classification (0_index.R → llm_batch()) ──────────────────
 
 # PREVIOUS VERSION (rule-based) — kept for comparison
+# DEPRECATED: supplemental references below predate the `output` file type (feature 026).
+#             result figures, output graphs, and HTML output files are now classified as
+#             `output`, not `supplemental`. Do not restore this block.
 # STRUCTURE_PROMPT <- 'You are analysing a psychology research data repository.
 # You will receive a file tree. For each path return a JSON array (same order).
 # Each element: {"path": "<exact path>", "type": "<type>", "group": "<group>"}
@@ -107,12 +110,20 @@ TYPE — what this file is for:
                  A codebook can be any format — .csv, .xlsx, .pdf, .docx, .txt.
   code         : executable source file or notebook — scripts, syntax files,
                  notebooks (.Rmd, .qmd, .ipynb), regardless of language.
-  supplemental : research support material that is not data, code, or a codebook —
-                 manuscripts, preregistrations, instruments, consent forms, output
-                 figures, appendices, experiment scripts.
-  readme       : file named README, LICENSE, or CONTRIBUTING (any capitalisation).
+  output       : file produced by executing a script — rendered notebooks (.html,
+                 .pdf, .docx output from .Rmd/.qmd/.ipynb), script-generated
+                 figures and graphs, log files (.log, .out), and other
+                 computational byproducts. Classify as output when the filename
+                 or folder context clearly indicates a script-generated artefact.
+                 When provenance is ambiguous, prefer supplemental.
+  supplemental : human-authored research material that is not data, code, or a
+                 codebook — manuscripts, preregistrations, instruments, consent
+                 forms, survey scales, appendices. Script-generated artefacts
+                 (figures, rendered notebooks) → output, not supplemental.
+                 Fallback for ambiguous provenance.
+  readme       : file named or contains README (any capitalisation).
   asset        : stimulus media presented to participants during the study —
-                 image, audio, or video files. Output figures → supplemental.
+                 image, audio, or video files.
   other        : no research content — OS metadata, config files, lock files,
                  executables. Not a catch-all for ambiguous research files.
 
@@ -135,13 +146,19 @@ Hard cases — use filename and folder context to decide:
   is the primary signal: measurement-oriented names → data; variable-description
   names → codebook; document-oriented names → supplemental.
 - subject-* or sub-* files (e.g. "subject-2294_run1.txt") → always data.
-- .rds/.rdata/.rda → data unless filename contains "plot", "figure", or "graph".
+- .rds/.rdata/.rda → data unless filename contains "plot", "figure", or "graph"
+  → output (not data, not supplemental).
 - .json → data if filename suggests measurements; other if it looks like config
   (package.json, dotfiles, *rc.json, *config.json).
 - .spv → supplemental (SPSS Viewer output file, NOT code — .sps is code, .spv is not).
 - Images/audio/video → asset if inside a stimuli/stim/materials/sounds/images
-  folder or filename contains "stim", "stimulus", "trial", or "item"; otherwise
-  supplemental.
+  folder or filename contains "stim", "stimulus", "trial", or "item".
+  → output if clearly script-generated: filename contains "figure", "fig",
+  "plot", "graph", "results", or "output" AND not in stimuli context.
+  → supplemental if provenance is ambiguous.
+- .html → output if it appears to be a rendered notebook (shares a basename with
+  an .Rmd/.qmd/.ipynb file in the same folder, or is in a folder containing
+  scripts); otherwise supplemental.
 - "Supplemental Experiment N" or "Supplemental Study N" folders → group "shared".
 - Archive and previous-version folders → type of contents, group "shared".
 
@@ -240,7 +257,10 @@ TYPE — use the same definitions as file classification:
   data         : series of research measurements (participant-level recordings, responses)
   asset        : stimulus media presented to participants
   code         : executable scripts or notebooks
-  supplemental : research support material — manuscripts, instruments, output figures
+  output       : script-generated artefacts — rendered notebooks, figures, graphs,
+                 log files, computational byproducts
+  supplemental : human-authored research material — manuscripts, instruments, consent
+                 forms. Ambiguous provenance → supplemental.
   other        : no research content
 
 GROUP — use the same rules as file classification:
@@ -253,6 +273,7 @@ Key signals for aggregate series:
 - Task-condition prefixes (e.g. "FlowerInsectCong-", "RaceEvalCong-") within an IAT folder → data,
   use the prior-batch experiment context to assign the correct group
 - Numbered stimulus files (.jpg, .png, .wav) → asset
+- Figure/graph/plot series named files (.jpg, .png, .svg) outside stimuli folder → output
 - Script collections → code
 - Use the Known experiment structure context (if provided) to assign group labels consistent
   with how merged data files from the same experiment were already classified

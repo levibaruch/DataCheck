@@ -134,7 +134,7 @@ run_codebook_label <- function(paper_id, output_dir = NULL) {
 
   labels_out <- file.path(eff_dir, "labels.csv")
   write.csv(labels_df, labels_out, row.names = FALSE)
-  n_labelled <- sum(labels_df$label_status == "labelled")
+  n_labelled <- sum(labels_df$label_status %in% c("labelled", "llm"))
   message("── Saved labels → ", labels_out,
           "  (", n_labelled, "/", nrow(labels_df), " columns labelled)")
 

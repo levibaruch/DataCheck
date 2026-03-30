@@ -668,6 +668,8 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
   t_col_start <- proc.time()[["elapsed"]]
   # ── 9. Extract columns + sample values from data files ───────────────────────
 
+  # Only "data" files are column-extracted. Files with type = "output", "supplemental",
+  # "codebook", "code", "asset", "readme", or "other" are excluded by this filter.
   data_files <- file_df[file_df$type == "data" & !file_df$is_sentinel, ]
   message("── Extracting columns + statistics from ", nrow(data_files), " data file(s)")
 
@@ -819,6 +821,10 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
       col <- names(df)[i]
       cls <- col_classifications[[i]]
 
+      # n_unique: distinct non-NA values in the source column (all col_types)
+      x_raw_col    <- df[[col]]
+      n_unique_val <- length(unique(x_raw_col[!is.na(x_raw_col)]))
+
       # Determine which numeric vector to use for statistics
       x_for_stats <- cls$numeric_values
       if (is.null(x_for_stats) && isTRUE(cls$ambiguous) && isTRUE(cls$is_numeric)) {
@@ -826,11 +832,11 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
       }
 
       if (is.null(x_for_stats)) {
-        # Non-numeric, non-ambiguous: report n/n_missing only
-        x_raw  <- df[[col]]
-        n_miss <- sum(is.na(x_raw))
-        n_val  <- length(x_raw) - n_miss
-        return(list(n = n_val, n_missing = n_miss, mean = NA, sd = NA, se = NA,
+        # Non-numeric, non-ambiguous: report n/n_missing/n_unique only
+        n_miss <- sum(is.na(x_raw_col))
+        n_val  <- length(x_raw_col) - n_miss
+        return(list(n = n_val, n_missing = n_miss, n_unique = n_unique_val,
+                    mean = NA, sd = NA, se = NA,
                     median = NA, min = NA, max = NA, range = NA,
                     p25 = NA, p75 = NA, iqr = NA, skewness = NA, kurtosis = NA))
       }
@@ -840,7 +846,8 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
       n      <- length(x_comp)
       n_miss <- sum(is.na(x_for_stats))
       if (n == 0) {
-        return(list(n = 0L, n_missing = n_miss, mean = NA, sd = NA, se = NA,
+        return(list(n = 0L, n_missing = n_miss, n_unique = n_unique_val,
+                    mean = NA, sd = NA, se = NA,
                     median = NA, min = NA, max = NA, range = NA,
                     p25 = NA, p75 = NA, iqr = NA, skewness = NA, kurtosis = NA))
       }
@@ -854,7 +861,8 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
       p75  <- quantile(x_comp, 0.75, names = FALSE)
       skew <- if (n > 2 && !is.na(s) && s > 0) mean((x_comp - mn)^3) / s^3 else NA_real_
       kurt <- if (n > 3 && !is.na(s) && s > 0) mean((x_comp - mn)^4) / s^4 - 3 else NA_real_
-      list(n = n, n_missing = n_miss, mean = mn, sd = s, se = se,
+      list(n = n, n_missing = n_miss, n_unique = n_unique_val,
+           mean = mn, sd = s, se = se,
            median = med, min = mn_v, max = mx_v, range = mx_v - mn_v,
            p25 = p25, p75 = p75, iqr = p75 - p25, skewness = skew, kurtosis = kurt)
     })

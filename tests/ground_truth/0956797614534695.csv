@@ -1,0 +1,5 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator"
+"0956797614534695","Raw_data_from_DOI_1011770956797614534695/DeLaFuenteEtAl_2014_RawData_Data Expt 1,3,4,5.csv","data","shared","combined","2026-03-30T12:10:21","Levi Baruch"
+"0956797614534695","Raw_data_from_DOI_1011770956797614534695/DeLaFuenteEtAl_2014_RawData_Notes.csv","supplemental","shared",NA,"2026-03-30T12:10:36","Levi Baruch"
+"0956797614534695","Raw_data_from_DOI_1011770956797614534695/DeLaFuenteEtAl_2014_RawData_TFQ Exp2.csv","data","ex2","combined","2026-03-30T12:10:42","Levi Baruch"
+"0956797614534695","Raw_data_from_DOI_1011770956797614534695/DeLaFuenteEtAl_2014_RawData_TFQ Exp4.csv","data","ex4","combined","2026-03-30T12:10:43","Levi Baruch"

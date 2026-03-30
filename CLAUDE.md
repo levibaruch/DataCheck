@@ -1,6 +1,6 @@
 # data_check Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-03-28
+Auto-generated from all feature plans. Last updated: 2026-03-30
 
 ## Active Technologies
 - R (base R only — no new packages; `haven`/`readxl`/`jsonlite` already present) + `llm_batch()`, `extract_json()` (existing helpers in `helper.R`); `jsonlite::fromJSON` (005-codebook-column-labelling)
@@ -39,6 +39,7 @@ Auto-generated from all feature plans. Last updated: 2026-03-28
 - CSV files on local filesystem — `outputs/<paper_id>/structure.csv` (schema change), `docs/output-schemas.md` (doc update) (022-file-type-taxonomy-refactor)
 - R (base R only — no new packages) + `metacheck` (`llm_batch()`), `haven`, `readxl`, `jsonlite` — all already installed (023-sentinel-aggregate-revamp)
 - CSV files on local filesystem — `outputs/<paper_id>/structure.csv`, `ground_truth/<paper_id>.csv` (023-sentinel-aggregate-revamp)
+- R (base R — no new packages) + `metacheck` (`llm_batch()`), `haven`, `readxl`, `jsonlite` — all already installed (026-add-output-file-type)
 
 - R (base R, no new packages) + `helper.R` (`classify_col_type_rules()`), `0_index.R` (`COLUMN_TYPE_PROMPT`, `run_index()`) (004-reduce-unknown-coltypes)
 
@@ -58,7 +59,7 @@ tests/
 R (base R, no new packages): Follow standard conventions
 
 ## Recent Changes
-- 024-fix-col-type-detection: Added R (base R, no new packages) + `metacheck` (`llm_batch()`), `haven`, `readxl`, `jsonlite` — all already installed
+- 026-add-output-file-type: Added R (base R — no new packages) + `metacheck` (`llm_batch()`), `haven`, `readxl`, `jsonlite` — all already installed
 - 024-fix-col-type-detection: Added R (base R, no new packages) + `metacheck` (`llm_batch()`), `haven`, `readxl`, `jsonlite` — all already installed
 - 024-fix-col-type-detection: Added R (base R, no new packages) + `metacheck` (`llm_batch()`), `haven`, `readxl`, `jsonlite` — all already installed
 
@@ -72,7 +73,7 @@ The `docs/` directory contains the canonical documentation for this pipeline.
 
 | File | What it documents | Update when... |
 |---|---|---|
-| `docs/pipeline.md` | End-to-end flow from paper ID to CSV outputs, all constants, resource limits, retry behaviour | Any stage is added/removed/reordered; a constant changes value; retry logic changes; a new LLM prompt is added |
+| `docs/pipeline.md` | End-to-end flow from paper ID to CSV outputs, all constants, resource limits, retry behaviour, **test infrastructure** | Any stage is added/removed/reordered; a constant changes value; retry logic changes; a new LLM prompt is added; a test paper is added |
 | `docs/output-schemas.md` | Column definitions for `_structure.csv`, `_columns.csv`, `bulk_summary.csv`; all type/group enum values | A column is added/removed/renamed in any output CSV; a new `col_type`, file `type`, `group`, or error code is introduced |
 
 ### Update rules
@@ -85,6 +86,8 @@ The `docs/` directory contains the canonical documentation for this pipeline.
 - When adding a new output CSV column → add it to the relevant schema table in `output-schemas.md`
 - When committing a new feature or writing a PR → add it to/update `progress.md`
 - All PRs MUST target `dev`, not `main`
+- When implementing any new feature → run `runners/run_tests.R` then `runners/report_tests.R`; review the quality report before merging (see **Testing** section in `pipeline.md`)
+- When a new edge case is found → add it to `data_check/tests/test_papers.csv` and to the test paper catalogue in `pipeline.md`
 
 
 <!-- MANUAL ADDITIONS END -->

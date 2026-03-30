@@ -26,7 +26,7 @@ FROM_LOCAL  <- TRUE
 
 # Set RESUME = FALSE to ignore prior bulk_summary.csv and re-run everything.
 # Typically set FALSE when doing a FROM_LOCAL re-run after pipeline changes.
-RESUME      <- FALSE
+RESUME      <- TRUE
 
 if (FROM_LOCAL) DOWNLOAD <- FALSE
 

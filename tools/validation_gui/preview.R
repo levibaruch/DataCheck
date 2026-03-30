@@ -417,8 +417,20 @@ render_preview <- function(path, ext) {
     pre_wrap(sprintf("[Binary file: .%s — no text preview available]\nFile: %s",
                      ext, basename(path)))
 
-  # ── Unknown: hex dump ────────────────────────────────────────────────────────
+  # ── Unknown: try plaintext, fall back to hex if binary ───────────────────────
   } else {
-    pre_wrap(preview_hex(path))
+    txt <- tryCatch({
+      lines <- readLines(path, n = 100L, warn = FALSE)
+      paste(lines, collapse = "\n")
+    }, error = function(e) NULL)
+    is_binary <- is.null(txt) || nchar(txt) == 0 || {
+      raw_bytes <- readBin(path, "raw", n = 512L)
+      any(as.integer(raw_bytes) == 0L)  # null byte = binary
+    }
+    if (!is_binary) {
+      pre_wrap(txt)
+    } else {
+      pre_wrap(preview_hex(path))
+    }
   }
 }
