@@ -28,6 +28,11 @@ FROM_LOCAL  <- TRUE
 # Typically set FALSE when doing a FROM_LOCAL re-run after pipeline changes.
 RESUME      <- TRUE
 
+# Set PRIORITISE_GT = TRUE to process papers that have a ground_truth CSV first.
+# Within each group (GT / non-GT), the existing SHUFFLE/SEED ordering applies.
+PRIORITISE_GT <- TRUE
+GT_DIR        <- "./data_check/ground_truth"
+
 if (FROM_LOCAL) DOWNLOAD <- FALSE
 
 # ── Discover all papers ──────────────────────────────────────────────────────
@@ -70,6 +75,12 @@ remaining_ids <- setdiff(all_ids, done_ids)
 if (SHUFFLE) {
   if (!is.null(SEED)) set.seed(SEED)
   remaining_ids <- sample(remaining_ids)
+}
+if (PRIORITISE_GT) {
+  gt_ids <- sub("\\.csv$", "", list.files(GT_DIR, pattern = "\\.csv$"))
+  is_gt  <- remaining_ids %in% gt_ids
+  remaining_ids <- c(remaining_ids[is_gt], remaining_ids[!is_gt])
+  message("── GT priority: ", sum(is_gt), " GT paper(s) moved to front")
 }
 if (is.finite(N_RUNS) && N_RUNS < length(remaining_ids)) {
   remaining_ids <- remaining_ids[seq_len(N_RUNS)]

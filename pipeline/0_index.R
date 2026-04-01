@@ -40,12 +40,16 @@ AGGREGATE_EXT_OVERRIDE <- c(
   xlsx = "data", xls = "data", rds = "data"
 )
 if (!exists("LLM_BATCH_SIZE"))  LLM_BATCH_SIZE  <- 30
+if (!exists("LLM_RETRY_LIMIT")) LLM_RETRY_LIMIT <- 3L
+if (!exists("LLM_ERROR_LOG"))   LLM_ERROR_LOG   <- "./data_check/logs/llm_batch_errors.log"
+if (!exists("LLM_SENTINEL_VAL")) LLM_SENTINEL_VAL <- "llm_error"
 N_DATA_READ     <- 5
 MAX_TOTAL_DATA_MB <- 10 * 1024  # 10 GB total data read cap per paper across all data files
 MAX_FILE_READ_SEC <- 5 * 60    # per-file read timeout (seconds); file is skipped if exceeded
 VALID_COL_TYPES <- c("continuous", "binary", "categorical", "ordinal", "date", "id",
                      "text", "continuous_comma_decimal", "continuous_outliers_excluded",
-                     "empty", "constant", "unknown")
+                     "empty", "constant", "unknown",
+                     LLM_SENTINEL_VAL)
 if (!exists("MAX_COL_TYPE_LLM_CALLS"))      MAX_COL_TYPE_LLM_CALLS      <- 5L
 if (!exists("MAX_CHAR_COL_TYPE_LLM_CALLS")) MAX_CHAR_COL_TYPE_LLM_CALLS <- 3L
 if (!exists("FULL_RUN"))                    FULL_RUN                    <- FALSE
@@ -500,7 +504,10 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
         user_prefix   = prefix,
         key_col       = "path",
         extra_cols    = c("type", "group"),
-        fallback_vals = list(type = "other", group = "shared")
+        fallback_vals = list(type = "other", group = "shared"),
+        sentinel_cols = "type",
+        paper_id      = paper_id,
+        stage_name    = "file-type Phase 1"
       )
       batch_result$prompt_nr <- i
       structure_parsed <- rbind(structure_parsed, batch_result)
@@ -532,7 +539,10 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
         user_prefix   = pfx,
         key_col       = "path",
         extra_cols    = c("type", "group"),
-        fallback_vals = list(type = "other", group = "shared")
+        fallback_vals = list(type = "other", group = "shared"),
+        sentinel_cols = "type",
+        paper_id      = paper_id,
+        stage_name    = "file-type Phase 2"
       )
       batch_result$prompt_nr <- n_phase1_batches + i
       sentinel_parsed   <- rbind(sentinel_parsed, batch_result)
@@ -913,7 +923,10 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
           user_prefix   = "Classify each column:",
           key_col       = "descriptor",
           extra_cols    = "col_type",
-          fallback_vals = list(col_type = "unknown")
+          fallback_vals = list(col_type = "unknown"),
+          sentinel_cols = "col_type",
+          paper_id      = paper_id,
+          stage_name    = "col-type Batch 1"
         ),
         error = function(e) {
           warning("LLM col_type Batch 1 failed: ", conditionMessage(e))
@@ -961,7 +974,10 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
           user_prefix   = "Classify each column:",
           key_col       = "descriptor",
           extra_cols    = "col_type",
-          fallback_vals = list(col_type = "text")
+          fallback_vals = list(col_type = "text"),
+          sentinel_cols = "col_type",
+          paper_id      = paper_id,
+          stage_name    = "col-type Batch 2"
         ),
         error = function(e) {
           warning("LLM col_type Batch 2 failed: ", conditionMessage(e))

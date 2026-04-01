@@ -42,6 +42,7 @@ One row per file discovered in the paper's OSF repository.
 | `readme` | Files named `README.*`, `LICENSE.*`, or `CONTRIBUTING.*` only. Classified by filename. |
 | `asset` | Participant-facing sensory material presented to participants during the study — stimulus images, audio clips, video stimuli. |
 | `other` | No research content: OS metadata (`.DS_Store`, `Thumbs.db`), lock files, environment config, executables, installers. Not a catch-all. |
+| `llm_error` | LLM batch chunk failed on all retry attempts — classification could not be determined. Indicates a process error; rows should be reviewed manually. |
 
 ### File Type Consumers
 
@@ -118,6 +119,7 @@ including `binary`, `constant`, `categorical`, `ordinal`, `date`, `id`, `text`,
 | `continuous_outliers_excluded` | Rule 8 | Numeric with comma separator but some non-convertible values (80–95%) |
 | `empty` | Rule 1 | All values are `NA` |
 | `unknown` | LLM / fallback | Cannot be determined (genuinely uninformative name and values) |
+| `llm_error` | `llm_batch()` (on retry exhaustion) | LLM batch chunk failed on all retry attempts — column type could not be determined. Indicates a process error; not remapped by any fallback rule. |
 
 ---
 

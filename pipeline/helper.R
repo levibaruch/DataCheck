@@ -300,7 +300,10 @@ clean_llm_values <- function(df) {
 # Run an LLM prompt over a character vector in batches, joining results by a
 # key column.  Returns a data.frame with columns c(key_col, extra_cols).
 llm_batch <- function(paths, system_prompt, user_prefix, key_col, extra_cols,
-                      fallback_vals) {
+                      fallback_vals,
+                      sentinel_cols = NULL,
+                      paper_id      = NULL,
+                      stage_name    = NULL) {
   chunks     <- split(paths, ceiling(seq_along(paths) / LLM_BATCH_SIZE))
   all_parsed <- vector("list", length(chunks))
 
@@ -312,9 +315,6 @@ llm_batch <- function(paths, system_prompt, user_prefix, key_col, extra_cols,
                           " objects — one per path above. Echo every path character-for-character.",
                           " No truncation. No notes. No text outside the array.")
 
-    llm_params <- if (!is.null(getOption("llm_temperature"))) list(temperature = getOption("llm_temperature")) else list()
-    raw <- llm(system_prompt = system_prompt, text = chunk_input, params = llm_params)
-
     needed_cols    <- c(key_col, extra_cols)
     chunk_fallback <- as.data.frame(
       c(list(paths = chunk_paths),
@@ -323,29 +323,87 @@ llm_batch <- function(paths, system_prompt, user_prefix, key_col, extra_cols,
     )
     names(chunk_fallback)[1] <- key_col
 
-    all_parsed[[i]] <- tryCatch({
-      result <- clean_llm_values(jsonlite::fromJSON(extract_json(raw$answer), flatten = TRUE))
-      if (!all(needed_cols %in% names(result))) {
-        stop("Response missing fields: ",
-             paste(setdiff(needed_cols, names(result)), collapse = ", "))
+    attempt       <- 1L
+    last_raw      <- NULL
+    last_err      <- NULL
+    last_fail_raw <- NULL
+    success       <- FALSE
+
+    while (TRUE) {
+      llm_params <- if (!is.null(getOption("llm_temperature"))) list(temperature = getOption("llm_temperature")) else list()
+      raw        <- llm(system_prompt = system_prompt, text = chunk_input, params = llm_params)
+      last_raw   <- raw
+
+      parsed <- tryCatch({
+        result <- clean_llm_values(jsonlite::fromJSON(extract_json(raw$answer), flatten = TRUE))
+        if (!all(needed_cols %in% names(result))) {
+          stop("Response missing fields: ",
+               paste(setdiff(needed_cols, names(result)), collapse = ", "))
+        }
+        # Deduplicate LLM response on the key column before merging — duplicate
+        # echoed keys (e.g. same basename returned twice) cause a many-to-many
+        # join that drops rows.  Keep first occurrence of each key.
+        result <- result[!duplicated(result[[key_col]]), needed_cols, drop = FALSE]
+        merged <- merge(
+          data.frame(x = chunk_paths, stringsAsFactors = FALSE) |> setNames(key_col),
+          result,
+          by = key_col, all.x = TRUE
+        )
+        for (col in extra_cols) merged[[col]][is.na(merged[[col]])] <- fallback_vals[[col]]
+        merged[match(chunk_paths, merged[[key_col]]), ]
+      }, error = function(e) e)
+
+      if (!inherits(parsed, "error")) {
+        success <- TRUE
+        break
       }
-      # Deduplicate LLM response on the key column before merging — duplicate
-      # echoed keys (e.g. same basename returned twice) cause a many-to-many
-      # join that drops rows.  Keep first occurrence of each key.
-      result <- result[!duplicated(result[[key_col]]), needed_cols, drop = FALSE]
-      merged <- merge(
-        data.frame(x = chunk_paths, stringsAsFactors = FALSE) |> setNames(key_col),
-        result,
-        by = key_col, all.x = TRUE
-      )
-      for (col in extra_cols) merged[[col]][is.na(merged[[col]])] <- fallback_vals[[col]]
-      merged[match(chunk_paths, merged[[key_col]]), ]
-    }, error = function(e) {
-      message("── LLM raw response (chunk ", i, ") ──\n", raw$answer,
-              "\n────────────────────────────────")
-      warning("Chunk ", i, " failed: ", conditionMessage(e), "; using fallback values")
-      chunk_fallback
-    })
+
+      last_err      <- parsed
+      last_fail_raw <- raw
+      if (attempt <= LLM_RETRY_LIMIT) {
+        message(sprintf("\u2500\u2500 LLM chunk %d retry %d/%d \u2500\u2500", i, attempt, LLM_RETRY_LIMIT))
+        attempt <- attempt + 1L
+      } else {
+        break
+      }
+    }
+
+    if (success) {
+      if (attempt > 1L) {
+        pid   <- if (!is.null(paper_id))   paper_id   else "<unknown>"
+        stage <- if (!is.null(stage_name)) stage_name else "<unknown>"
+        dir.create(dirname(LLM_ERROR_LOG), recursive = TRUE, showWarnings = FALSE)
+        cat(sprintf("[%s] paper_id=%s stage=%s chunk=%d n_items=%d retries=%d SUCCEEDED\n--- system prompt ---\n%s\n--- user prompt ---\n%s\n--- last failed response ---\n%s\n---\n\n",
+                    format(Sys.time(), "%Y-%m-%dT%H:%M:%S"),
+                    pid, stage, i, length(chunk_paths), attempt - 1L,
+                    system_prompt,
+                    chunk_input,
+                    last_fail_raw$answer),
+            file = LLM_ERROR_LOG, append = TRUE)
+      }
+      all_parsed[[i]] <- parsed
+    } else {
+      # All retries exhausted — log the failure
+      pid   <- if (!is.null(paper_id))   paper_id   else "<unknown>"
+      stage <- if (!is.null(stage_name)) stage_name else "<unknown>"
+      dir.create(dirname(LLM_ERROR_LOG), recursive = TRUE, showWarnings = FALSE)
+      cat(sprintf("[%s] paper_id=%s stage=%s chunk=%d n_items=%d\n--- system prompt ---\n%s\n--- user prompt ---\n%s\n--- raw response ---\n%s\n---\n\n",
+                  format(Sys.time(), "%Y-%m-%dT%H:%M:%S"),
+                  pid, stage, i, length(chunk_paths),
+                  system_prompt,
+                  chunk_input,
+                  last_raw$answer),
+          file = LLM_ERROR_LOG, append = TRUE)
+      warning("Chunk ", i, " failed after ", LLM_RETRY_LIMIT, " retries: ",
+              conditionMessage(last_err), "; using sentinel")
+      # Build error_fallback: sentinel_cols get LLM_SENTINEL_VAL, others get fallback_vals
+      error_fallback <- chunk_fallback
+      for (col in extra_cols) {
+        val <- if (col %in% sentinel_cols) LLM_SENTINEL_VAL else fallback_vals[[col]]
+        error_fallback[[col]] <- rep(val, length(chunk_paths))
+      }
+      all_parsed[[i]] <- error_fallback
+    }
   }
 
   do.call(rbind, all_parsed)

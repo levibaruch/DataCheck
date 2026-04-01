@@ -1,5 +1,47 @@
 # Progress Log
 
+## 2026-03-30
+
+### Completed ✅
+
+**027** — llm-retry-logging (branch: `027-llm-retry-logging`)
+- Adds automatic retry loop to `llm_batch()` in `helper.R`: up to `LLM_RETRY_LIMIT` (default 3) retries per failing chunk, with a `message()` per attempt
+- On retry exhaustion: appends a structured entry to `logs/llm_batch_errors.log` (timestamp, paper_id, stage, chunk, n_items, raw LLM response)
+- Introduces `"llm_error"` sentinel value: written to `sentinel_cols` on irrecoverable failure instead of fallback; `VALID_COL_TYPES` updated so sentinel rows are never remapped
+- New constants in `0_index.R`: `LLM_RETRY_LIMIT <- 3L`, `LLM_ERROR_LOG <- "logs/llm_batch_errors.log"`, `LLM_SENTINEL_VAL <- "llm_error"`
+- All 4 `llm_batch()` call sites updated with `paper_id`, `stage_name`, and `sentinel_cols`
+- `logs/` added to `.gitignore`; `llm_error` added to File Types and Column Types tables in `docs/output-schemas.md`
+
+**026** — add-output-file-type (branch: `026-add-output-file-type`)
+- Introduces `output` file type for script-generated artefacts (rendered notebooks `.html`/`.pdf`/`.docx`, figures, log files); narrows `supplemental` to human-authored documents only
+- Updates `STRUCTURE_PROMPT` with `output` type definition and examples; `supplemental` definition explicitly excludes script-generated files
+- `output` files excluded from column extraction (same as `supplemental`)
+- Updates validation GUI: `output` added to TYPE_MAP, keyboard shortcut assigned
+- Updates `docs/output-schemas.md`: `output` added to File Types table; `supplemental` definition narrowed
+- Updates `docs/pipeline.md` to reflect new type
+
+**025** — add-n-unique-stat (branch: `025-add-n-unique-stat`)
+- Adds `n_unique` column to `columns.csv`: count of distinct non-NA values for every column, regardless of `col_type`
+- `n_unique = 0` for all-NA columns; excludes NA values consistent with existing `n` (non-missing count)
+- Column positioned after `n_missing` and before `mean` in `columns.csv`
+- Updates `docs/output-schemas.md` with `n_unique` column definition
+
+**test-infrastructure** — test runner and test paper catalogue
+- Adds `runners/run_tests.R`: runs full pipeline (index → codebook label → PsychDS) on all papers in `tests/test_papers.csv`; outputs to `tests/outputs/<paper_id>/` and `tests/psychds/<paper_id>/`; appends per-paper timing and status to `tests/test_log.csv`; generates `results/test_report_<date>.md`
+- Adds `runners/run_test_validation_gui.R`: launches validation GUI in test mode reading from `tests/outputs/` and writing to `tests/ground_truth/`; scoped to 13 test papers only
+- Adds `tests/test_papers.csv`: catalogue of hard-dataset papers covering known edge cases (multilevel headers, aggregate repos, labelled columns, etc.)
+- Removes unused `sample_size.R` / `token_difference.R` scripts
+
+**026 (pt. 2)** — validation GUI enhancements
+- Bulk labelling: Shift+click for range select, Cmd+click for toggle; single Save applies one label to all selected files; bulk banner shows selection count; "Select all unvalidated" button; Escape clears selection
+- Paper completion tracking: dropdown prefixes complete papers with ✓; `paper_is_complete()` and `make_paper_choices()` helpers in `gt_store.R`
+- "Open folder in Finder" button (📂) on file header
+- Keyboard help updated with Shift+click, Cmd+click, Esc shortcuts
+- `readme` type now matches any file *containing* `README` (not just files named exactly `README`)
+- `label_status = "llm"` now counted as labelled in `2_codebook_label.R` and `run_tests.R`
+
+---
+
 ## 2026-03-28
 
 ### Completed ✅
