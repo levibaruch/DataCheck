@@ -169,6 +169,18 @@ classify_by_rules <- function(path) {
   list(label = NA_character_, certain = FALSE)
 }
 
+# ── Data format sub-classification ───────────────────────────────────────────
+
+TABULAR_EXTENSIONS <- c("csv", "tsv", "txt", "dat", "xlsx", "xls", "sav", "dta", "sas7bdat")
+RAW_EXTENSIONS     <- c("edf", "bdf", "acq", "mat", "mp4", "avi", "mov", "wav", "mp3")
+
+# Takes a character vector of lowercase file extensions (no leading dot).
+# Returns "tabular" or "raw" for each element — never NA.
+# Unknown extensions fall back to "tabular" (conservative).
+classify_data_format <- function(ext) {
+  ifelse(ext %in% RAW_EXTENSIONS, "raw", "tabular")
+}
+
 # ── Column type classification ─────────────────────────────────────────────────
 
 # Rule-based classification of a single data column.

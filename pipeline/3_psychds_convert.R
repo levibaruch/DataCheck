@@ -718,6 +718,11 @@ convert_study <- function(paper_id, study_group, files_df, cols_df, labels_df,
       next
     }
 
+    # Raw-format files (binary recordings, matrices, media) — already copied to
+    # data/raw/ above; skip column extraction and conversion.
+    if (!is.null(row$data_format) && !is.na(row$data_format) &&
+        row$data_format == "raw") next
+
     # Read full data
     read_result <- read_full_data(src_path)
     if (is.null(read_result)) next

@@ -22,7 +22,7 @@ get_gt_dir <- function() {
 # ── Canonical column order ────────────────────────────────────────────────────
 
 GT_COLS <- c("paper_id", "rel_path", "type_gt", "group_gt",
-             "data_granularity_gt", "validated_at", "annotator")
+             "data_granularity_gt", "data_format_gt", "validated_at", "annotator")
 
 # ── Empty GT data.frame ───────────────────────────────────────────────────────
 
@@ -33,6 +33,7 @@ empty_gt <- function() {
     type_gt              = character(0),
     group_gt             = character(0),
     data_granularity_gt  = character(0),
+    data_format_gt       = character(0),
     validated_at         = character(0),
     annotator            = character(0),
     stringsAsFactors = FALSE

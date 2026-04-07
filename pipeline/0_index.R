@@ -666,6 +666,9 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
   file_df$paper_id <- paper_id
   file_df$filename <- basename(file_df$path)
   file_df$ext      <- tolower(tools::file_ext(file_df$path))
+  file_df$data_format <- ifelse(file_df$type == "data",
+                                classify_data_format(file_df$ext),
+                                NA_character_)
 
   # ── 8. Save structure ────────────────────────────────────────────────────────
 
@@ -680,7 +683,8 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
 
   # Only "data" files are column-extracted. Files with type = "output", "supplemental",
   # "codebook", "code", "asset", "readme", or "other" are excluded by this filter.
-  data_files <- file_df[file_df$type == "data" & !file_df$is_sentinel, ]
+  data_files <- file_df[file_df$type == "data" & !file_df$is_sentinel &
+                          !is.na(file_df$data_format) & file_df$data_format == "tabular", ]
   message("── Extracting columns + statistics from ", nrow(data_files), " data file(s)")
 
   MAX_FILE_MB <- 500  # skip data files larger than this
@@ -1028,7 +1032,7 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
   write.csv(
     file_df[, c("paper_id", "path", "rel_path", "filename", "ext",
                 "type", "type_source", "group", "aggregate_folder",
-                "data_granularity", "is_sentinel", "prompt_nr")],
+                "data_granularity", "is_sentinel", "prompt_nr", "data_format")],
     structure_out, row.names = FALSE
   )
   message("── Saved structure → ", structure_out)
@@ -1062,7 +1066,8 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
     llm_sec        = t_llm,
     column_sec     = t_col,
     n_files        = nrow(file_df),
-    n_data_files   = nrow(data_files),
+    n_data_files   = sum(file_df$type == "data" & !file_df$is_sentinel, na.rm = TRUE),
+    n_tabular_files = nrow(data_files),
     n_agg_dirs     = length(agg_dirs),
     n_individual   = n_individual,
     n_combined     = n_combined,

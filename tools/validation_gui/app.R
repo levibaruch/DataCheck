@@ -171,6 +171,14 @@ document.addEventListener("DOMContentLoaded", function() {
     wrap.style.opacity = msg.disabled ? "0.35" : "1";
   });
 
+  // Custom message: enable/disable the data_format buttons
+  Shiny.addCustomMessageHandler("set_data_format_disabled", function(msg) {
+    var wrap = document.getElementById("data_format_ui");
+    if (!wrap) return;
+    wrap.querySelectorAll("button").forEach(function(btn) { btn.disabled = msg.disabled; });
+    wrap.style.opacity = msg.disabled ? "0.35" : "1";
+  });
+
   document.addEventListener("focusin", function(e) {
     if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") {
       Shiny.setInputValue("text_focused", true, {priority: "event"});
@@ -309,6 +317,10 @@ details > summary { font-size:0.75em; font-weight:700; letter-spacing:0.05em;
 .tbadge-other        { background:#eceff1; color:#455a64; }
 .tbadge-output       { background:#e0f7fa; color:#006064; }
 
+/* Data format sub-type badges — light */
+.tbadge-df-tabular { background:#ecf5ec; color:#388e3c; font-size:0.72em; padding:1px 5px; border-radius:3px; font-weight:600; margin-left:3px; }
+.tbadge-df-raw     { background:#fff8e1; color:#f57c00; font-size:0.72em; padding:1px 5px; border-radius:3px; font-weight:600; margin-left:3px; }
+
 /* Type buttons — light */
 .tbtn { border:1.5px solid rgba(0,0,0,0.13) !important; background:rgba(0,0,0,0.02) !important; color:rgba(0,0,0,0.45) !important; }
 .tbtn:hover { background:rgba(0,0,0,0.06) !important; color:rgba(0,0,0,0.75) !important; border-color:rgba(0,0,0,0.25) !important; }
@@ -411,6 +423,8 @@ hr { border-color:#dee2e6 !important; margin:8px 0 !important; }
 [data-theme='dark'] .tbadge-asset        { background:rgba(244,143,177,0.22); color:#fce4ec; }
 [data-theme='dark'] .tbadge-other        { background:rgba(144,164,174,0.22); color:#b0bec5; }
 [data-theme='dark'] .tbadge-output       { background:rgba(0,188,212,0.22);   color:#80deea; }
+[data-theme='dark'] .tbadge-df-tabular  { background:rgba(102,187,106,0.18); color:#a5d6a7; }
+[data-theme='dark'] .tbadge-df-raw      { background:rgba(255,183,77,0.18);  color:#ffe082; }
 
 /* Type buttons — dark */
 [data-theme='dark'] .tbtn { border-color:rgba(255,255,255,0.13) !important; background:rgba(255,255,255,0.04) !important; color:rgba(255,255,255,0.45) !important; }
@@ -434,6 +448,18 @@ hr { border-color:#dee2e6 !important; margin:8px 0 !important; }
 [data-theme='dark'] .dg-btn { border-color:rgba(255,255,255,0.13) !important; background:rgba(255,255,255,0.04) !important; color:rgba(255,255,255,0.45) !important; }
 [data-theme='dark'] .dg-btn:hover { background:rgba(255,255,255,0.1) !important; color:rgba(255,255,255,0.85) !important; border-color:rgba(255,255,255,0.28) !important; }
 [data-theme='dark'] .dg-btn.dg-active { border-color:#4caf50 !important; background:rgba(76,175,80,0.22) !important; color:#a5d6a7 !important; box-shadow:0 0 10px rgba(76,175,80,0.25) !important; }
+
+/* Data format buttons — light */
+.df-btn { border:1.5px solid rgba(0,0,0,0.13) !important; background:rgba(0,0,0,0.02) !important; color:rgba(0,0,0,0.45) !important; font-size:0.8em !important; padding:3px 10px !important; }
+.df-btn:hover { background:rgba(0,0,0,0.06) !important; color:rgba(0,0,0,0.75) !important; border-color:rgba(0,0,0,0.25) !important; }
+.df-btn.df-active-tabular { border-color:#388e3c !important; background:rgba(56,142,60,0.1) !important; color:#1b5e20 !important; font-weight:700; box-shadow:0 0 8px rgba(56,142,60,0.2) !important; }
+.df-btn.df-active-raw     { border-color:#f57c00 !important; background:rgba(245,124,0,0.1)  !important; color:#e65100 !important; font-weight:700; box-shadow:0 0 8px rgba(245,124,0,0.2)  !important; }
+
+/* Data format buttons — dark */
+[data-theme='dark'] .df-btn { border-color:rgba(255,255,255,0.13) !important; background:rgba(255,255,255,0.04) !important; color:rgba(255,255,255,0.45) !important; }
+[data-theme='dark'] .df-btn:hover { background:rgba(255,255,255,0.1) !important; color:rgba(255,255,255,0.85) !important; border-color:rgba(255,255,255,0.28) !important; }
+[data-theme='dark'] .df-btn.df-active-tabular { border-color:#66bb6a !important; background:rgba(102,187,106,0.22) !important; color:#a5d6a7 !important; box-shadow:0 0 10px rgba(102,187,106,0.25) !important; }
+[data-theme='dark'] .df-btn.df-active-raw     { border-color:#ffa726 !important; background:rgba(255,167,38,0.22)  !important; color:#ffe082  !important; box-shadow:0 0 10px rgba(255,167,38,0.25)  !important; }
 
 /* File header — dark */
 [data-theme='dark'] .file-hdr         { background:rgba(255,255,255,0.025); border-bottom-color:rgba(255,255,255,0.09); }
@@ -568,6 +594,7 @@ ui <- page_sidebar(
             textInput("group_val", tags$small("Group"), value = "",
                       placeholder = "ex1, shared, na …")),
         uiOutput("data_granularity_ui"),
+        uiOutput("data_format_ui"),
         div(
           style = "margin-left:auto; display:flex; gap:6px; padding-bottom:4px;",
           actionButton("btn_back", "\u2190 Prev",      class = "btn-sm btn-outline-secondary"),
@@ -593,6 +620,7 @@ server <- function(input, output, session) {
     status        = character(0),  # named: "unvisited"/"validated"/"skipped"
     selected_type         = NA_character_,
     data_granularity_val  = "",
+    data_format_val       = "",
     skipped            = integer(0),
     xml                = NULL,     # list(title, abstract, body) or NULL
     col_names          = character(0),
@@ -687,12 +715,18 @@ server <- function(input, output, session) {
       rv$selected_type        <- gt_row$type_gt[1]
       rv$data_granularity_val <- if (!is.na(gt_row$data_granularity_gt[1]))
                                    gt_row$data_granularity_gt[1] else ""
+      rv$data_format_val      <- if ("data_format_gt" %in% names(gt_row) &&
+                                      !is.na(gt_row$data_format_gt[1]))
+                                   gt_row$data_format_gt[1] else ""
       updateTextInput(session, "group_val", value = gt_row$group_gt[1])
     } else {
       rv$selected_type        <- if (!is.na(row$type)) row$type else "other"
       rv$data_granularity_val <- if ("data_granularity" %in% names(row) &&
                                       !is.na(row$data_granularity))
                                    row$data_granularity else ""
+      rv$data_format_val      <- if ("data_format" %in% names(row) &&
+                                      !is.na(row$data_format))
+                                   row$data_format else ""
       updateTextInput(session, "group_val", value = row$group)
     }
   }
@@ -705,6 +739,15 @@ server <- function(input, output, session) {
     if (!is_data && nzchar(isolate(rv$data_granularity_val)))
       rv$data_granularity_val <- ""
     session$sendCustomMessage("set_data_granularity_disabled", list(disabled = !is_data))
+  }) |> bindEvent(rv$selected_type, ignoreInit = FALSE)
+
+  # data_format disable for non-data types
+  observe({
+    sel     <- isolate(rv$selected_type)
+    is_data <- !is.na(sel) && sel == "data"
+    if (!is_data && nzchar(isolate(rv$data_format_val)))
+      rv$data_format_val <- ""
+    session$sendCustomMessage("set_data_format_disabled", list(disabled = !is_data))
   }) |> bindEvent(rv$selected_type, ignoreInit = FALSE)
 
   # ── T009/T010: File list click + type button clicks ──────────────────────────
@@ -768,6 +811,14 @@ server <- function(input, output, session) {
         if (!is.na(rv$selected_type) && rv$selected_type == "data")
           rv$data_granularity_val <- if (rv$data_granularity_val == "combined") "" else "combined"
       },
+      "t" = {
+        if (!is.na(rv$selected_type) && rv$selected_type == "data")
+          rv$data_format_val <- if (rv$data_format_val == "tabular") "" else "tabular"
+      },
+      "r" = {
+        if (!is.na(rv$selected_type) && rv$selected_type == "data")
+          rv$data_format_val <- if (rv$data_format_val == "raw") "" else "raw"
+      },
       "g"           = { session$sendCustomMessage("focus_group", list()) },
       "tab"         = { do_skip() },
       "cmd_enter"   = { do_save() },
@@ -789,6 +840,8 @@ server <- function(input, output, session) {
 
     dg_save  <- if (rv$selected_type == "data" && nzchar(rv$data_granularity_val))
                   rv$data_granularity_val else NA_character_
+    df_save  <- if (rv$selected_type == "data" && nzchar(rv$data_format_val))
+                  rv$data_format_val else NA_character_
     now      <- format(Sys.time(), "%Y-%m-%dT%H:%M:%S")
     grp      <- trimws(input$group_val)
 
@@ -800,6 +853,7 @@ server <- function(input, output, session) {
         type_gt              = rv$selected_type,
         group_gt             = grp,
         data_granularity_gt  = dg_save,
+        data_format_gt       = df_save,
         validated_at         = now,
         annotator            = rv$annotator,
         stringsAsFactors     = FALSE
@@ -1033,13 +1087,21 @@ server <- function(input, output, session) {
       else
         NA_character_
 
+      df_badge <- if (isTRUE(row$type == "data") &&
+                       "data_format" %in% names(row) &&
+                       !is.na(row$data_format))
+        tags$span(class = paste0("tbadge-df-", row$data_format), row$data_format)
+      else
+        NULL
+
       tags$div(
         class   = css_class,
         onclick = sprintf("fileRowClick(event,%d)", i),
         tags$span(class = "file-row__status", status_icon),
         tags$span(class = "file-row__name",   row$filename),
         if (!is.na(abbrev))
-          tags$span(class = paste0("file-row__type tbadge-", type_shown), abbrev)
+          tags$span(class = paste0("file-row__type tbadge-", type_shown), abbrev),
+        df_badge
       )
     })
     do.call(tagList, rows)
@@ -1090,6 +1152,34 @@ server <- function(input, output, session) {
 
   observeEvent(input$btn_dg_combined, {
     rv$data_granularity_val <- if (rv$data_granularity_val == "combined") "" else "combined"
+  }, ignoreInit = TRUE)
+
+  # Data format buttons
+  output$data_format_ui <- renderUI({
+    val <- rv$data_format_val
+    mk_btn <- function(id, label, key, v) {
+      is_active <- !is.na(val) && val == v
+      actionButton(id,
+        HTML(sprintf('<span class="tbtn__key">%s</span><span class="tbtn__label">%s</span>',
+                     key, label)),
+        class = paste0("btn df-btn", if (is_active) paste0(" df-active-", v) else "")
+      )
+    }
+    div(style = "display:flex; flex-direction:column; gap:3px;",
+      tags$small("data_format"),
+      div(style = "display:flex; gap:6px;",
+        mk_btn("btn_df_tabular", "tabular", "T", "tabular"),
+        mk_btn("btn_df_raw",     "raw",     "R", "raw")
+      )
+    )
+  })
+
+  observeEvent(input$btn_df_tabular, {
+    rv$data_format_val <- if (rv$data_format_val == "tabular") "" else "tabular"
+  }, ignoreInit = TRUE)
+
+  observeEvent(input$btn_df_raw, {
+    rv$data_format_val <- if (rv$data_format_val == "raw") "" else "raw"
   }, ignoreInit = TRUE)
 
   # T034: Prediction mismatch note

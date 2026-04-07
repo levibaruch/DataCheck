@@ -1,6 +1,6 @@
 # data_check Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-03-30
+Auto-generated from all feature plans. Last updated: 2026-04-01
 
 ## Active Technologies
 - R (base R only — no new packages; `haven`/`readxl`/`jsonlite` already present) + `llm_batch()`, `extract_json()` (existing helpers in `helper.R`); `jsonlite::fromJSON` (005-codebook-column-labelling)
@@ -42,6 +42,8 @@ Auto-generated from all feature plans. Last updated: 2026-03-30
 - R (base R — no new packages) + `metacheck` (`llm_batch()`), `haven`, `readxl`, `jsonlite` — all already installed (026-add-output-file-type)
 - R (base R only — no new packages) + `pipeline/helper.R` (`llm_batch()`), `pipeline/0_index.R` (constants + fallback rules), `docs/output-schemas.md` (027-llm-retry-logging)
 - Append-only plain-text log at `logs/llm_batch_errors.log` (relative to `data_check/` root); auto-created by pipeline if absen (027-llm-retry-logging)
+- R (base R only — no new packages) + `haven`, `readxl`, `jsonlite`, `tools` (base) — all already installed; `metacheck` (`llm_batch()`) (028-data-format-subtype)
+- CSV files on local filesystem (`outputs/<paper_id>/structure.csv`, `ground_truth/<paper_id>.csv`, `results/bulk_summary.csv`) (028-data-format-subtype)
 
 - R (base R, no new packages) + `helper.R` (`classify_col_type_rules()`), `0_index.R` (`COLUMN_TYPE_PROMPT`, `run_index()`) (004-reduce-unknown-coltypes)
 
@@ -61,9 +63,9 @@ tests/
 R (base R, no new packages): Follow standard conventions
 
 ## Recent Changes
+- 028-data-format-subtype: Added R (base R only — no new packages) + `haven`, `readxl`, `jsonlite`, `tools` (base) — all already installed; `metacheck` (`llm_batch()`)
 - 027-llm-retry-logging: Added R (base R only — no new packages) + `pipeline/helper.R` (`llm_batch()`), `pipeline/0_index.R` (constants + fallback rules), `docs/output-schemas.md`
 - 026-add-output-file-type: Added R (base R — no new packages) + `metacheck` (`llm_batch()`), `haven`, `readxl`, `jsonlite` — all already installed
-- 024-fix-col-type-detection: Added R (base R, no new packages) + `metacheck` (`llm_batch()`), `haven`, `readxl`, `jsonlite` — all already installed
 
 
 <!-- MANUAL ADDITIONS START -->

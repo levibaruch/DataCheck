@@ -21,6 +21,8 @@ One row per file discovered in the paper's OSF repository.
 | `aggregate_folder` | character \| NA | Relative path of the aggregate folder this file was expanded from; `NA` for non-aggregate files |
 | `data_granularity` | character \| NA | `"individual"` (part of a detected participant series), `"combined"` (classified individually), or `NA` (non-data file) |
 | `is_sentinel` | logical | `TRUE` if row represents a collapsed folder (>50 files) — always `FALSE` in current output; retained for compatibility |
+| `prompt_nr` | integer \| NA | LLM prompt batch index used to classify this file; `NA` for rule-classified files |
+| `data_format` | character \| NA | Sub-classification for `type = "data"` rows: `"tabular"` (column-extractable) or `"raw"` (binary recordings, matrices, media); `NA` for all non-data rows. Determined by file extension via `classify_data_format()` — never set by the LLM. Unknown extensions fall back to `"tabular"`. |
 
 ### Type Source Values
 
@@ -138,7 +140,8 @@ runner to resume after a crash.
 | `llm_ms` | integer | Time spent on all LLM calls in milliseconds |
 | `column_ms` | integer | Time spent on column extraction in milliseconds |
 | `n_files` | integer | Total files discovered in the repository |
-| `n_data_files` | integer | Files classified as `type = "data"` |
+| `n_data_files` | integer | Files classified as `type = "data"` (all formats, excluding sentinels) |
+| `n_tabular_files` | integer | Data files with `data_format = "tabular"` — the subset actually sent to column extraction |
 | `n_agg_dirs` | integer | Aggregate folders detected and sub-grouped |
 | `n_individual` | integer | Data files with `data_granularity = "individual"` (part of a detected series) |
 | `n_combined` | integer | Data files with `data_granularity = "combined"` (classified individually) |
@@ -270,3 +273,34 @@ One row per variable extracted from any codebook/readme file. Produced by `2_cod
 | `group` | character | Experiment group scope inferred from codebook context; `NA` if no scope detected (applicable to all groups) |
 | `parse_method` | character | How the codebook was parsed: `structured` — rule-based header/column detection; `llm` — LLM chunk parsing fallback |
 | `match_status` | character | `matched` — variable found in at least one data column; `unmatched_in_data` — not found in any data column |
+
+
+---
+
+## `results/ground_truth_repair_summary.csv`
+
+One row per ground truth file processed by `runners/repair_ground_truth_data_format.R`. Written in a single pass over all 103 ground truth files (overwritten on each run).
+
+| Column | Type | Description |
+|---|---|---|
+| `paper_id` | character | Paper identifier (leading zeros preserved) |
+| `n_data_rows` | integer | Rows in the ground truth file where `type_gt == "data"` |
+| `n_tabular` | integer | Data rows assigned `data_format_gt = "tabular"` |
+| `n_raw` | integer | Data rows assigned `data_format_gt = "raw"` |
+| `n_already_present` | integer | Data rows where `data_format_gt` was non-NA before the repair run (idempotency count) |
+
+---
+
+## `results/ground_truth_audit_report.csv`
+
+One row per ground truth entry where `type_gt == "data"` and the file extension is a raw format. Written by `runners/audit_ground_truth_data_format.R`. Sorted by `paper_id` then `rel_path`.
+
+These rows identify entries that were validated under potentially incorrect assumptions — column extraction was previously attempted on raw binary files (EEG recordings, MATLAB matrices, video files) that cannot be parsed by `read_data_head()`.
+
+| Column | Type | Description |
+|---|---|---|
+| `paper_id` | character | Paper identifier |
+| `rel_path` | character | Relative path of the flagged file |
+| `ext` | character | File extension (lowercase, no dot) |
+| `type_gt` | character | Validated type — always `"data"` for rows in this report |
+| `data_format_gt` | character | Assigned format — always `"raw"` for rows in this report |

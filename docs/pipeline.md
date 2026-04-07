@@ -79,12 +79,17 @@ Paper ID (character string)
 │                     │              readme | asset | other
 │                     │  aggregate_folder: relative path of aggregate parent (NA otherwise)
 │                     │  data_granularity: "individual" (series member) | "combined" |  NA
+│                     │  data_format: "tabular" | "raw" — assigned by classify_data_format()
+│                     │    tabular: csv/tsv/txt/dat/xlsx/xls/sav/dta/sas7bdat + unknown (fallback)
+│                     │    raw: edf/bdf/acq/mat/mp4/avi/mov/wav/mp3
 └──────────┬──────────┘
-           │  only files with type = "data" continue (output/supplemental/codebook/etc. excluded)
+           │  only files with type = "data" AND data_format = "tabular" continue
+           │  (raw-format data files retained in structure.csv but skipped for column extraction)
            ▼
 ┌─────────────────────┐
 │  6. Read data       │  read_data_head(path, n_rows = 5) in helper.R
 │     heads           │  Formats: csv/tsv/txt/dat/xlsx/xls/sav/dta/sas7bdat/rds/rda/rdata
+│                     │  Only data_format = "tabular" files reach this step.
 │                     │  Limit: 500 MB per file; ggplot objects → NULL (skipped)
 │                     │  Encoding: csv/tsv/txt/dat read with default encoding; if any
 │                     │  character column contains invalid UTF-8 bytes, file is re-read
@@ -142,6 +147,13 @@ Paper ID (character string)
            │                    │                          │  ground_truth/<paper_id>.csv
            │                    └─────────────────────────┘
            │                         │ overrides feed into step 13
+           │                    ┌─────────────────────────┐
+           │   (before bulk     │  [R] Ground truth repair │  runners/repair_ground_truth_data_format.R
+           ├──────────────────► │       (pre-rerun step)   │  Backfills data_format_gt in all
+           │    rerun only)     │                          │  ground_truth/<paper_id>.csv files.
+           │                    │                          │  Idempotent. Run once before
+           │                    │                          │  triggering a full pipeline rerun.
+           │                    └─────────────────────────┘
            ▼
 ┌─────────────────────┐
 │  11. Append to      │  bulk_summary.csv  (one row per paper, appended immediately)
@@ -280,7 +292,7 @@ not exist, then removes it after the stage completes.
 | `index_success` / `index_error` | Stage 1 pass/fail and error message |
 | `codebook_success` / `codebook_error` | Stage 2 pass/fail and error message |
 | `psychds_success` / `psychds_error` | Stage 3 pass/fail and error message |
-| `n_files`, `n_data_files`, `n_columns`, `n_agg_dirs` | Index-stage file counts |
+| `n_files`, `n_data_files`, `n_tabular_files`, `n_columns`, `n_agg_dirs` | Index-stage file counts (`n_data_files` = all data rows; `n_tabular_files` = tabular-format subset sent to column extraction) |
 | `file_types`, `data_groups`, `col_types` | JSON count maps from index stage |
 | `index_elapsed_sec` | Wall-clock seconds for index stage |
 | `label_status`, `n_labelled`, `n_unlabelled`, `coverage` | Codebook label results |
