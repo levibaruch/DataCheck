@@ -14,6 +14,26 @@ source("data_check/pipeline/helper.R")
 source("data_check/pipeline/3_psychds_convert.R")
 
 SUMMARY_CSV <- file.path(PSYCHDS_OUT_DIR, "conversion_summary.csv")
+#MAX_DATA_MB <- 150
+# ── Size filter (optional) ────────────────────────────────────────────────────
+# Set MAX_DATA_MB to skip papers whose downloaded data folder exceeds this size.
+# Default Inf = no limit.  Override before sourcing:  MAX_DATA_MB <- 100
+if (!exists("MAX_DATA_MB")) MAX_DATA_MB <- Inf
+
+# ── Codebook filter (optional) ────────────────────────────────────────────────
+# Set CODEBOOK_ONLY <- TRUE to restrict to papers that passed the codebook phase
+# (i.e. label_status == "ok" in codebook_summary.csv — at least one column labelled).
+# Override before sourcing:  CODEBOOK_ONLY <- TRUE
+
+if (!exists("CODEBOOK_ONLY")) CODEBOOK_ONLY <- FALSE
+
+folder_size_mb <- function(path) {
+  if (!dir.exists(path)) return(0)
+  files <- list.files(path, recursive = TRUE, full.names = TRUE)
+  files <- files[!dir.exists(files)]
+  if (length(files) == 0) return(0)
+  sum(file.info(files)$size, na.rm = TRUE) / 1024^2
+}
 
 # ── 1. Load target papers from bulk_summary.csv ───────────────────────────────
 
@@ -27,6 +47,24 @@ bulk <- read.csv(bulk_path, stringsAsFactors = FALSE,
 target_ids <- bulk$paper_id[!is.na(bulk$success) & as.logical(bulk$success) == TRUE]
 if (length(target_ids) == 0) stop("No successfully indexed papers in bulk_summary.csv.")
 target_ids <- unique(target_ids)
+
+# ── Codebook filter ───────────────────────────────────────────────────────────
+if (CODEBOOK_ONLY) {
+  cb_path <- "./data_check/results/codebook_summary.csv"
+  if (!file.exists(cb_path)) cb_path <- "./data_check/codebook_summary.csv"
+  if (!file.exists(cb_path))
+    stop("CODEBOOK_ONLY = TRUE but codebook_summary.csv not found. Run the codebook pipeline first.")
+  cb <- read.csv(cb_path, stringsAsFactors = FALSE,
+                 colClasses = c(paper_id = "character"))
+  passed_ids <- cb$paper_id[!is.na(cb$success) & cb$success == TRUE &
+                              !is.na(cb$label_status) & cb$label_status == "ok"]
+  before <- length(target_ids)
+  target_ids <- intersect(target_ids, passed_ids)
+  message("Codebook filter: ", length(target_ids), " / ", before,
+          " papers passed (label_status == 'ok')")
+  if (length(target_ids) == 0)
+    stop("No papers passed the codebook filter. Run the codebook pipeline first.")
+}
 
 message("Target papers: ", length(target_ids))
 
@@ -81,6 +119,16 @@ n_err <- 0L
 for (k in seq_along(papers_to_run)) {
   pid <- papers_to_run[k]
   cat(sprintf("[%d/%d] %s ... ", k, remaining, pid))
+
+  # Size check — skip if downloaded data folder exceeds MAX_DATA_MB
+  if (is.finite(MAX_DATA_MB)) {
+    data_dir <- file.path("./data_check/data", pid)
+    mb <- folder_size_mb(data_dir)
+    if (mb > MAX_DATA_MB) {
+      cat(sprintf("SKIPPED (%.1f MB > %.0f MB limit)\n", mb, MAX_DATA_MB))
+      next
+    }
+  }
 
   results <- tryCatch(
     convert_psychds(pid),

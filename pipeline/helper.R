@@ -651,7 +651,7 @@ parse_codebook <- function(path) {
   # ── Structured extraction (rule-based) ──────────────────────────────────────
   result <- tryCatch({
     switch(ext,
-      csv = , tsv = , dat = {
+      csv = , tsv = , dat = local({
         sep <- if (ext == "tsv") "\t" else sniff_delimiter(path)
         # Read without treating any row as a header so we can scan for it.
         raw <- tryCatch(
@@ -688,7 +688,7 @@ parse_codebook <- function(path) {
         df <- raw[seq(header_row + 1L, nrow(raw)), , drop = FALSE]
         rownames(df) <- NULL
         .extract_structured_codebook(df, src)
-      },
+      }),
       xlsx = , xls = {
         df <- tryCatch(
           as.data.frame(readxl::read_excel(path), stringsAsFactors = FALSE),

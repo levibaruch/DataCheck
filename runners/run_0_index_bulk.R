@@ -9,13 +9,17 @@ source("data_check/pipeline/0_index.R")
 
 # ── Config ────────────────────────────────────────────────────────────────────
 
-FULL_RUN     <- TRUE         # TRUE = no LLM call caps (file classification + col_type)
-SKIP_COLUMNS <- TRUE        # TRUE = skip column extraction (file indexing only)
-N_RUNS       <- Inf          # Inf = all papers; set an integer to cap
-SEED        <- NULL         # set an integer for reproducibility, or NULL
-SHUFFLE     <- TRUE         # TRUE = randomise paper order; FALSE = process in discovery order
+FULL_RUN       <- TRUE         # TRUE = no LLM call caps (file classification + col_type)
+SKIP_COLUMNS   <- FALSE         # TRUE = skip column extraction (file indexing only)
+RERUN_COLUMNS  <- TRUE        # TRUE = re-run column extraction for papers previously run
+                               #   without it (no columns.csv exists).  Forces
+                               #   SKIP_COLUMNS=FALSE, FROM_LOCAL=TRUE, DOWNLOAD=FALSE.
+                               #   Updates existing rows in the summary CSV rather than appending.
+N_RUNS       <- Inf            # Inf = all papers; set an integer to cap
+SEED        <- NULL            # set an integer for reproducibility, or NULL
+SHUFFLE     <- TRUE            # TRUE = randomise paper order; FALSE = process in discovery order
 SUMMARY_CSV <- "./data_check/results/bulk_summary.csv"
-DOWNLOAD    <- TRUE         # Whether the script should attempt downloads or not
+DOWNLOAD    <- TRUE            # Whether the script should attempt downloads or not
 
 LLM_BATCH_SIZE         <- 20L  # paths sent per LLM call for file classification
 MAX_COL_TYPE_LLM_CALLS <- 5L   # max LLM calls for column type classification per paper
@@ -34,6 +38,13 @@ RESUME      <- TRUE
 PRIORITISE_GT <- TRUE
 GT_DIR        <- "./data_check/ground_truth"
 
+if (RERUN_COLUMNS) {
+  SKIP_COLUMNS <- FALSE
+  COLUMNS_ONLY <- TRUE   # skip download + LLM in run_index(); use existing structure.csv
+  FROM_LOCAL   <- TRUE
+  DOWNLOAD     <- FALSE
+}
+
 if (FROM_LOCAL) DOWNLOAD <- FALSE
 
 # ── Discover all papers ──────────────────────────────────────────────────────
@@ -51,7 +62,9 @@ if (FROM_LOCAL) {
 
 # ── Load prior progress ─────────────────────────────────────────────────────
 
-done_ids <- character(0)
+done_ids          <- character(0)
+rerun_columns_ids <- character(0)  # populated only when RERUN_COLUMNS = TRUE
+
 if (file.exists(SUMMARY_CSV)) {
   prior <- tryCatch(read.csv(SUMMARY_CSV, stringsAsFactors = FALSE, colClasses = c(paper_id = "character")), error = function(e) NULL)
   if (!is.null(prior) && "paper_id" %in% names(prior)) {
@@ -63,7 +76,15 @@ if (file.exists(SUMMARY_CSV)) {
       write.csv(prior, SUMMARY_CSV, row.names = FALSE)
       message("── Migrated bulk_summary.csv: added run_at column")
     }
-    if (RESUME) {
+    if (RERUN_COLUMNS) {
+      # Target: papers that succeeded but have no columns.csv on disk yet
+      succeeded <- prior[!is.na(prior$success) & as.logical(prior$success) == TRUE, ]
+      rerun_columns_ids <- succeeded$paper_id[!file.exists(
+        file.path("./data_check/outputs", succeeded$paper_id, "columns.csv")
+      )]
+      message("── RERUN_COLUMNS: ", length(rerun_columns_ids),
+              " paper(s) succeeded without a columns.csv — will re-run columns")
+    } else if (RESUME) {
       done_ids <- unique(as.character(prior$paper_id))
       message("── Resuming: ", length(done_ids), " paper(s) already processed, skipping")
     }
@@ -72,16 +93,24 @@ if (file.exists(SUMMARY_CSV)) {
 
 # ── Determine papers to run ─────────────────────────────────────────────────
 
-remaining_ids <- setdiff(all_ids, done_ids)
-if (SHUFFLE) {
-  if (!is.null(SEED)) set.seed(SEED)
-  remaining_ids <- sample(remaining_ids)
-}
-if (PRIORITISE_GT) {
-  gt_ids <- sub("\\.csv$", "", list.files(GT_DIR, pattern = "\\.csv$"))
-  is_gt  <- remaining_ids %in% gt_ids
-  remaining_ids <- c(remaining_ids[is_gt], remaining_ids[!is_gt])
-  message("── GT priority: ", sum(is_gt), " GT paper(s) moved to front")
+if (RERUN_COLUMNS) {
+  remaining_ids <- rerun_columns_ids
+  if (SHUFFLE) {
+    if (!is.null(SEED)) set.seed(SEED)
+    remaining_ids <- sample(remaining_ids)
+  }
+} else {
+  remaining_ids <- setdiff(all_ids, done_ids)
+  if (SHUFFLE) {
+    if (!is.null(SEED)) set.seed(SEED)
+    remaining_ids <- sample(remaining_ids)
+  }
+  if (PRIORITISE_GT) {
+    gt_ids <- sub("\\.csv$", "", list.files(GT_DIR, pattern = "\\.csv$"))
+    is_gt  <- remaining_ids %in% gt_ids
+    remaining_ids <- c(remaining_ids[is_gt], remaining_ids[!is_gt])
+    message("── GT priority: ", sum(is_gt), " GT paper(s) moved to front")
+  }
 }
 if (is.finite(N_RUNS) && N_RUNS < length(remaining_ids)) {
   remaining_ids <- remaining_ids[seq_len(N_RUNS)]
@@ -97,33 +126,57 @@ if (n_total == 0) {
 
 message("── Will process ", n_total, " paper(s)")
 
-# ── Helper: append one row to the summary CSV ───────────────────────────────
+# ── Helpers: write summary rows ──────────────────────────────────────────────
 
 na_fallback <- function(x, na = NA) if (is.null(x) || length(x) == 0) na else x
 
-append_summary_row <- function(r) {
-  row <- data.frame(
-    paper_id     = na_fallback(r$paper_id, NA_character_),
-    run_at       = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
-    success      = r$success,
-    error        = na_fallback(r$error, NA_character_),
-    elapsed_ms   = round(na_fallback(r$elapsed_sec, NA_real_) * 1000),
-    download_ms  = round(na_fallback(r$download_sec, NA_real_) * 1000),
-    llm_ms       = round(na_fallback(r$llm_sec, NA_real_) * 1000),
-    column_ms    = round(na_fallback(r$column_sec, NA_real_) * 1000),
-    n_files      = na_fallback(r$n_files, NA_integer_),
-    n_data_files    = na_fallback(r$n_data_files, NA_integer_),
+make_summary_row <- function(r) {
+  data.frame(
+    paper_id        = na_fallback(r$paper_id, NA_character_),
+    run_at          = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
+    success         = r$success,
+    error           = na_fallback(r$error, NA_character_),
+    elapsed_ms      = round(na_fallback(r$elapsed_sec,  NA_real_) * 1000),
+    download_ms     = round(na_fallback(r$download_sec, NA_real_) * 1000),
+    llm_ms          = round(na_fallback(r$llm_sec,      NA_real_) * 1000),
+    column_ms       = round(na_fallback(r$column_sec,   NA_real_) * 1000),
+    n_files         = na_fallback(r$n_files,        NA_integer_),
+    n_data_files    = na_fallback(r$n_data_files,   NA_integer_),
     n_tabular_files = na_fallback(r$n_tabular_files, NA_integer_),
-    n_agg_dirs   = na_fallback(r$n_agg_dirs, NA_integer_),
-    n_individual = na_fallback(r$n_individual, NA_integer_),
-    n_combined   = na_fallback(r$n_combined, NA_integer_),
-    n_columns    = na_fallback(r$n_columns, NA_integer_),
-    n_src_files  = na_fallback(r$n_source_files, NA_integer_),
+    n_agg_dirs      = na_fallback(r$n_agg_dirs,     NA_integer_),
+    n_individual    = na_fallback(r$n_individual,   NA_integer_),
+    n_combined      = na_fallback(r$n_combined,     NA_integer_),
+    n_columns       = na_fallback(r$n_columns,      NA_integer_),
+    n_src_files     = na_fallback(r$n_source_files, NA_integer_),
     stringsAsFactors = FALSE
   )
+}
+
+append_summary_row <- function(r) {
+  row <- make_summary_row(r)
   write_header <- !file.exists(SUMMARY_CSV)
   write.table(row, SUMMARY_CSV, append = TRUE, sep = ",",
               row.names = FALSE, col.names = write_header)
+}
+
+# Replace the existing row for a paper (used by RERUN_COLUMNS mode).
+update_summary_row <- function(r) {
+  if (!file.exists(SUMMARY_CSV)) { append_summary_row(r); return(invisible(NULL)) }
+  df  <- tryCatch(
+    read.csv(SUMMARY_CSV, stringsAsFactors = FALSE,
+             colClasses = c(paper_id = "character")),
+    error = function(e) NULL
+  )
+  if (is.null(df)) { append_summary_row(r); return(invisible(NULL)) }
+  row <- make_summary_row(r)
+  idx <- which(df$paper_id == r$paper_id)
+  if (length(idx) > 0) {
+    df[idx[1], intersect(names(row), names(df))] <-
+      row[1,    intersect(names(row), names(df))]
+  } else {
+    df <- rbind(df, row[, intersect(names(row), names(df))])
+  }
+  write.csv(df, SUMMARY_CSV, row.names = FALSE)
 }
 
 # ── Run ──────────────────────────────────────────────────────────────────────
@@ -132,7 +185,13 @@ for (i in seq_along(remaining_ids)) {
   pid <- remaining_ids[i]
 
   # Double-check: re-read CSV in case a prior iteration already covered this ID
-  if (RESUME && file.exists(SUMMARY_CSV)) {
+  if (RERUN_COLUMNS) {
+    # Skip if columns.csv now exists (e.g. a prior iteration of this same pass wrote it)
+    if (file.exists(file.path("./data_check/outputs", pid, "columns.csv"))) {
+      message("  skipping (columns.csv now exists): ", pid)
+      next
+    }
+  } else if (RESUME && file.exists(SUMMARY_CSV)) {
     already <- tryCatch(read.csv(SUMMARY_CSV, stringsAsFactors = FALSE, colClasses = c(paper_id = "character")), error = function(e) NULL)
     if (!is.null(already) && pid %in% already$paper_id) {
       message("  skipping (already in CSV): ", pid)
@@ -198,7 +257,7 @@ for (i in seq_along(remaining_ids)) {
 
   result <- run_once(download = DOWNLOAD)
 
-  append_summary_row(result)
+  if (RERUN_COLUMNS) update_summary_row(result) else append_summary_row(result)
 }
 
 # ── Print summary ────────────────────────────────────────────────────────────

@@ -16,7 +16,7 @@ source("data_check/pipeline/helper.R")
 source("data_check/pipeline/prompts.R")
 
 llm_use(TRUE)
-llm_model("ollama/gpt-oss:20b")
+llm_model("ollama/gpt-oss:20b-cloud")
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -56,6 +56,7 @@ if (!exists("MAX_COL_TYPE_LLM_CALLS"))      MAX_COL_TYPE_LLM_CALLS      <- 5L
 if (!exists("MAX_CHAR_COL_TYPE_LLM_CALLS")) MAX_CHAR_COL_TYPE_LLM_CALLS <- 3L
 if (!exists("FULL_RUN"))                    FULL_RUN                    <- FALSE
 if (!exists("SKIP_COLUMNS"))               SKIP_COLUMNS                <- FALSE  # TRUE = skip column extraction entirely
+if (!exists("COLUMNS_ONLY"))               COLUMNS_ONLY                <- FALSE  # TRUE = skip download+LLM, read existing structure.csv, run columns only
 # Folders with more than this many files are treated as aggregate datasets
 AGGREGATE_THRESHOLD <- 20
 # Max rows to scan below row 1 for a usable sub-header in multi-level CSV files
@@ -89,6 +90,23 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
   } else paper_output_dir(paper_id)
 
   target_dir <- file.path(DATA_DIR, paper_id)
+
+  # ── COLUMNS_ONLY: skip download + LLM; read existing structure.csv ───────────
+
+  if (COLUMNS_ONLY) {
+    structure_out <- file.path(eff_dir, "structure.csv")
+    if (!file.exists(structure_out))
+      stop("columns_only_missing_structure: no structure.csv found for paper ", paper_id)
+    file_df <- read.csv(structure_out, stringsAsFactors = FALSE,
+                        colClasses = c(paper_id = "character"))
+    agg_dirs <- unique(file_df$aggregate_folder[
+      !is.na(file_df$aggregate_folder) & nchar(file_df$aggregate_folder) > 0
+    ])
+    t_download <- 0
+    t_llm      <- 0
+    message("── COLUMNS_ONLY: skipping download + LLM; loaded ",
+            nrow(file_df), " files from existing structure.csv")
+  } else {
 
   # ── 1. Download ─────────────────────────────────────────────────────────────
 
@@ -680,6 +698,8 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
   print(table(paste0(file_df$type, " / ", file_df$group)))
 
   t_llm <- proc.time()[["elapsed"]] - t_llm_start
+
+  } # end if (!COLUMNS_ONLY)
 
   t_col_start <- proc.time()[["elapsed"]]
   # ── 9. Extract columns + sample values from data files ───────────────────────
