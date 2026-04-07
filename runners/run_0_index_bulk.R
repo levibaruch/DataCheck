@@ -9,8 +9,9 @@ source("data_check/pipeline/0_index.R")
 
 # ── Config ────────────────────────────────────────────────────────────────────
 
-FULL_RUN    <- TRUE         # TRUE = no LLM call caps (file classification + col_type)
-N_RUNS      <- Inf          # Inf = all papers; set an integer to cap
+FULL_RUN     <- TRUE         # TRUE = no LLM call caps (file classification + col_type)
+SKIP_COLUMNS <- TRUE        # TRUE = skip column extraction (file indexing only)
+N_RUNS       <- Inf          # Inf = all papers; set an integer to cap
 SEED        <- NULL         # set an integer for reproducibility, or NULL
 SHUFFLE     <- TRUE         # TRUE = randomise paper order; FALSE = process in discovery order
 SUMMARY_CSV <- "./data_check/results/bulk_summary.csv"

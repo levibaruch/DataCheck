@@ -38,7 +38,8 @@ One row per file discovered in the paper's OSF repository.
 |---|---|
 | `data` | Any file containing research measurements for analysis — tabular (CSV, SAV, XLSX, RDS, DTA, etc.) or non-tabular (EEG/physiological recordings `.edf`/`.acq`/`.bdf`, MATLAB matrices `.mat`, nested JSON survey exports). Column extraction skips non-parseable formats; file remains `data`. |
 | `codebook` | File whose primary purpose is describing what variables mean — variable dictionary, data dictionary, coding key. Determined by semantic inference from filename. |
-| `code` | Executable source file: R, Python, MATLAB, Julia, SQL, shell scripts, `.Rmd`/`.qmd` notebooks (always `code` regardless of narrative content). |
+| `code` | Executable source file: R, Python, MATLAB, Julia, SQL, shell scripts, `.Rmd`/`.qmd` notebooks (always `code` regardless of narrative content). Purpose: generating analyses or research outputs. |
+| `software` | Program, application, or any file that is part of the experiment software package — stimulus delivery tools, task presentation programs, data collection applications, compiled binaries (`.exe`, `.app`, `.jar`, `.msi`, `.dmg`), installers, configuration files, build files, and anything else belonging to the experiment software. Distinct from `code` (which generates analyses/outputs). The whole package counts: if a file belongs to the experiment software, it is `software` regardless of extension. |
 | `output` | File produced by executing a script — rendered notebooks (`.html`, `.pdf`, `.docx` output from `.Rmd`/`.qmd`/`.ipynb`), script-generated figures and graphs, log files, and other computational byproducts. Not column-extracted. When provenance is ambiguous, `supplemental` is the fallback. |
 | `supplemental` | Human-authored research material that is not data, code, or a codebook — manuscripts, articles, reports, proposals, theses, preregistrations, registered reports, survey instruments, consent forms, SPSS `.spv` syntax, supporting appendices. Script-generated artefacts (figures, rendered notebooks, log files) → `output`. Fallback for ambiguous provenance. |
 | `readme` | Files named `README.*`, `LICENSE.*`, or `CONTRIBUTING.*` only. Classified by filename. |
@@ -54,9 +55,12 @@ Any component that enumerates or displays file types must be updated whenever a 
 |---|---|---|
 | LLM classification prompt | `pipeline/prompts.R` — `STRUCTURE_PROMPT` | Add type to `TYPE —` block and relevant hard-case rules |
 | Sentinel classification prompt | `pipeline/prompts.R` — `SENTINEL_PROMPT` | Add type to `TYPE —` block and key signals |
-| Validation GUI type buttons | `tools/validation_gui/app.R` — `TYPE_MAP`, `TYPE_ABBREV` | Add entry; assign next available keyboard shortcut (1–8) |
+| Validation GUI type buttons | `tools/validation_gui/app.R` — `TYPE_MAP`, `TYPE_ABBREV` | Add entry; assign next available keyboard shortcut (1–9) |
 | Validation GUI CSS | `tools/validation_gui/app.R` — `APP_CSS` | Add `.tbadge-<type>` and `.tbtn-<type>.tbtn-active` for light and dark mode |
 | Validation GUI keyboard handler | `tools/validation_gui/app.R` — `observeEvent(input$key_press)` | Add `"N" = { rv$selected_type <- "<type>" }` |
+| Validation GUI JS key allowlist | `tools/validation_gui/app.R` — `KB_JS` | Add key character to the allowlist array |
+| PsychDS converter subdirectory map | `pipeline/3_psychds_convert.R` — `TYPE_TO_SUBDIR` | Add type → subdirectory mapping |
+| PsychDS converter aggregate override | `pipeline/3_psychds_convert.R` — `AGGREGATE_EXT_OVERRIDE` | Add extensions → type mapping |
 
 ### Groups
 

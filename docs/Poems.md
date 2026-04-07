@@ -284,3 +284,32 @@ the raw response — preserved across the miles.
 a marker of failure, visible, until
 a human reads the log and finds the cause —
 and the pipeline, at last, earns its applause.
+
+---
+
+## 030 — Prompt Fixes, SKIP_COLUMNS, Aggregate Threshold
+
+A .wav file sits in a folder called `Stimuli/`.
+The model squints. "No stim keyword," it says. "Other, clearly."
+Two hundred assets perish this way —
+declared irrelevant, filed, and swept away.
+
+No more. Image, audio, video: never `other`.
+The three-way rule now governs each format's brother:
+participant ID? Data. Output keywords? Output.
+Otherwise: asset. The fallback is no longer doubt.
+
+The .spv was supplemental. It was not.
+The .log was output — unless a subject was caught
+in the filename. E-Prime writes per-participant logs.
+The model now knows. We update its catalogue.
+
+Fifty files to trigger the sentinel path —
+too high a bar; the mid-sized series did the math
+and fell through to Phase 1, where the LLM drifts
+mid-batch, reclassifying what it already listed.
+
+Twenty now. The series routes through Phase 2.
+The sentinel classifies the whole group as true.
+And SKIP_COLUMNS waits by the door, coat in hand:
+"Just index the files — columns can wait, as planned."

@@ -26,13 +26,15 @@ source(file.path(getOption("dc_root"), "tools", "validation_gui", "preview.R"))
 
 TYPE_MAP <- c(
   "1" = "data", "2" = "code", "3" = "codebook", "4" = "supplemental",
-  "5" = "readme", "6" = "asset", "7" = "output", "8" = "other"
+  "5" = "readme", "6" = "asset", "7" = "output", "8" = "other",
+  "9" = "software"
 )
 VALID_TYPES <- unname(TYPE_MAP)
 
 TYPE_ABBREV <- c(
   data = "dat", code = "cod", codebook = "cbk", supplemental = "sup",
-  readme = "rdm", asset = "ast", other = "oth", output = "out"
+  readme = "rdm", asset = "ast", other = "oth", output = "out",
+  software = "sfw"
 )
 
 # ── JavaScript ────────────────────────────────────────────────────────────────
@@ -211,6 +213,16 @@ document.addEventListener("DOMContentLoaded", function() {
       Shiny.setInputValue("key_press", {key: "escape", ts: Date.now()}, {priority: "event"});
       return;
     }
+    if (e.key === "PageUp") {
+      e.preventDefault();
+      Shiny.setInputValue("key_press", {key: "page_up",   ts: Date.now()}, {priority: "event"});
+      return;
+    }
+    if (e.key === "PageDown") {
+      e.preventDefault();
+      Shiny.setInputValue("key_press", {key: "page_down", ts: Date.now()}, {priority: "event"});
+      return;
+    }
     var inText = document.activeElement &&
       (document.activeElement.tagName === "INPUT" ||
        document.activeElement.tagName === "TEXTAREA");
@@ -222,7 +234,7 @@ document.addEventListener("DOMContentLoaded", function() {
       return;
     }
     var k = e.key.toLowerCase();
-    if (["1","2","3","4","5","6","7","8","i","c","g"].indexOf(k) !== -1) {
+    if (["1","2","3","4","5","6","7","8","9","i","c","g","t","r"].indexOf(k) !== -1) {
       e.preventDefault();
       Shiny.setInputValue("key_press", {key: k, ts: Date.now()}, {priority: "event"});
     }
@@ -316,6 +328,11 @@ details > summary { font-size:0.75em; font-weight:700; letter-spacing:0.05em;
 .tbadge-asset        { background:#fce4ec; color:#880e4f; }
 .tbadge-other        { background:#eceff1; color:#455a64; }
 .tbadge-output       { background:#e0f7fa; color:#006064; }
+.tbadge-software     { background:#fff3e0; color:#e65100; }
+
+/* Data format sub-type badges — light */
+.tbadge-df-tabular { background:#ecf5ec; color:#388e3c; font-size:0.72em; padding:1px 5px; border-radius:3px; font-weight:600; margin-left:3px; }
+.tbadge-df-raw     { background:#fff8e1; color:#f57c00; font-size:0.72em; padding:1px 5px; border-radius:3px; font-weight:600; margin-left:3px; }
 
 /* Data format sub-type badges — light */
 .tbadge-df-tabular { background:#ecf5ec; color:#388e3c; font-size:0.72em; padding:1px 5px; border-radius:3px; font-weight:600; margin-left:3px; }
@@ -333,6 +350,7 @@ details > summary { font-size:0.75em; font-weight:700; letter-spacing:0.05em;
 .tbtn-asset.tbtn-active        { border-color:#880e4f !important; background:rgba(136,14,79,0.1) !important;   color:#560027 !important; box-shadow:0 0 8px rgba(136,14,79,0.2) !important; }
 .tbtn-other.tbtn-active        { border-color:#455a64 !important; background:rgba(69,90,100,0.1) !important;   color:#263238 !important; box-shadow:0 0 8px rgba(69,90,100,0.2) !important; }
 .tbtn-output.tbtn-active       { border-color:#006064 !important; background:rgba(0,96,100,0.1) !important;    color:#004d40 !important; box-shadow:0 0 8px rgba(0,96,100,0.2) !important; }
+.tbtn-software.tbtn-active     { border-color:#e65100 !important; background:rgba(230,101,0,0.1) !important;   color:#bf360c !important; box-shadow:0 0 8px rgba(230,101,0,0.2) !important; }
 
 /* File header — light */
 .file-hdr         { padding:11px 16px 10px; border-bottom:1px solid #dee2e6; background:#f8f9fa; margin-bottom:10px; }
@@ -423,6 +441,7 @@ hr { border-color:#dee2e6 !important; margin:8px 0 !important; }
 [data-theme='dark'] .tbadge-asset        { background:rgba(244,143,177,0.22); color:#fce4ec; }
 [data-theme='dark'] .tbadge-other        { background:rgba(144,164,174,0.22); color:#b0bec5; }
 [data-theme='dark'] .tbadge-output       { background:rgba(0,188,212,0.22);   color:#80deea; }
+[data-theme='dark'] .tbadge-software     { background:rgba(255,183,77,0.22);  color:#ffcc80; }
 [data-theme='dark'] .tbadge-df-tabular  { background:rgba(102,187,106,0.18); color:#a5d6a7; }
 [data-theme='dark'] .tbadge-df-raw      { background:rgba(255,183,77,0.18);  color:#ffe082; }
 
@@ -438,6 +457,7 @@ hr { border-color:#dee2e6 !important; margin:8px 0 !important; }
 [data-theme='dark'] .tbtn-asset.tbtn-active        { border-color:#f48fb1 !important; background:rgba(244,143,177,0.22) !important; color:#fce4ec !important; box-shadow:0 0 10px rgba(244,143,177,0.25) !important; }
 [data-theme='dark'] .tbtn-other.tbtn-active        { border-color:#90a4ae !important; background:rgba(144,164,174,0.22) !important; color:#b0bec5 !important; box-shadow:0 0 10px rgba(144,164,174,0.25) !important; }
 [data-theme='dark'] .tbtn-output.tbtn-active       { border-color:#00bcd4 !important; background:rgba(0,188,212,0.22) !important;  color:#80deea !important; box-shadow:0 0 10px rgba(0,188,212,0.25) !important; }
+[data-theme='dark'] .tbtn-software.tbtn-active     { border-color:#ffb300 !important; background:rgba(255,179,0,0.22) !important;  color:#ffe082 !important; box-shadow:0 0 10px rgba(255,179,0,0.25) !important; }
 
 /* Granularity buttons — light */
 .dg-btn { border:1.5px solid rgba(0,0,0,0.13) !important; background:rgba(0,0,0,0.02) !important; color:rgba(0,0,0,0.45) !important; font-size:0.8em !important; padding:3px 10px !important; }
@@ -502,10 +522,13 @@ hr { border-color:#dee2e6 !important; margin:8px 0 !important; }
 .bulk-banner__hint  { opacity:0.6; font-size:0.9em; }
 .btn-select-uv { background:transparent !important; border:none !important; box-shadow:none !important;
                  font-size:0.72em; cursor:pointer; padding:0 !important;
-                 text-decoration:underline; opacity:0.55; }
+                 text-decoration:underline; opacity:0.55; color:#000 !important; }
 .btn-select-uv:hover { opacity:1 !important; }
 [data-theme='dark'] .btn-select-uv { color:rgba(255,255,255,0.55) !important; }
 [data-theme='dark'] .btn-select-uv:hover { color:rgba(255,255,255,0.9) !important; }
+.btn-select-uv--delete { color:#c0392b !important; }
+[data-theme='dark'] .btn-select-uv--delete { color:rgba(239,154,154,0.7) !important; }
+[data-theme='dark'] .btn-select-uv--delete:hover { color:rgba(239,154,154,1) !important; }
 
 /* Open-folder button */
 .btn-open-folder { background:transparent !important; border:none !important; box-shadow:none !important;
@@ -546,8 +569,11 @@ ui <- page_sidebar(
     div(
       style = "display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;",
       uiOutput("bulk_count_ui"),
-      actionButton("btn_select_uv", "Select all unvalidated",
-                   class = "btn-select-uv")
+      div(
+        style = "display:flex; gap:4px;",
+        actionButton("btn_select_uv",     "Select all unvalidated", class = "btn-select-uv"),
+        actionButton("btn_delete_paper",  "Delete annotations",     class = "btn-select-uv btn-select-uv--delete")
+      )
     ),
     div(style = "overflow-y:auto; flex:1; min-height:0;",
         uiOutput("file_list_ui"))
@@ -803,6 +829,7 @@ server <- function(input, output, session) {
       "6" = { rv$selected_type <- "asset" },
       "7" = { rv$selected_type <- "output" },
       "8" = { rv$selected_type <- "other" },
+      "9" = { rv$selected_type <- "software" },
       "i" = {
         if (!is.na(rv$selected_type) && rv$selected_type == "data")
           rv$data_granularity_val <- if (rv$data_granularity_val == "individual") "" else "individual"
@@ -824,7 +851,9 @@ server <- function(input, output, session) {
       "cmd_enter"   = { do_save() },
       "cmd_bracket" = { do_back() },
       "cmd_slash"   = { show_kb_help() },
-      "escape"      = { rv$bulk_selected <- integer(0) }
+      "escape"      = { rv$bulk_selected <- integer(0) },
+      "page_up"     = { navigate_paper(-1L) },
+      "page_down"   = { navigate_paper(+1L) }
     )
   })
 
@@ -908,6 +937,47 @@ server <- function(input, output, session) {
     rv$bulk_selected <- which(rv$status != "validated")
   })
 
+  # ── Delete all annotations for current paper ─────────────────────────────────
+
+  observeEvent(input$btn_delete_paper, {
+    req(!is.null(rv$paper_id))
+    showModal(modalDialog(
+      title     = "Delete annotations",
+      p(sprintf("Delete all ground-truth annotations for paper %s? This cannot be undone.", rv$paper_id)),
+      footer    = tagList(
+        modalButton("Cancel"),
+        actionButton("confirm_delete_paper", "Delete", class = "btn-danger")
+      ),
+      easyClose = TRUE
+    ))
+  })
+
+  observeEvent(input$confirm_delete_paper, {
+    removeModal()
+    pid      <- rv$paper_id
+    gt_file  <- file.path(get_gt_dir(), paste0(pid, ".csv"))
+    if (file.exists(gt_file)) file.remove(gt_file)
+
+    # Reset GT state and file statuses for this paper
+    rv$gt     <- empty_gt()
+    if (!is.null(rv$structure)) {
+      rv$status <- setNames(rep("unvisited", nrow(rv$structure)),
+                            rv$structure$rel_path)
+    }
+    rv$skipped        <- integer(0)
+    rv$bulk_selected  <- integer(0)
+    rv$current_idx    <- 1L
+    load_file(1L)
+
+    # Update paper completion label in selector
+    rv$paper_completion[pid] <- FALSE
+    rv$label_update_only     <- TRUE
+    updateSelectInput(session, "paper_id",
+                      choices  = make_paper_choices(rv$papers, rv$paper_completion),
+                      selected = pid)
+    showNotification(paste0("Annotations deleted for paper ", pid), type = "message", duration = 3)
+  })
+
   # ── Open current file's folder in Finder ─────────────────────────────────────
 
   observeEvent(input$btn_open_folder, {
@@ -917,6 +987,17 @@ server <- function(input, output, session) {
     folder <- dirname(rv$structure$path[idx])
     system2("open", folder)
   })
+
+  # ── Paper navigation (PageUp / PageDown) ────────────────────────────────────
+
+  navigate_paper <- function(delta) {
+    papers  <- rv$papers
+    cur_pos <- match(rv$paper_id, papers)
+    if (is.na(cur_pos)) return()
+    new_pos <- cur_pos + delta
+    if (new_pos < 1L || new_pos > length(papers)) return()
+    updateSelectInput(session, "paper_id", selected = papers[new_pos])
+  }
 
   # ── Advance to next unvalidated file ────────────────────────────────────────
 

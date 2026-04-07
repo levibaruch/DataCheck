@@ -35,6 +35,7 @@ ERR_NO_DATA_FILES   <- "no_data_files"
 # File-type → PsychDS subdirectory mapping
 TYPE_TO_SUBDIR <- list(
   code        = "analysis",
+  software    = "materials",
   codebook    = "documentation",
   supplemental = "documentation",
   other       = "documentation",
@@ -51,6 +52,8 @@ AGGREGATE_EXT_OVERRIDE <- c(
   gif  = "asset", bmp = "asset", tif = "asset", tiff = "asset",
   mp4  = "asset", avi = "asset", mov = "asset", wav = "asset", mp3 = "asset",
   svg  = "asset",
+  exe  = "software", app = "software", jar = "software",
+  msi  = "software", dmg = "software",
   pdf  = "supplemental",
   docx = "supplemental", doc = "supplemental", txt = "supplemental", rtf = "supplemental",
   md   = "supplemental",

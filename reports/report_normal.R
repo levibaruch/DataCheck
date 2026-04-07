@@ -19,6 +19,7 @@
 #   results/normal_report_<date>_ext_errors.png       error rate by file extension
 #   results/normal_report_<date>_group_conf.png       group confusion matrix heatmap
 #   results/normal_report_<date>_dg_conf.png          data_granularity confusion heatmap
+#   results/normal_report_<date>_df_conf.png           data_format confusion heatmap
 #
 # Usage (interactive):  source("data_check/runners/report_normal.R")
 # Usage (CLI):          Rscript data_check/runners/report_normal.R
@@ -148,12 +149,16 @@ for (pid in eligible) {
 
   if (is.null(gt) || is.null(str) || nrow(gt) == 0) next
 
+  # Skip partially annotated papers — only include papers where every file
+  # in structure.csv has a corresponding GT row
+  if (!all(str$rel_path %in% gt$rel_path)) next
+
   keep_str <- intersect(
-    c("rel_path", "type", "group", "data_granularity", "type_source"),
+    c("rel_path", "type", "group", "data_granularity", "data_format", "type_source"),
     names(str)
   )
   m <- merge(
-    gt[, intersect(c("rel_path", "type_gt", "group_gt", "data_granularity_gt"), names(gt))],
+    gt[, intersect(c("rel_path", "type_gt", "group_gt", "data_granularity_gt", "data_format_gt"), names(gt))],
     str[, keep_str],
     by = "rel_path", all.x = TRUE
   )
@@ -233,8 +238,10 @@ per_paper_full <- do.call(rbind, Filter(Negate(is.null), lapply(sort(unique(acc$
   a  <- acc[acc$paper_id == pid, ]
   da <- a[!is.na(a$type_gt) & a$type_gt == "data", ]
   dg <- da[!is.na(da$data_granularity_gt), ]
+  df <- da[!is.na(da$data_format_gt), ]
   n_group <- sum(!is.na(da$group_gt))
   n_dg    <- nrow(dg)
+  n_df    <- nrow(df)
 
   w <- v[v$type_gt != v$type, ]
   top_err <- if (nrow(w) > 0) {
@@ -255,6 +262,7 @@ per_paper_full <- do.call(rbind, Filter(Negate(is.null), lapply(sort(unique(acc$
     type_acc  = s$accuracy,
     group_acc = pct_num(sum(!is.na(da$group_gt) & !is.na(da$group) & da$group_gt == da$group), n_group),
     dg_acc    = pct_num(sum(!is.na(dg$data_granularity) & dg$data_granularity_gt == dg$data_granularity), n_dg),
+    df_acc    = pct_num(sum(!is.na(df$data_format) & df$data_format_gt == df$data_format), n_df),
     top_err   = top_err,
     top_ext   = top_ext,
     stringsAsFactors = FALSE
@@ -378,6 +386,23 @@ if (nrow(dg_valid) > 0) {
   cm_dg <- NULL
 }
 
+# ── data_format confusion matrix ─────────────────────────────────────────────
+
+df_valid <- acc[
+  !is.na(acc$type_gt) & acc$type_gt == "data" &
+  !is.na(acc$type)    & acc$type    == "data" &
+  !is.na(acc$data_format_gt) & !is.na(acc$data_format), ]
+
+if (nrow(df_valid) > 0) {
+  df_levels <- sort(unique(c(df_valid$data_format_gt, df_valid$data_format)))
+  cm_df <- as.matrix(table(
+    gt   = factor(df_valid$data_format_gt, levels = df_levels),
+    pred = factor(df_valid$data_format,    levels = df_levels)
+  ))
+} else {
+  cm_df <- NULL
+}
+
 # ── Downstream FP/FN impact on `data` ────────────────────────────────────────
 
 data_fp <- valid[valid$type_gt != "data" & valid$type == "data", ]
@@ -449,10 +474,13 @@ tn_n <- sum(!is.na(acc$type_gt))
 
 data_acc_rows <- acc[!is.na(acc$type_gt) & acc$type_gt == "data", ]
 dg_acc_rows   <- data_acc_rows[!is.na(data_acc_rows$data_granularity_gt), ]
+df_acc_rows   <- data_acc_rows[!is.na(data_acc_rows$data_format_gt), ]
 gc <- sum(!is.na(data_acc_rows$group_gt) & !is.na(data_acc_rows$group) & data_acc_rows$group_gt == data_acc_rows$group)
 gn <- sum(!is.na(data_acc_rows$group_gt))
 dc <- sum(!is.na(dg_acc_rows$data_granularity) & dg_acc_rows$data_granularity_gt == dg_acc_rows$data_granularity)
 dn <- nrow(dg_acc_rows)
+dfc <- sum(!is.na(df_acc_rows$data_format) & df_acc_rows$data_format_gt == df_acc_rows$data_format)
+dfn <- nrow(df_acc_rows)
 
 L("## 1. Executive Summary")
 BR()
@@ -470,7 +498,7 @@ L(sprintf("| **Overall accuracy** | **%s** | %s (%d / %d files) |",
 BR()
 L("_Paper-averaged and file-pooled metrics diverge when a small number of large repositories dominate the corpus. When they differ substantially, the paper-averaged figure is the more reliable estimate of generalised classification quality._")
 BR()
-L(sprintf("![Paper-averaged vs file-pooled summary](normal_report_%s_summary_compare.png)", date_str))
+L("![Paper-averaged vs file-pooled summary](summary_compare.png)")
 BR()
 L("**Subfield performance** (conditional on type = data, file-pooled):")
 BR()
@@ -478,6 +506,7 @@ L("| Task | Accuracy | N |")
 L("|---|---|---|")
 L(sprintf("| Group classification | %s | %d files |", pct(gc, gn), gn))
 L(sprintf("| data_granularity classification | %s | %d files |", pct(dc, dn), dn))
+L(sprintf("| data_format (raw vs tabular) | %s | %d files |", pct(dfc, dfn), dfn))
 BR()
 L("---")
 BR()
@@ -499,7 +528,7 @@ if (nrow(valid) > 0) {
   L("_Insufficient data._")
 }
 BR()
-L(sprintf("![File-pooled type confusion matrix](normal_report_%s_confusion.png)", date_str))
+L("![File-pooled type confusion matrix](confusion.png)")
 BR()
 
 L("### 2b. Paper-averaged (mean row-normalised proportions)")
@@ -513,7 +542,7 @@ if (!is.null(pa_cm_norm) && nrow(pa_cm_norm) > 0) {
   L("_Insufficient data._")
 }
 BR()
-L(sprintf("![Paper-averaged type confusion matrix](normal_report_%s_confusion_pa.png)", date_str))
+L("![Paper-averaged type confusion matrix](confusion_pa.png)")
 BR()
 L("---")
 BR()
@@ -546,9 +575,9 @@ pa_metrics_tbl <- data.frame(
 )
 L(md_table(pa_metrics_tbl))
 BR()
-L(sprintf("![File-pooled per-class Precision / Recall / F1](normal_report_%s_metrics.png)", date_str))
+L("![File-pooled per-class Precision / Recall / F1](metrics.png)")
 BR()
-L(sprintf("![Paper-averaged per-class F1 with distribution](normal_report_%s_metrics_pa.png)", date_str))
+L("![Paper-averaged per-class F1 with distribution](metrics_pa.png)")
 BR()
 L("---")
 BR()
@@ -566,7 +595,7 @@ if (!is.null(cm_grp) && nrow(cm_grp) > 0) {
   cm_grp_df <- as.data.frame.matrix(cm_grp)
   L(md_table(cbind(data.frame(`group \\ pred` = rownames(cm_grp_df), check.names = FALSE), cm_grp_df)))
   BR()
-  L(sprintf("![Group confusion matrix](normal_report_%s_group_conf.png)", date_str))
+  L("![Group confusion matrix](group_conf.png)")
 } else {
   L("_Insufficient data._")
 }
@@ -578,7 +607,19 @@ if (!is.null(cm_dg) && nrow(cm_dg) > 0) {
   cm_dg_df <- as.data.frame.matrix(cm_dg)
   L(md_table(cbind(data.frame(`dg \\ pred` = rownames(cm_dg_df), check.names = FALSE), cm_dg_df)))
   BR()
-  L(sprintf("![DG confusion matrix](normal_report_%s_dg_conf.png)", date_str))
+  L("![DG confusion matrix](dg_conf.png)")
+} else {
+  L("_Insufficient data._")
+}
+BR()
+
+L("### 4c. data_format confusion matrix (raw vs tabular)")
+BR()
+if (!is.null(cm_df) && nrow(cm_df) > 0) {
+  cm_df_df <- as.data.frame.matrix(cm_df)
+  L(md_table(cbind(data.frame(`format \\ pred` = rownames(cm_df_df), check.names = FALSE), cm_df_df)))
+  BR()
+  L("![data_format confusion matrix](df_conf.png)")
 } else {
   L("_Insufficient data._")
 }
@@ -607,7 +648,7 @@ if (length(top_pairs) == 0) {
   conf_tbl$`% of errors` <- sapply(conf_tbl$Count, function(n) pct(n, total_wrong))
   L(md_table(conf_tbl))
   BR()
-  L(sprintf("![Top misclassification patterns](normal_report_%s_fp_fn.png)", date_str))
+  L("![Top misclassification patterns](fp_fn.png)")
 }
 BR()
 
@@ -628,7 +669,7 @@ if (is.null(ext_stats) || nrow(ext_stats) == 0) {
   )
   L(md_table(ext_tbl))
   BR()
-  L(sprintf("![Error rate by file extension](normal_report_%s_ext_errors.png)", date_str))
+  L("![Error rate by file extension](ext_errors.png)")
 }
 BR()
 L("---")
@@ -698,11 +739,11 @@ L(sprintf("| **Type accuracy** | %s | %s | %s | %s | %s |",
   fmt1(mean(type_vals)),  fmt1(median(type_vals)),  fmt1(sd(type_vals)),
   fmt1(min(type_vals)),   fmt1(max(type_vals))))
 BR()
-L(sprintf("![Per-paper kappa distribution](normal_report_%s_kappa_dist.png)", date_str))
+L("![Per-paper kappa distribution](kappa_dist.png)")
 BR()
-L(sprintf("![Per-paper type accuracy distribution](normal_report_%s_paper_dist.png)", date_str))
+L("![Per-paper type accuracy distribution](paper_dist.png)")
 BR()
-L(sprintf("![Paper size vs accuracy scatter](normal_report_%s_paper_scatter.png)", date_str))
+L("![Paper size vs accuracy scatter](paper_scatter.png)")
 BR()
 
 breaks <- c(0, 50, 70, 85, 95, 100)
@@ -803,8 +844,9 @@ BR()
 
 # ── Write MD ──────────────────────────────────────────────────────────────────
 
-dir.create(REPORT_DIR, recursive = TRUE, showWarnings = FALSE)
-out_path <- file.path(REPORT_DIR, paste0("normal_report_", date_str, ".md"))
+run_dir  <- file.path(REPORT_DIR, paste0("normal_report_", date_str))
+dir.create(run_dir, recursive = TRUE, showWarnings = FALSE)
+out_path <- file.path(run_dir, "report.md")
 writeLines(lines, out_path)
 cat(sprintf("  [report] written to: %s\n", out_path))
 
@@ -812,7 +854,7 @@ cat(sprintf("  [report] written to: %s\n", out_path))
 
 # ── Plot 1: File-pooled per-class P/R/F1 bar ─────────────────────────────────
 
-png_metrics <- file.path(REPORT_DIR, paste0("normal_report_", date_str, "_metrics.png"))
+png_metrics <- file.path(run_dir, "metrics.png")
 png(png_metrics, width = 900, height = 500, res = 100)
 cls_names <- class_metrics$class
 mat <- rbind(class_metrics$precision / 100, class_metrics$recall / 100,
@@ -833,7 +875,7 @@ cat(sprintf("  [plot]   written to: %s\n", png_metrics))
 
 # ── Plot 2: Paper-averaged per-class F1 box plots ────────────────────────────
 
-png_metrics_pa <- file.path(REPORT_DIR, paste0("normal_report_", date_str, "_metrics_pa.png"))
+png_metrics_pa <- file.path(run_dir, "metrics_pa.png")
 png(png_metrics_pa, width = 900, height = 520, res = 100)
 old_par <- par(mar = c(6, 4.5, 3.5, 1))
 cls_order <- all_types
@@ -864,7 +906,7 @@ cat(sprintf("  [plot]   written to: %s\n", png_metrics_pa))
 
 # ── Plot 3: File-pooled confusion matrix ─────────────────────────────────────
 
-png_conf <- file.path(REPORT_DIR, paste0("normal_report_", date_str, "_confusion.png"))
+png_conf <- file.path(run_dir, "confusion.png")
 png(png_conf, width = 700, height = 620, res = 100)
 heatmap_plot(as.matrix(cm), "Type Confusion Matrix — File-pooled (row-normalised)",
              subtitle = "Each file weighted equally; large repos dominate")
@@ -873,7 +915,7 @@ cat(sprintf("  [plot]   written to: %s\n", png_conf))
 
 # ── Plot 4: Paper-averaged confusion matrix ───────────────────────────────────
 
-png_conf_pa <- file.path(REPORT_DIR, paste0("normal_report_", date_str, "_confusion_pa.png"))
+png_conf_pa <- file.path(run_dir, "confusion_pa.png")
 png(png_conf_pa, width = 700, height = 620, res = 100)
 heatmap_plot(pa_cm_norm, "Type Confusion Matrix — Paper-averaged (mean row proportions)",
              subtitle = "Each paper weighted equally regardless of file count")
@@ -882,7 +924,7 @@ cat(sprintf("  [plot]   written to: %s\n", png_conf_pa))
 
 # ── Plot 5: Paper-averaged vs file-pooled summary comparison ─────────────────
 
-png_compare <- file.path(REPORT_DIR, paste0("normal_report_", date_str, "_summary_compare.png"))
+png_compare <- file.path(run_dir, "summary_compare.png")
 png(png_compare, width = 750, height = 480, res = 100)
 old_par <- par(mar = c(5, 5, 3.5, 1))
 metrics_lab <- c("Accuracy", "Macro F1", "κ × 100", "MCC × 100")
@@ -904,7 +946,7 @@ cat(sprintf("  [plot]   written to: %s\n", png_compare))
 
 # ── Plot 6: Per-paper kappa distribution ─────────────────────────────────────
 
-png_kappa <- file.path(REPORT_DIR, paste0("normal_report_", date_str, "_kappa_dist.png"))
+png_kappa <- file.path(run_dir, "kappa_dist.png")
 png(png_kappa, width = 800, height = 480, res = 100)
 old_par <- par(mar = c(5, 4, 3, 1))
 h_k <- hist(kap_vals, breaks = seq(-0.1, 1.05, by = 0.05), plot = FALSE)
@@ -934,7 +976,7 @@ cat(sprintf("  [plot]   written to: %s\n", png_kappa))
 
 # ── Plot 7: Per-paper type accuracy distribution ──────────────────────────────
 
-png_dist <- file.path(REPORT_DIR, paste0("normal_report_", date_str, "_paper_dist.png"))
+png_dist <- file.path(run_dir, "paper_dist.png")
 png(png_dist, width = 800, height = 480, res = 100)
 old_par <- par(mar = c(5, 4, 3, 1))
 h_dist <- hist(type_vals, breaks = seq(0, 100, by = 5), plot = FALSE)
@@ -955,7 +997,7 @@ cat(sprintf("  [plot]   written to: %s\n", png_dist))
 
 # ── Plot 8: Paper size vs accuracy scatter ────────────────────────────────────
 
-png_scatter <- file.path(REPORT_DIR, paste0("normal_report_", date_str, "_paper_scatter.png"))
+png_scatter <- file.path(run_dir, "paper_scatter.png")
 png(png_scatter, width = 800, height = 500, res = 100)
 old_par <- par(mar = c(5, 4.5, 3.5, 1))
 plot(per_paper_full$n_files, per_paper_full$type_acc,
@@ -983,7 +1025,7 @@ cat(sprintf("  [plot]   written to: %s\n", png_scatter))
 # ── Plot 9: Top FP/FN confusion pairs ────────────────────────────────────────
 
 if (length(top_pairs) > 0) {
-  png_fp_fn <- file.path(REPORT_DIR, paste0("normal_report_", date_str, "_fp_fn.png"))
+  png_fp_fn <- file.path(run_dir, "fp_fn.png")
   n_show    <- min(15, length(top_pairs))
   png(png_fp_fn, width = 900, height = 400 + n_show * 20, res = 100)
   old_par <- par(mar = c(4, 14, 3, 2))
@@ -998,7 +1040,7 @@ if (length(top_pairs) > 0) {
 # ── Plot 10: Extension error rate ─────────────────────────────────────────────
 
 if (!is.null(ext_stats) && nrow(ext_stats) > 0) {
-  png_ext <- file.path(REPORT_DIR, paste0("normal_report_", date_str, "_ext_errors.png"))
+  png_ext <- file.path(run_dir, "ext_errors.png")
   n_show  <- min(20, nrow(ext_stats))
   top_ext <- ext_stats[seq_len(n_show), ]
   top_ext <- top_ext[order(top_ext$error_rate), ]
@@ -1019,7 +1061,7 @@ if (!is.null(ext_stats) && nrow(ext_stats) > 0) {
 # ── Plot 11: Group confusion matrix ───────────────────────────────────────────
 
 if (!is.null(cm_grp) && nrow(cm_grp) > 1) {
-  png_grp <- file.path(REPORT_DIR, paste0("normal_report_", date_str, "_group_conf.png"))
+  png_grp <- file.path(run_dir, "group_conf.png")
   sz      <- max(500, 100 * nrow(cm_grp) + 200)
   png(png_grp, width = sz, height = sz, res = 100)
   heatmap_plot(cm_grp, "Group Confusion Matrix (row-normalised, data files only)")
@@ -1030,10 +1072,21 @@ if (!is.null(cm_grp) && nrow(cm_grp) > 1) {
 # ── Plot 12: DG confusion matrix ──────────────────────────────────────────────
 
 if (!is.null(cm_dg) && nrow(cm_dg) > 1) {
-  png_dg <- file.path(REPORT_DIR, paste0("normal_report_", date_str, "_dg_conf.png"))
+  png_dg <- file.path(run_dir, "dg_conf.png")
   sz     <- max(500, 100 * nrow(cm_dg) + 200)
   png(png_dg, width = sz, height = sz, res = 100)
   heatmap_plot(cm_dg, "data_granularity Confusion Matrix (row-normalised, data files only)")
   invisible(dev.off())
   cat(sprintf("  [plot]   written to: %s\n", png_dg))
+}
+
+# ── Plot 13: data_format confusion matrix ─────────────────────────────────────
+
+if (!is.null(cm_df) && nrow(cm_df) > 1) {
+  png_df <- file.path(run_dir, "df_conf.png")
+  sz     <- max(500, 100 * nrow(cm_df) + 200)
+  png(png_df, width = sz, height = sz, res = 100)
+  heatmap_plot(cm_df, "data_format Confusion Matrix (row-normalised, data files only)")
+  invisible(dev.off())
+  cat(sprintf("  [plot]   written to: %s\n", png_df))
 }

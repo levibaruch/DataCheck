@@ -172,7 +172,37 @@ classify_by_rules <- function(path) {
 # ── Data format sub-classification ───────────────────────────────────────────
 
 TABULAR_EXTENSIONS <- c("csv", "tsv", "txt", "dat", "xlsx", "xls", "sav", "dta", "sas7bdat")
-RAW_EXTENSIONS     <- c("edf", "bdf", "acq", "mat", "mp4", "avi", "mov", "wav", "mp3")
+RAW_EXTENSIONS     <- c(
+  # EEG / physiological recordings
+  "edf", "bdf", "acq", "gdf", "rec", "cnt",
+  "vhdr", "vmrk", "eeg",          # BrainVision
+  "mff",                           # EGI/Philips
+  "set", "fdt",                    # EEGLAB
+  "fif",                           # MNE / MEG
+  # Neuroimaging
+  "nii", "img", "hdr",             # NIfTI / Analyze
+  "mgh", "mgz",                    # FreeSurfer
+  "mnc",                           # MINC
+  "dcm",                           # DICOM
+  # Motion capture / biomechanics
+  "c3d", "trc", "mot", "sto",
+  # MATLAB / array formats
+  "mat",
+  # HDF5 / scientific array formats
+  "h5", "hdf5", "hdf",
+  "nc", "cdf",                     # NetCDF
+  # NumPy / Python serialised arrays
+  "npy", "npz",
+  "pkl", "pickle",
+  # Eye-tracking
+  "asc",                           # EyeLink ASCII export
+  # Audio
+  "wav", "mp3", "flac", "ogg", "m4a", "aiff", "aif", "au", "wma",
+  # Video
+  "mp4", "avi", "mov", "mkv", "wmv", "m4v", "flv", "webm", "3gp",
+  # Generic binary
+  "bin", "raw"
+)
 
 # Takes a character vector of lowercase file extensions (no leading dot).
 # Returns "tabular" or "raw" for each element — never NA.
@@ -320,6 +350,9 @@ llm_batch <- function(paths, system_prompt, user_prefix, key_col, extra_cols,
   all_parsed <- vector("list", length(chunks))
 
   for (i in seq_along(chunks)) {
+    if (exists("SKIP_FILE") && file.exists(SKIP_FILE))
+      stop("user_skip: skip signal detected — user requested paper be aborted")
+
     chunk_paths <- chunks[[i]]
     chunk_text  <- paste(seq_along(chunk_paths), chunk_paths, sep = ". ", collapse = "\n")
     chunk_input <- paste0(user_prefix, "\n\n", chunk_text,

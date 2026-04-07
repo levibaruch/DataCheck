@@ -16,7 +16,7 @@ source("data_check/pipeline/helper.R")
 source("data_check/pipeline/prompts.R")
 
 llm_use(TRUE)
-llm_model("ollama/gpt-oss:20b-cloud")
+llm_model("ollama/gpt-oss:20b")
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -32,6 +32,8 @@ AGGREGATE_EXT_OVERRIDE <- c(
   do = "code", sps = "supplemental", jl = "code", js = "code", sh = "code",
   bash = "code", pl = "code", rb = "code", cpp = "code", c = "code",
   h = "code", java = "code", scala = "code", sql = "code",
+  exe = "software", app = "software", jar = "software",
+  msi = "software", dmg = "software",
   jpg = "asset", jpeg = "asset", png = "asset", gif = "asset",
   bmp = "asset", tiff = "asset", tif = "asset", svg = "asset",
   mp4 = "asset", avi = "asset", mov = "asset", mp3 = "asset",
@@ -53,8 +55,9 @@ VALID_COL_TYPES <- c("continuous", "binary", "categorical", "ordinal", "date", "
 if (!exists("MAX_COL_TYPE_LLM_CALLS"))      MAX_COL_TYPE_LLM_CALLS      <- 5L
 if (!exists("MAX_CHAR_COL_TYPE_LLM_CALLS")) MAX_CHAR_COL_TYPE_LLM_CALLS <- 3L
 if (!exists("FULL_RUN"))                    FULL_RUN                    <- FALSE
+if (!exists("SKIP_COLUMNS"))               SKIP_COLUMNS                <- FALSE  # TRUE = skip column extraction entirely
 # Folders with more than this many files are treated as aggregate datasets
-AGGREGATE_THRESHOLD <- 50
+AGGREGATE_THRESHOLD <- 20
 # Max rows to scan below row 1 for a usable sub-header in multi-level CSV files
 MULTILEVEL_HEADER_LOOKAHEAD <- 3L
 # Directory names longer than this many words are truncated; spaces → underscores
@@ -681,6 +684,13 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
   t_col_start <- proc.time()[["elapsed"]]
   # ── 9. Extract columns + sample values from data files ───────────────────────
 
+  if (SKIP_COLUMNS) {
+    message("── Column extraction skipped (SKIP_COLUMNS = TRUE)")
+    columns_df   <- NULL
+    columns_out  <- NULL
+    data_files   <- file_df[FALSE, ]  # empty frame for n_tabular_files below
+  } else {
+
   # Only "data" files are column-extracted. Files with type = "output", "supplemental",
   # "codebook", "code", "asset", "readme", or "other" are excluded by this filter.
   data_files <- file_df[file_df$type == "data" & !file_df$is_sentinel &
@@ -909,54 +919,15 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
   column_list  <- Filter(Negate(is.null), column_list)
   columns_df   <- do.call(rbind, lapply(column_list, function(x) x$columns))
 
-  # ── Batch 1: numeric-ambiguous columns (COLUMN_TYPE_PROMPT) ──────────────
+  # ── Batch 1: numeric-ambiguous columns → continuous (LLM disabled) ────────
+  # LLM classification for numeric columns fails 100% of the time and always
+  # falls back to continuous anyway. Skip the call; assign directly.
   if (!is.null(columns_df) && nrow(columns_df) > 0) {
     num_ambig_rows <- which(is.na(columns_df$col_type) & columns_df$is_numeric)
     if (length(num_ambig_rows) > 0) {
-      max_num_cols <- MAX_COL_TYPE_LLM_CALLS * LLM_BATCH_SIZE
-      if (!FULL_RUN && length(num_ambig_rows) > max_num_cols)
-        num_ambig_rows <- num_ambig_rows[seq_len(max_num_cols)]
-      descriptors <- paste0('"', columns_df$column_name[num_ambig_rows], '"',
-                            " (samples: ", columns_df$sample_values_unique[num_ambig_rows], ")")
-      message("── LLM col_type Batch 1 (numeric): classifying ",
-              length(num_ambig_rows), " column(s)")
-      llm_result <- tryCatch(
-        llm_batch(
-          paths         = descriptors,
-          system_prompt = COLUMN_TYPE_PROMPT,
-          user_prefix   = "Classify each column:",
-          key_col       = "descriptor",
-          extra_cols    = "col_type",
-          fallback_vals = list(col_type = "unknown"),
-          sentinel_cols = "col_type",
-          paper_id      = paper_id,
-          stage_name    = "col-type Batch 1"
-        ),
-        error = function(e) {
-          warning("LLM col_type Batch 1 failed: ", conditionMessage(e))
-          data.frame(descriptor = descriptors,
-                     col_type   = rep("unknown", length(descriptors)),
-                     stringsAsFactors = FALSE)
-        }
-      )
-      returned_types <- llm_result$col_type
-      invalid_mask   <- !returned_types %in% VALID_COL_TYPES
-      if (any(invalid_mask)) {
-        bad_types <- unique(returned_types[invalid_mask])
-        message("── col_type Batch 1: ", sum(invalid_mask),
-                " invalid type(s) remapped to unknown: ",
-                paste(bad_types, collapse = ", "))
-        returned_types[invalid_mask] <- "unknown"
-      }
-      columns_df$col_type[num_ambig_rows] <- returned_types
-
-      # Fallback: LLM "unknown" for a confirmed-numeric column → "continuous".
-      num_unknown <- num_ambig_rows[columns_df$col_type[num_ambig_rows] == "unknown"]
-      if (length(num_unknown) > 0) {
-        columns_df$col_type[num_unknown] <- "continuous"
-        message("── col_type fallback: ", length(num_unknown),
-                " numeric column(s) reclassified from unknown \u2192 continuous")
-      }
+      columns_df$col_type[num_ambig_rows] <- "continuous"
+      message("── col_type Batch 1 (numeric): ", length(num_ambig_rows),
+              " column(s) assigned continuous (LLM skipped)")
     }
   }
 
@@ -1023,6 +994,8 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
     columns_df$sample_values_unique <- NULL
     columns_df$is_numeric           <- NULL
   }
+
+  } # end if (!SKIP_COLUMNS)
 
   n_individual <- sum(file_df$data_granularity == "individual", na.rm = TRUE)
   n_combined   <- sum(file_df$data_granularity == "combined",   na.rm = TRUE)

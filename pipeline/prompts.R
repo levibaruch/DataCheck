@@ -108,13 +108,21 @@ TYPE — what this file is for:
                  coding_key, variable_key, var_desc, data_guide, labels, legend,
                  metadata; or "variables" at the start or end of the filename.
                  A codebook can be any format — .csv, .xlsx, .pdf, .docx, .txt.
-  code         : executable source file or notebook — scripts, syntax files,
-                 notebooks (.Rmd, .qmd, .ipynb), regardless of language.
+  code         : executable source file or notebook whose purpose is to generate
+                 analyses or research outputs — scripts, syntax files, notebooks
+                 (.Rmd, .qmd, .ipynb), regardless of language.
+  software     : program, application, or configuration file whose purpose is to
+                 run or configure the experiment — stimulus delivery, task
+                 presentation, data collection tools, and their configuration
+                 files (experiment parameters, trial config, settings files).
+                 Compiled binaries (.exe, .app, .jar, .msi, .dmg) → always software.
   output       : file produced by executing a script — rendered notebooks (.html,
                  .pdf, .docx output from .Rmd/.qmd/.ipynb), script-generated
                  figures and graphs, log files (.log, .out), and other
                  computational byproducts. Classify as output when the filename
                  or folder context clearly indicates a script-generated artefact.
+                 Exception: experiment software (E-Prime, PsychoPy, etc.) writes
+                 per-participant .log files that are raw data — see hard cases.
                  When provenance is ambiguous, prefer supplemental.
   supplemental : human-authored research material that is not data, code, or a
                  codebook — manuscripts, preregistrations, instruments, consent
@@ -124,9 +132,10 @@ TYPE — what this file is for:
   readme       : file named or contains README (any capitalisation).
   asset        : stimulus media presented to participants during the study —
                  image, audio, or video files.
-  other        : no research content — OS metadata, config files, lock files,
-                 executables. Not a catch-all for ambiguous research files.
-
+  other        : ONLY when the file clearly has no research relevance (e.g., system files,
+                temporary files, unrelated documents). If any plausible research use exists,
+                DO NOT use "other".
+                
 GROUP — which experiment this file belongs to:
   "ex<N>"   : clearly tied to a numbered experiment or study.
               The number must follow an explicit experiment label in the folder
@@ -145,24 +154,39 @@ Hard cases — use filename and folder context to decide:
 - .csv/.xlsx/.txt/.pdf can each be data OR codebook OR supplemental. The filename
   is the primary signal: measurement-oriented names → data; variable-description
   names → codebook; document-oriented names → supplemental.
+- Tabular files (.csv, .xlsx, .sav, .dta, .tsv, .dat) whose name contains
+  "graph", "figure", or "plot" → output, NOT data.
 - subject-* or sub-* files (e.g. "subject-2294_run1.txt") → always data.
-- .rds/.rdata/.rda → data unless filename contains "plot", "figure", or "graph"
+- Transcript files — filename contains "transcript", "transcription", "interview",
+  or "verbal" — are raw qualitative data → data, NOT supplemental, regardless
+  of format (.txt, .docx, .pdf, .csv).
+- .rds/.rdata/.rda/.sav → data unless filename contains "plot", "figure", or "graph"
   → output (not data, not supplemental).
 - .json → data if filename suggests measurements; other if it looks like config
   (package.json, dotfiles, *rc.json, *config.json).
-- .spv → supplemental (SPSS Viewer output file, NOT code — .sps is code, .spv is not).
-- Images/audio/video → asset if inside a stimuli/stim/materials/sounds/images
-  folder or filename contains "stim", "stimulus", "trial", or "item".
-  → output if clearly script-generated: filename contains "figure", "fig",
-  "plot", "graph", "results", or "output" AND not in stimuli context.
-  → supplemental if provenance is ambiguous.
+- .spv → output (SPSS Viewer file — computational byproduct of running SPSS;
+  .sps is code, .spv is NOT supplemental).
+- .log/.out → output (system or script log). Exception: if the filename contains
+  a participant/subject ID pattern (e.g. "subject01.log", "p01_session1.log")
+  → data (experiment software such as E-Prime and PsychoPy writes per-participant
+  .log files that are raw data).
+- Images/audio/video (.jpg, .png, .gif, .wav, .mp3, .mp4, .avi, .mov, etc.)
+  are NEVER other. Classify as:
+  → data if filename contains a participant/subject ID (e.g. "subject-2294_run1.wav")
+  → output if filename contains "figure", "fig", "plot", "graph", "results", or
+    "output" AND not in a stimuli context
+  → asset in all other cases (default for unidentified media in a research repo)
+  Stimuli folder names (stimuli/, stim/, materials/, images/, sounds/, audio/,
+  video/, pictures/) and filename keywords ("stim", "stimulus", "trial", "item")
+  are strong positive signals for asset but are not required.
 - .html → output if it appears to be a rendered notebook (shares a basename with
   an .Rmd/.qmd/.ipynb file in the same folder, or is in a folder containing
   scripts); otherwise supplemental.
-- .mat → data if the filename suggests participant-level measurements (subject/
-  participant ID in name, or folder is data/); → output if the filename contains
-  "result", "output", "model", "fit", "figure", or "plot"; → data for
-  truly ambiguous cases (conservative fallback).
+- .mat → output if the filename contains "result", "output", "model", "fit",
+  "figure", or "plot". Otherwise → data. In particular: folder path contains
+  "data" or "raw" (e.g. raw_data/, rawdata/, data_files/), numeric suffix
+  (e.g. "_13", "_14"), or subject/participant ID in name → data. Default for
+  all other ambiguous .mat files is also data (conservative fallback).
 - "Supplemental Experiment N" or "Supplemental Study N" folders → group "shared".
 - Archive and previous-version folders → type of contents, group "shared".
 
@@ -195,8 +219,8 @@ the extension, to infer each file's purpose."
         },
         "type": {
           "type": "string",
-          "enum": ["data", "codebook", "code", "output", "supplemental", "readme", "asset", "other"],
-          "description": "What this file is for. Use the full path and folder context — not just the extension — to infer purpose. Rules per value: 'data': contains research measurements — observations, recordings, or matrices intended for analysis. The extension alone is not sufficient: a .csv or .xlsx may be a codebook, a .txt may be participant data. Judge from filename and folder context. 'codebook': primary purpose is describing what variables mean. Identified by filename keywords: codebook, data_dictionary, variable_list, coding_key, variable_key, var_desc, data_guide, labels, legend, metadata; or 'variables' at the start or end of the filename. A codebook can be any format — .csv, .xlsx, .pdf, .docx, .txt. 'code': executable source file or notebook — scripts, syntax files, notebooks (.Rmd, .qmd, .ipynb), regardless of language. 'output': file produced by executing a script — rendered notebooks (.html, .pdf, .docx output from .Rmd/.qmd/.ipynb), script-generated figures and graphs, log files (.log, .out), and other computational byproducts. Classify as output when the filename or folder context clearly indicates a script-generated artefact. When provenance is ambiguous, prefer supplemental. 'supplemental': human-authored research material that is not data, code, or a codebook — manuscripts, preregistrations, instruments, consent forms, survey scales, appendices. Script-generated artefacts (figures, rendered notebooks) → output, not supplemental. Fallback for ambiguous provenance. 'readme': file named or contains README (any capitalisation). 'asset': stimulus media presented to participants during the study — image, audio, or video files. 'other': no research content — OS metadata, config files, lock files, executables. Not a catch-all for ambiguous research files. Hard cases: .csv/.xlsx/.txt/.pdf can each be data OR codebook OR supplemental — the filename is the primary signal: measurement-oriented names → data; variable-description names → codebook; document-oriented names → supplemental. subject-* or sub-* files → always data. .rds/.rdata/.rda → data unless filename contains 'plot', 'figure', or 'graph' → output. .json → data if filename suggests measurements; other if it looks like config (package.json, dotfiles, *rc.json, *config.json). .spv → supplemental (.sps is code, .spv is not). Images/audio/video → asset if inside a stimuli/stim/materials/sounds/images folder or filename contains 'stim', 'stimulus', 'trial', or 'item'; → output if filename contains 'figure', 'fig', 'plot', 'graph', 'results', or 'output' AND not in stimuli context; → supplemental if provenance is ambiguous. .html → output if it shares a basename with an .Rmd/.qmd/.ipynb in the same folder or is in a folder containing scripts; otherwise supplemental. .mat → data if the filename suggests participant-level measurements (subject/participant ID in name, or in a data/ folder); → output if filename contains 'result', 'output', 'model', 'fit', 'figure', or 'plot'; → data for ambiguous cases."
+          "enum": ["data", "codebook", "code", "software", "output", "supplemental", "readme", "asset", "other"],
+          "description": "What this file is for. Use the full path and folder context — not just the extension — to infer purpose. Rules per value: 'data': contains research measurements — observations, recordings, or matrices intended for analysis. The extension alone is not sufficient: a .csv or .xlsx may be a codebook, a .txt may be participant data. Judge from filename and folder context. 'codebook': primary purpose is describing what variables mean. Identified by filename keywords: codebook, data_dictionary, variable_list, coding_key, variable_key, var_desc, data_guide, labels, legend, metadata; or 'variables' at the start or end of the filename. A codebook can be any format — .csv, .xlsx, .pdf, .docx, .txt. 'code': executable source file or notebook whose purpose is to generate analyses or research outputs — scripts, syntax files, notebooks (.Rmd, .qmd, .ipynb), regardless of language. 'software': program, application, or configuration file whose purpose is to run or configure the experiment — stimulus delivery, task presentation, data collection tools, configuration files, and any other file that is part of the experiment software package. Compiled binaries (.exe, .app, .jar, .msi, .dmg) → always software. Any file belonging to the experiment software package → software. 'output': file produced by executing a script — rendered notebooks (.html, .pdf, .docx output from .Rmd/.qmd/.ipynb), script-generated figures and graphs, log files (.log, .out), and other computational byproducts. Classify as output when the filename or folder context clearly indicates a script-generated artefact. When provenance is ambiguous, prefer supplemental. 'supplemental': human-authored research material that is not data, code, or a codebook — manuscripts, preregistrations, instruments, consent forms, survey scales, appendices. Script-generated artefacts (figures, rendered notebooks) → output, not supplemental. Fallback for ambiguous provenance. 'readme': file named or contains README (any capitalisation). 'asset': stimulus media presented to participants during the study — image, audio, or video files. 'other': no research content — OS metadata, config files, lock files. Not a catch-all for ambiguous research files. (Compiled experiment programs → software, not other.) Hard cases: .csv/.xlsx/.txt/.pdf can each be data OR codebook OR supplemental — the filename is the primary signal: measurement-oriented names → data; variable-description names → codebook; document-oriented names → supplemental. subject-* or sub-* files → always data. Transcript files (filename contains 'transcript', 'transcription', 'interview', or 'verbal') → data, NOT supplemental, regardless of format. .rds/.rdata/.rda → data unless filename contains 'plot', 'figure', or 'graph' → output. .json → data if filename suggests measurements; other if it looks like config (package.json, dotfiles, *rc.json, *config.json). .spv → output (SPSS Viewer file — computational byproduct; .sps is code, .spv is NOT supplemental). .log/.out → output unless filename contains a participant/subject ID → data. Tabular files (.csv, .xlsx, .sav, .dta, .tsv, .dat) whose name contains 'graph', 'figure', or 'plot' → output, NOT data. Images/audio/video (.jpg, .png, .wav, .mp4, etc.) are NEVER other — classify as: data if filename contains a participant/subject ID; output if filename contains 'figure', 'fig', 'plot', 'graph', 'results', or 'output' AND not in stimuli context; asset in all other cases (default for unidentified media). Stimuli folder names and filename keywords ('stim', 'stimulus', 'trial', 'item') are strong positive signals for asset but not required. .html → output if it shares a basename with an .Rmd/.qmd/.ipynb in the same folder or is in a folder containing scripts; otherwise supplemental. .mat → output if filename contains 'result', 'output', 'model', 'fit', 'figure', or 'plot'; → data otherwise (including folder path contains 'data' or 'raw', numeric suffix, or subject/participant ID in name). Default for ambiguous .mat is data. code vs software: use purpose and full path as the signal. Analysis/modelling/cleaning scripts → code. Experiment task runners, stimulus apps, compiled programs → software. Path contains experiment/, task/, paradigm/, or stimulus/ folder AND file runs something → prefer software. Analysis/, results/, scripts/ folder context → code."
         },
         "group": {
           "type": "string",
@@ -303,7 +327,9 @@ Descriptor format: folder/[prefix: "PREFIX", N files, .EXT, samples: FILE1, FILE
 TYPE — use the same definitions as file classification:
   data         : series of research measurements (participant-level recordings, responses)
   asset        : stimulus media presented to participants
-  code         : executable scripts or notebooks
+  code         : executable scripts or notebooks whose purpose is to generate analyses
+  software     : series of experiment programs, compiled binaries, task tools,
+                 or experiment configuration files
   output       : script-generated artefacts — rendered notebooks, figures, graphs,
                  log files, computational byproducts
   supplemental : human-authored research material — manuscripts, instruments, consent
@@ -317,9 +343,10 @@ GROUP — use the same rules as file classification:
 
 Key signals for aggregate series:
 - Participant-named series (participant IDs, subject codes) with tabular extensions → data
+- Participant-named media series (subject IDs in filenames, .wav/.mp4 etc.) → data
 - Task-condition prefixes (e.g. "FlowerInsectCong-", "RaceEvalCong-") within an IAT folder → data,
   use the prior-batch experiment context to assign the correct group
-- Numbered stimulus files (.jpg, .png, .wav) → asset
+- Numbered or stimulus-keyword media files (.jpg, .png, .wav) → asset (NEVER other)
 - Figure/graph/plot series named files (.jpg, .png, .svg) outside stimuli folder → output
 - Script collections → code
 - Use the Known experiment structure context (if provided) to assign group labels consistent
