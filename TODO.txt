@@ -7,62 +7,113 @@ Legend:
 Open items are marked  [ ]
 Done items are marked  [x]
 
-────────────────────────────────────────────────────────────────────────────────
-PIPELINE: 0_index.R — file classification & structure
-────────────────────────────────────────────────────────────────────────────────
 
-[ ] [USER] Qualtrics triple-header detection
-      Qualtrics exports use a 3-row header:
-        row 1 = machine-readable column names  (used as R header)
-        row 2 = human-readable labels
-        row 3 = ImportId JSON  (e.g. {"ImportId":"QID1_TEXT"})
-      When row 1 of the data (after reading) contains {"ImportId": strings,
-      skip rows 1–2 so that actual participant responses are used as
-      sample_values instead of label/ImportId strings.
-      Location: extract_columns() in 0_index.R
-
-[ ] [USER] Supplemental experiments — dedicated group "supex<N>"
-      Currently "Supplemental Experiment N" folders are mapped to group
-      "other" to avoid false merges with the main ex<N> groups.
-      But supplemental experiments are sometimes real replications or
-      additional studies that warrant tracking separately.
-      Proposed fix: introduce a "supex<N>" group (e.g. "supex1", "supex2")
-      and update the LLM prompt + downstream schema-mapping step accordingly.
-      Location: STRUCTURE_PROMPT rules in 0_index.R
-
-[ ] [USER] Explode xslx files into different csv files (as an unpack file)
-      Probably, some analysis of the first row would be needed to classify the files as either codebook,
-      data or other things
-
-
-────────────────────────────────────────────────────────────────────────────────
-PIPELINE: general / future
-────────────────────────────────────────────────────────────────────────────────
-
-[ ] [DEV]  Verify downloaded files match OSF manifest, not just folder existence
-      Rationale: The current download guard checks only whether the target
-      folder exists. If a previous run was interrupted mid-download, the folder
-      exists but is incomplete. Comparing the local file list against the OSF
-      API manifest (file names + sizes) would make reruns safe and idempotent.
-      Location: step 1 (download) in 0_index.R
-
-[ ] [DEV]  Qualtrics ResponseId / metadata column stripping
-      Rationale: Qualtrics exports always include housekeeping columns
-      (ResponseId, RecordedDate, Status, IPAddress, etc.) that are not
-      substantive variables. These inflate the column index and confuse
-      downstream schema matching. A lightweight blocklist or pattern filter
-      applied in extract_columns() would keep the output clean.
-      Location: extract_columns() in 0_index.R
-
-[ ] [DEV]  Multi-sheet Excel handling
-      Rationale: read_data_head() currently reads only the first sheet of
-      .xlsx/.xls files. Repos sometimes store each experiment's data in
-      separate sheets of one workbook. Each sheet should be treated as a
-      separate logical file, producing its own rows in the columns CSV.
-      Location: read_data_head() in helper.R
+Mistakes found during the ground truth annotations, or unclarities found during annotation
 
 
 
-N unique voor sumstats
+617706706 -> interesting codebook
 
-Labels vanuit codebook kunnen beter verbatim, niet verklaeint/geinterpreteerd
+RDATA should be exploded like XLSX when there is data detected (so nog gplot)
+
+Raw video files are data when they are raw data. 
+
+Example video of data -> sup
+
+PIcture of materials used -> Supplemental
+
+SQL -> Raw Combined data
+
+615586560 Gini calculator. How do I detemine this?I would say output?
+ 
+ .log is often raw data
+
+ Transcript of an interview is raw individual data
+
+ 614557697 Example of paper where group membership of files i simpossible wihtout reading the paper
+
+ 615569002 -> FMRI data that I dont understand. I think its raw data?
+
+ 616649660(6 or 1): .inp is code, since it does analytics
+
+ +616684682: A JASP is hard. They are both data and code in one. I really dont know how to deal with this for now
+
+ 622119391 screenshots of a survey are assets
+
+ 617724426 Model files in .txt, do we onsider these models outputs or code? They are written in code
+
+ 617729817 archive.txt -> data
+
+617735807 Figure that is actually an asset (asset used as figure! Therefore LLM labelled as output). I dont think this is fixable; just author Mistakes
+
+617730814
+      Impossible to know dataset grouping from dataname
+
+Continious versus ordinal detection is not so good. Revisit these rules.
+
+Qualtrics detectoin not working always. Too many times I see the "ImportID in the first variable. Maybe detect it for more collumns in more depth? Seems to happen when 
+there is no qualtrics in the first one, but in second one. Maybe check N=x rows?
+
+618774252 is a good paper with a hard codebook
+
+Maybe we can detect used measurement tools in the paper?
+
+617734827 Intermediate results that are furhter processed are data
+
+Many autors kindly supply the same dataset in .sav and other forms. This is nice, but will require an equivilance test later down the line; we have a lot of duplicate data
+The same problem comes across when there is data and "cleaned" data. What do we keep? Maybe both?
+
+.RAR is not currently extracted.
+
+Recheck all .ebs or .es (i cnanot remember why)
+
+615595607 If the first row is just automatically generated headers, or stuff like (V1, V2, V3), make sure that other rows are checked as dataset headers. Maybe check if there is some thing like (if row x is all text for only this row, that is probably not part of the dataset)
+
+616647518 xslx is not exploded
+
+617730892 pdf was somehow detected as a tabular dataset?
+
+
+6177372128 configs are software
+
+We need to handle long versus wide datasets somehow. This isnt working
+
+617617659 many .mat files
+
+618773095 .jasp files
+
+619831964 .pdf not labelled as output while it has the same name as a .rmd file. Probably should make a rule for that. Rdata with glmermod = output
+
+61984421 wide ipv long codebook
+
+315593071 ехперимент 1, but folders contians both: GT = shared
+
+0956797615581(5)5 -> datasets in both wide and long. Gmmmm How do we handle this> What is best for our use case?
+
+615605818 -> correlational additional study I consider shared
+
+615619206 dupliate datasets
+
+616654131 is data from another experiment supplemental or data? I consider it data, since it is used in the experiment/analysis, right?
+
+616685770 Pretest = experiment, not pilot
+
+617753562 .xlsm not exploded
+
+619869505(?) ,rar not extracted
+
+620929302 how do we handle dummy files and datasets? other?
+
+620941840 datasets sometimes have codebook variables that explain not per variable, but per gooiing (v1-10 means x). This happens more often than I want
+
+614553944 codebook describes 5 non-labelled collumns frommt he raw data (so no headers; explanation given). I think this is such bad manners that we should account for it
+
+614564191 many different individual tabular files might give an opportunity to algorithmically concate these into a combined file; aka check if all collumns are the same with simular valuepypes, concenate and add aprticipant nr (maybe file name) as a collumn. This would be a great way to use the currently under/not- utilized individual datasets
+
+615569002 Skipped, I dont understand these fmri datasets, so cannot judge the correctness of the predictions right now.
+
+There exist R packages to read in .mat ifles. We should do this for the ones we have; especially considering the previous concation logic for individual files that are tabular
+
+Many csv codebooks include more than one collumns (include means, explanations.) we need to find a way to keep this information but still parse them correctly and preferably without LLM extraciton.
+Also LLM css extraction seems to take long. maybe first convert it more properly than we do now? 
+

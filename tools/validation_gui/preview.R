@@ -17,6 +17,9 @@ preview_text <- function(path, n_lines = 50L) {
     setTimeLimit(elapsed = PREVIEW_TIMEOUT_SEC, transient = TRUE)
     on.exit(setTimeLimit(elapsed = Inf), add = TRUE)
     lines <- readLines(path, n = n_lines, warn = FALSE)
+    # Sanitize invalid UTF-8 bytes (e.g. latin-1 encoded files) so downstream
+    # nchar() / htmlEscape() calls don't crash. Invalid bytes → <XX> hex escape.
+    lines <- iconv(lines, from = "", to = "UTF-8", sub = "byte")
     paste(lines, collapse = "\n")
   }, error = function(e) {
     paste0("[Preview error: ", conditionMessage(e), "]")
@@ -421,9 +424,10 @@ render_preview <- function(path, ext) {
   } else {
     txt <- tryCatch({
       lines <- readLines(path, n = 100L, warn = FALSE)
+      lines <- iconv(lines, from = "", to = "UTF-8", sub = "byte")
       paste(lines, collapse = "\n")
     }, error = function(e) NULL)
-    is_binary <- is.null(txt) || nchar(txt) == 0 || {
+    is_binary <- is.null(txt) || nchar(txt, type = "bytes") == 0L || {
       raw_bytes <- readBin(path, "raw", n = 512L)
       any(as.integer(raw_bytes) == 0L)  # null byte = binary
     }

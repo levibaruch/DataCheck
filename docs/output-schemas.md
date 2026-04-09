@@ -151,6 +151,7 @@ runner to resume after a crash.
 | `n_combined` | integer | Data files with `data_granularity = "combined"` (classified individually) |
 | `n_columns` | integer | Total columns extracted across all data files |
 | `n_src_files` | integer | Source data files from which columns were extracted |
+| `source` | character | Repository source: `"osf"` or `"dataverse"`. `NA` on rows written before this column was added — treat as `"osf"`. |
 
 ### Error Codes
 
@@ -160,6 +161,7 @@ runner to resume after a crash.
 | `download_failed` | Network or OSF API error during download |
 | `empty_repo` | Downloaded repository contains no usable files after unpacking (retried once) |
 | `too_large` | Exceeded download size limit (10 GB) or file path count limit (200 paths) |
+| `dataverse_dir_missing` | Dataverse deposit: `data_check/data/dataverse/<doi_slug>/` directory does not exist |
 | `pipeline_failed` | Paper's `structure.csv` is absent or `success` column indicates an earlier pipeline stage failed |
 | `no_data_files` | `structure.csv` exists and pipeline succeeded, but no files with `type = "data"` were found |
 

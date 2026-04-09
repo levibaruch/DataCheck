@@ -22,9 +22,9 @@ test_papers <- read.csv(
 
 options(
   dc_root          = dc_root,
-  dc_outputs_dir   = file.path(dc_root, "tests", "outputs"),
-  dc_gt_dir        = file.path(dc_root, "tests", "ground_truth"),
-  dc_papers_filter = test_papers$id
+  dc_outputs_dir   = file.path(dc_root, "tests", "outputs", "osf"),
+  dc_gt_dir        = file.path(dc_root, "tests", "ground_truth", "osf"),
+  dc_papers_filter = test_papers$id[test_papers$source == "osf"]
 )
 
 shiny::runApp(file.path(dc_root, "tools", "validation_gui"))

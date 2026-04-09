@@ -11,7 +11,7 @@ source("data_check/pipeline/0_index.R")
 
 FULL_RUN       <- TRUE         # TRUE = no LLM call caps (file classification + col_type)
 SKIP_COLUMNS   <- FALSE         # TRUE = skip column extraction (file indexing only)
-RERUN_COLUMNS  <- TRUE        # TRUE = re-run column extraction for papers previously run
+RERUN_COLUMNS  <- FALSE        # TRUE = re-run column extraction for papers previously run
                                #   without it (no columns.csv exists).  Forces
                                #   SKIP_COLUMNS=FALSE, FROM_LOCAL=TRUE, DOWNLOAD=FALSE.
                                #   Updates existing rows in the summary CSV rather than appending.
@@ -23,6 +23,7 @@ DOWNLOAD    <- TRUE            # Whether the script should attempt downloads or 
 
 LLM_BATCH_SIZE         <- 20L  # paths sent per LLM call for file classification
 MAX_COL_TYPE_LLM_CALLS <- 5L   # max LLM calls for column type classification per paper
+MAX_DATA_FILES         <- 30L  # max tabular data files to column-extract per paper (Inf = no cap)
 
 # Set FROM_LOCAL = TRUE to skip downloading and re-process already-downloaded
 # datasets from the data/ folder. Discovers paper IDs from existing subdirs
@@ -50,13 +51,16 @@ if (FROM_LOCAL) DOWNLOAD <- FALSE
 # ── Discover all papers ──────────────────────────────────────────────────────
 
 if (FROM_LOCAL) {
-  all_ids <- list.dirs(DATA_DIR, full.names = FALSE, recursive = FALSE)
-  all_ids <- all_ids[nchar(all_ids) > 0]
-  if (length(all_ids) == 0) stop("No paper directories found in ", DATA_DIR)
+  all_papers_df <- list_downloaded_papers()
+  if (is.null(all_papers_df))
+    stop("No paper directories found under any source in ", DATA_DIR)
+  all_ids     <- all_papers_df$paper_id
+  all_sources <- all_papers_df$source
 } else {
-  all_ids <- tools::file_path_sans_ext(
+  all_ids     <- tools::file_path_sans_ext(
     list.files(XML_DIR, pattern = "\\.xml$", full.names = FALSE)
   )
+  all_sources <- rep("osf", length(all_ids))
   if (length(all_ids) == 0) stop("No XML files found in ", XML_DIR)
 }
 
@@ -79,9 +83,12 @@ if (file.exists(SUMMARY_CSV)) {
     if (RERUN_COLUMNS) {
       # Target: papers that succeeded but have no columns.csv on disk yet
       succeeded <- prior[!is.na(prior$success) & as.logical(prior$success) == TRUE, ]
-      rerun_columns_ids <- succeeded$paper_id[!file.exists(
-        file.path("./data_check/outputs", succeeded$paper_id, "columns.csv")
-      )]
+      src_col   <- if ("source" %in% names(succeeded)) succeeded$source else
+                   rep("osf", nrow(succeeded))
+      has_cols  <- mapply(function(s, p)
+        file.exists(paper_path("outputs", s, p, "columns.csv")),
+        src_col, succeeded$paper_id)
+      rerun_columns_ids <- succeeded$paper_id[!has_cols]
       message("── RERUN_COLUMNS: ", length(rerun_columns_ids),
               " paper(s) succeeded without a columns.csv — will re-run columns")
     } else if (RESUME) {
@@ -94,21 +101,29 @@ if (file.exists(SUMMARY_CSV)) {
 # ── Determine papers to run ─────────────────────────────────────────────────
 
 if (RERUN_COLUMNS) {
-  remaining_ids <- rerun_columns_ids
+  remaining_ids     <- rerun_columns_ids
+  remaining_sources <- all_sources[match(remaining_ids, all_ids)]
   if (SHUFFLE) {
     if (!is.null(SEED)) set.seed(SEED)
-    remaining_ids <- sample(remaining_ids)
+    ord               <- sample(length(remaining_ids))
+    remaining_ids     <- remaining_ids[ord]
+    remaining_sources <- remaining_sources[ord]
   }
 } else {
-  remaining_ids <- setdiff(all_ids, done_ids)
+  keep              <- !all_ids %in% done_ids
+  remaining_ids     <- all_ids[keep]
+  remaining_sources <- all_sources[keep]
   if (SHUFFLE) {
     if (!is.null(SEED)) set.seed(SEED)
-    remaining_ids <- sample(remaining_ids)
+    ord               <- sample(length(remaining_ids))
+    remaining_ids     <- remaining_ids[ord]
+    remaining_sources <- remaining_sources[ord]
   }
   if (PRIORITISE_GT) {
-    gt_ids <- sub("\\.csv$", "", list.files(GT_DIR, pattern = "\\.csv$"))
+    gt_ids <- sub("\\.csv$", "", list.files(file.path(GT_DIR, "osf"), pattern = "\\.csv$"))
     is_gt  <- remaining_ids %in% gt_ids
-    remaining_ids <- c(remaining_ids[is_gt], remaining_ids[!is_gt])
+    remaining_ids     <- c(remaining_ids[is_gt],     remaining_ids[!is_gt])
+    remaining_sources <- c(remaining_sources[is_gt], remaining_sources[!is_gt])
     message("── GT priority: ", sum(is_gt), " GT paper(s) moved to front")
   }
 }
@@ -148,6 +163,7 @@ make_summary_row <- function(r) {
     n_combined      = na_fallback(r$n_combined,     NA_integer_),
     n_columns       = na_fallback(r$n_columns,      NA_integer_),
     n_src_files     = na_fallback(r$n_source_files, NA_integer_),
+    source          = na_fallback(r$source, "osf"),
     stringsAsFactors = FALSE
   )
 }
@@ -183,11 +199,12 @@ update_summary_row <- function(r) {
 
 for (i in seq_along(remaining_ids)) {
   pid <- remaining_ids[i]
+  src <- remaining_sources[i]
 
   # Double-check: re-read CSV in case a prior iteration already covered this ID
   if (RERUN_COLUMNS) {
     # Skip if columns.csv now exists (e.g. a prior iteration of this same pass wrote it)
-    if (file.exists(file.path("./data_check/outputs", pid, "columns.csv"))) {
+    if (file.exists(paper_path("outputs", src, pid, "columns.csv"))) {
       message("  skipping (columns.csv now exists): ", pid)
       next
     }
@@ -211,7 +228,7 @@ for (i in seq_along(remaining_ids)) {
         msg <- conditionMessage(e)
         # If the folder is empty, delete it and retry the download once only if download = TRUE
         if (grepl("^empty_repo:", msg) && download) {
-          empty_dir <- file.path(DATA_DIR, pid)
+          empty_dir <- paper_path("data", src, pid)
           if (dir.exists(empty_dir)) {
             message("  empty_repo — deleting empty folder and retrying: ", empty_dir)
             unlink(empty_dir, recursive = TRUE)
@@ -231,7 +248,8 @@ for (i in seq_along(remaining_ids)) {
                 n_individual   = NA_integer_,
                 n_combined     = NA_integer_,
                 n_columns      = NA_integer_,
-                n_source_files = NA_integer_
+                n_source_files = NA_integer_,
+                source         = src
               )
             }
           )
@@ -248,7 +266,8 @@ for (i in seq_along(remaining_ids)) {
             n_individual   = NA_integer_,
             n_combined     = NA_integer_,
             n_columns      = NA_integer_,
-            n_source_files = NA_integer_
+            n_source_files = NA_integer_,
+            source         = src
           )
         }
       }

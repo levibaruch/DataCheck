@@ -1,11 +1,65 @@
 # ── Output directory helper ───────────────────────────────────────────────────
 
+# Returns TRUE if paper_id is a Harvard Dataverse DOI slug.
+# OSF paper IDs are always numeric strings and never start with "doi_".
+is_dataverse_id <- function(paper_id) {
+  startsWith(as.character(paper_id), "doi_")
+}
+
+# Make a source-specific ID safe for filesystem paths.
+# Replaces ':' and '/' with '_' so DOIs like "doi:10.7910/DVN/ABC" become
+# "doi_10.7910_DVN_ABC" — consistent with the existing Dataverse directory
+# naming convention and compatible with is_dataverse_id().
+sanitize_id <- function(id) {
+  gsub("[:/]", "_", as.character(id))
+}
+
+# Central path resolver — all per-paper filesystem paths route through here.
+# layer:    "data" | "outputs" | "psychds" | "ground_truth"
+# source:   registered source identifier — "osf" | "dataverse"
+# paper_id: source-specific identifier (will be sanitized for filesystem use)
+# ...:      optional additional path components forwarded to file.path()
+# Note: DATA_DIR, OUTPUT_DIR, PSYCHDS_OUT_DIR, GROUND_TRUTH_DIR must be
+#       defined in the calling script before paper_path() is invoked.
+paper_path <- function(layer, source, paper_id, ...) {
+  KNOWN_SOURCES <- c("osf", "dataverse")
+  if (!source %in% KNOWN_SOURCES)
+    stop(sprintf("paper_path: unknown source '%s'. Valid sources: %s",
+                 source, paste(KNOWN_SOURCES, collapse = ", ")))
+  root <- switch(layer,
+    data         = DATA_DIR,
+    outputs      = OUTPUT_DIR,
+    psychds      = PSYCHDS_OUT_DIR,
+    ground_truth = GROUND_TRUTH_DIR,
+    stop(sprintf("paper_path: unknown layer '%s'", layer))
+  )
+  file.path(root, source, sanitize_id(paper_id), ...)
+}
+
 # Return the per-paper output directory path, creating it if necessary.
-# paper_id must be a character string (leading zeros are meaningful).
-paper_output_dir <- function(paper_id) {
-  dir_path <- file.path("./data_check/outputs", paper_id)
+# source and paper_id must be character strings.
+paper_output_dir <- function(source, paper_id) {
+  dir_path <- paper_path("outputs", source, paper_id)
   if (!dir.exists(dir_path)) dir.create(dir_path, recursive = TRUE)
   dir_path
+}
+
+# Scan data/<source>/ for each registered source and return a data.frame
+# with columns: source (character), paper_id (character).
+# Returns NULL if no paper directories are found under any source.
+list_downloaded_papers <- function() {
+  KNOWN_SOURCES <- c("osf", "dataverse")
+  rows <- lapply(KNOWN_SOURCES, function(src) {
+    src_dir <- file.path(DATA_DIR, src)
+    if (!dir.exists(src_dir)) return(NULL)
+    ids <- list.dirs(src_dir, full.names = FALSE, recursive = FALSE)
+    ids <- ids[nzchar(ids)]
+    if (length(ids) == 0L) return(NULL)
+    data.frame(source = src, paper_id = ids, stringsAsFactors = FALSE)
+  })
+  result <- do.call(rbind, Filter(Negate(is.null), rows))
+  if (is.null(result) || nrow(result) == 0L) return(NULL)
+  result
 }
 
 # ── Text file helpers ─────────────────────────────────────────────────────────
@@ -1037,16 +1091,15 @@ match_column_labels <- function(columns_df, codebook_vars_df,
 # ── PsychDS helpers ───────────────────────────────────────────────────────────
 
 # Apply ground-truth overrides to a structure data frame.
-# Reads ground_truth/<paper_id>.csv if present; for each validated row whose
-# rel_path matches, overwrites type/group/data_granularity with
+# Reads ground_truth/<source>/<paper_id>.csv if present; for each validated
+# row whose rel_path matches, overwrites type/group/data_granularity with
 # type_gt/group_gt/data_granularity_gt and sets ground_truth_validated = TRUE.
 # Returns structure_df unchanged (with ground_truth_validated = FALSE for all
 # rows) when no GT file exists.
-# paper_id must be a character string (leading zeros are meaningful).
-apply_ground_truth <- function(structure_df, paper_id) {
+# source and paper_id must be character strings.
+apply_ground_truth <- function(structure_df, source, paper_id) {
   structure_df$ground_truth_validated <- FALSE
-  gt_path <- file.path("./data_check/ground_truth",
-                       paste0(paper_id, ".csv"))
+  gt_path <- paste0(paper_path("ground_truth", source, paper_id), ".csv")
   if (!file.exists(gt_path)) return(structure_df)
   gt <- tryCatch(
     read.csv(gt_path, stringsAsFactors = FALSE,

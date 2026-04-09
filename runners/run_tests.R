@@ -74,8 +74,11 @@ generate_report <- function() {
   latest_run <- if (nrow(log_all) > 0) tail(sort(unique(log_all$run_id)), 1) else "—"
 
   papers_df    <- read.csv(file.path(TEST_DIR, "test_papers.csv"),
-                           colClasses = c(id = "character"), stringsAsFactors = FALSE)
-  paper_labels <- setNames(papers_df$label, papers_df$id)
+                           colClasses = c(id = "character", source = "character"),
+                           stringsAsFactors = FALSE)
+  if (!"source" %in% names(papers_df)) papers_df$source <- "osf"
+  paper_labels  <- setNames(papers_df$label,  papers_df$id)
+  paper_sources <- setNames(papers_df$source, papers_df$id)
 
   # Build run_log: most recent entry per paper (across all runs).
   # Papers never run get an all-NA placeholder row so the report lists them.
@@ -100,8 +103,12 @@ generate_report <- function() {
   # Load GT + structure, merge into one accuracy frame
   acc_list <- list()
   for (pid in run_log$paper_id) {
-    gt_path  <- file.path(TEST_DIR, "ground_truth", paste0(pid, ".csv"))
-    str_path <- file.path(TEST_DIR, "outputs", pid, "structure.csv")
+    src      <- if (pid %in% papers_df$id) {
+      row_src <- papers_df$source[papers_df$id == pid]
+      if (length(row_src) > 0 && !is.na(row_src[1])) row_src[1] else "osf"
+    } else "osf"
+    gt_path  <- file.path(TEST_DIR, "ground_truth", src, paste0(pid, ".csv"))
+    str_path <- file.path(TEST_DIR, "outputs", src, pid, "structure.csv")
     if (!file.exists(gt_path) || !file.exists(str_path)) next
     gt  <- read.csv(gt_path,  colClasses = c(paper_id = "character"), stringsAsFactors = FALSE)
     str <- read.csv(str_path, colClasses = c(paper_id = "character"), stringsAsFactors = FALSE)
@@ -319,9 +326,10 @@ generate_report <- function() {
   col_frames <- list()
   cov_frames <- list()
   for (pid in run_log$paper_id) {
-    col_path <- file.path(TEST_DIR, "outputs", pid, "columns.csv")
-    lbl_path <- file.path(TEST_DIR, "outputs", pid, "labels.csv")
-    cov_path <- file.path(TEST_DIR, "outputs", pid, "codebook_coverage.csv")
+    pid_src  <- if (pid %in% names(paper_sources)) paper_sources[[pid]] else "osf"
+    col_path <- file.path(TEST_DIR, "outputs", pid_src, pid, "columns.csv")
+    lbl_path <- file.path(TEST_DIR, "outputs", pid_src, pid, "labels.csv")
+    cov_path <- file.path(TEST_DIR, "outputs", pid_src, pid, "codebook_coverage.csv")
     if (!file.exists(col_path)) next
     cols <- read.csv(col_path, colClasses = c(paper_id = "character"),
                      stringsAsFactors = FALSE)
@@ -565,11 +573,15 @@ dir.create(TEST_PSYCHDS_DIR, recursive = TRUE, showWarnings = FALSE)
 
 test_papers_df <- read.csv(
   file.path(TEST_DIR, "test_papers.csv"),
-  colClasses       = c(id = "character"),
+  colClasses       = c(id = "character", source = "character"),
   stringsAsFactors = FALSE
 )
+if (!"source" %in% names(test_papers_df))
+  test_papers_df$source <- "osf"
 TEST_PAPERS <- lapply(seq_len(nrow(test_papers_df)), function(i)
-  list(id = test_papers_df$id[i], label = test_papers_df$label[i])
+  list(id     = test_papers_df$id[i],
+       source = test_papers_df$source[i],
+       label  = test_papers_df$label[i])
 )
 
 # ── Log ────────────────────────────────────────────────────────────────────────
@@ -617,9 +629,9 @@ divider_h <- paste0(rep("═", 72), collapse = "")
 
 # ── PsychDS helper ─────────────────────────────────────────────────────────────
 
-run_psychds_test <- function(pid) {
-  test_dir <- normalizePath(file.path(TEST_OUTPUT_DIR, pid), mustWork = TRUE)
-  prod_dir <- file.path("./data_check/outputs", pid)
+run_psychds_test <- function(pid, source = "osf") {
+  test_dir <- normalizePath(file.path(TEST_OUTPUT_DIR, source, pid), mustWork = TRUE)
+  prod_dir <- paper_path("outputs", source, pid)
 
   used_symlink <- FALSE
   if (!file.exists(prod_dir)) {
@@ -688,8 +700,9 @@ cat(sprintf("\n%s\n  TEST RUN %s — %d papers\n%s\n",
 
 for (tp in TEST_PAPERS) {
   pid         <- tp$id
+  src         <- tp$source %||% "osf"
   label       <- tp$label
-  pid_out_dir <- file.path(TEST_OUTPUT_DIR, pid)
+  pid_out_dir <- file.path(TEST_OUTPUT_DIR, src, pid)
 
   cat(sprintf("\n%s\n  %s\n  %s\n%s\n", divider, pid, label, divider))
 
@@ -779,7 +792,7 @@ for (tp in TEST_PAPERS) {
 
   # Stage 3: psychds
   cat("Stage 3: psychds\n")
-  p3 <- run_psychds_test(pid)
+  p3 <- run_psychds_test(pid, src)
   row$psychds_success     <- p3$success
   row$psychds_error       <- p3$error
   row$psychds_studies     <- p3$studies

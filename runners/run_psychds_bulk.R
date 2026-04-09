@@ -14,7 +14,7 @@ source("data_check/pipeline/helper.R")
 source("data_check/pipeline/3_psychds_convert.R")
 
 SUMMARY_CSV <- file.path(PSYCHDS_OUT_DIR, "conversion_summary.csv")
-#MAX_DATA_MB <- 150
+MAX_DATA_MB <- 150
 # ── Size filter (optional) ────────────────────────────────────────────────────
 # Set MAX_DATA_MB to skip papers whose downloaded data folder exceeds this size.
 # Default Inf = no limit.  Override before sourcing:  MAX_DATA_MB <- 100
@@ -24,7 +24,7 @@ if (!exists("MAX_DATA_MB")) MAX_DATA_MB <- Inf
 # Set CODEBOOK_ONLY <- TRUE to restrict to papers that passed the codebook phase
 # (i.e. label_status == "ok" in codebook_summary.csv — at least one column labelled).
 # Override before sourcing:  CODEBOOK_ONLY <- TRUE
-
+CODEBOOK_ONLY <- FALSE
 if (!exists("CODEBOOK_ONLY")) CODEBOOK_ONLY <- FALSE
 
 folder_size_mb <- function(path) {

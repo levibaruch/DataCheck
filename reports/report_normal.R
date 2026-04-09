@@ -118,10 +118,10 @@ heatmap_plot <- function(mat, title, xlab = "Predicted", ylab = "Ground truth",
 
 # ── Discover eligible papers ──────────────────────────────────────────────────
 
-gt_ids <- sub("\\.csv$", "", list.files(GT_DIR, pattern = "\\.csv$"))
+gt_ids <- sub("\\.csv$", "", list.files(file.path(GT_DIR, "osf"), pattern = "\\.csv$"))
 
 eligible <- Filter(function(pid) {
-  file.exists(file.path(OUTPUTS_DIR, pid, "structure.csv"))
+  file.exists(file.path(OUTPUTS_DIR, "osf", pid, "structure.csv"))
 }, gt_ids)
 
 if (length(eligible) == 0) {
@@ -135,8 +135,8 @@ cat(sprintf("Found %d eligible papers.\n", length(eligible)))
 
 acc_list <- list()
 for (pid in eligible) {
-  gt_path  <- file.path(GT_DIR,      paste0(pid, ".csv"))
-  str_path <- file.path(OUTPUTS_DIR, pid, "structure.csv")
+  gt_path  <- file.path(GT_DIR,      "osf", paste0(pid, ".csv"))
+  str_path <- file.path(OUTPUTS_DIR, "osf", pid, "structure.csv")
 
   gt  <- tryCatch(
     read.csv(gt_path,  colClasses = c(paper_id = "character"), stringsAsFactors = FALSE),
@@ -307,7 +307,10 @@ pa_class_metrics <- do.call(rbind, lapply(all_types, function(cls) {
 }))
 
 # Paper-averaged confusion matrix (average of per-paper row-normalised matrices)
-pa_cm_norm <- Reduce("+", Filter(Negate(is.null), lapply(sort(unique(acc$paper_id)), function(pid) {
+# Each paper's CM is row-normalised (rows sum to 1 for classes the paper has).
+# We then average row-wise across only the papers that contained each class,
+# so the final matrix also has rows summing to 1 (for classes with >= 1 paper).
+pa_cm_sum <- Reduce("+", Filter(Negate(is.null), lapply(sort(unique(acc$paper_id)), function(pid) {
   v <- valid[valid$paper_id == pid, ]
   if (nrow(v) < 2) return(NULL)
   cm_p <- as.matrix(table(
@@ -315,8 +318,11 @@ pa_cm_norm <- Reduce("+", Filter(Negate(is.null), lapply(sort(unique(acc$paper_i
     pred = factor(v$type,    levels = ctypes)
   ))
   rs <- rowSums(cm_p)
-  cm_p / ifelse(rs == 0, 1, rs)   # row-normalise
-}))) / length(unique(per_paper_full$paper_id))
+  cm_p / ifelse(rs == 0, 1, rs)   # row-normalise; rows with no files stay 0
+})))
+# rowSums(pa_cm_sum)[i] == number of papers that had at least one file of class i
+pa_cm_row_n <- rowSums(pa_cm_sum)
+pa_cm_norm  <- pa_cm_sum / ifelse(pa_cm_row_n == 0, 1, pa_cm_row_n)
 
 # ── Per-paper accuracy (legacy alias) ────────────────────────────────────────
 type_vals  <- per_paper_full$type_acc[!is.na(per_paper_full$type_acc)]
@@ -949,13 +955,17 @@ cat(sprintf("  [plot]   written to: %s\n", png_compare))
 png_kappa <- file.path(run_dir, "kappa_dist.png")
 png(png_kappa, width = 800, height = 480, res = 100)
 old_par <- par(mar = c(5, 4, 3, 1))
-h_k <- hist(kap_vals, breaks = seq(-0.1, 1.05, by = 0.05), plot = FALSE)
-plot(NULL, xlim = c(-0.1, 1.05), ylim = c(0, max(h_k$counts) + 1),
+# Compute break bounds dynamically so out-of-range kappa values (e.g. < -0.1
+# when agreement is worse than chance) don't cause hist() to error.
+kap_lo <- min(-0.1, floor(min(kap_vals, na.rm = TRUE) / 0.05) * 0.05)
+kap_hi <- max(1.05, ceiling(max(kap_vals, na.rm = TRUE) / 0.05) * 0.05)
+h_k <- hist(kap_vals, breaks = seq(kap_lo, kap_hi, by = 0.05), plot = FALSE)
+plot(NULL, xlim = c(kap_lo, kap_hi), ylim = c(0, max(h_k$counts) + 1),
      xlab = "Cohen's κ (per paper)", ylab = "Number of papers",
      main = sprintf("Per-Paper Cohen's κ  (mean=%.3f  median=%.3f)",
                     mean(kap_vals), median(kap_vals)), las = 1)
 # shade interpretation bands
-rect(-0.1, 0, 0.20, max(h_k$counts)+1, col = "#FFE5E5", border = NA)
+rect(kap_lo, 0, 0.20, max(h_k$counts)+1, col = "#FFE5E5", border = NA)
 rect( 0.20, 0, 0.40, max(h_k$counts)+1, col = "#FFF3CD", border = NA)
 rect( 0.40, 0, 0.60, max(h_k$counts)+1, col = "#FFF9C4", border = NA)
 rect( 0.60, 0, 0.80, max(h_k$counts)+1, col = "#E8F5E9", border = NA)

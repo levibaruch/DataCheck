@@ -47,31 +47,46 @@ empty_gt <- function() {
 # are returned; otherwise all subdirectories of outputs_dir are scanned.
 discover_papers <- function() {
   outputs_dir <- get_outputs_dir()
-  if (!dir.exists(outputs_dir)) return(character(0))
+  # GUI is OSF-only: scan outputs/osf/ (or the overridden outputs dir directly)
+  osf_dir <- if (basename(outputs_dir) == "osf") outputs_dir
+             else file.path(outputs_dir, "osf")
+  if (!dir.exists(osf_dir)) return(character(0))
   filter <- getOption("dc_papers_filter", NULL)
   dirs <- if (!is.null(filter)) {
-    filter[dir.exists(file.path(outputs_dir, filter))]
+    filter[dir.exists(file.path(osf_dir, filter))]
   } else {
-    list.dirs(outputs_dir, full.names = FALSE, recursive = FALSE)
+    list.dirs(osf_dir, full.names = FALSE, recursive = FALSE)
   }
-  has_structure <- dirs[file.exists(file.path(outputs_dir, dirs, "structure.csv"))]
+  has_structure <- dirs[file.exists(file.path(osf_dir, dirs, "structure.csv"))]
   sort(has_structure)
 }
 
 # ── Structure loading ─────────────────────────────────────────────────────────
 
 load_structure <- function(paper_id) {
-  path <- file.path(get_outputs_dir(), paper_id, "structure.csv")
-  read.csv(path,
-           colClasses      = c(paper_id    = "character",
-                               is_sentinel = "logical"),
-           stringsAsFactors = FALSE)
+  outputs_dir <- get_outputs_dir()
+  osf_dir     <- if (basename(outputs_dir) == "osf") outputs_dir
+                 else file.path(outputs_dir, "osf")
+  path <- file.path(osf_dir, paper_id, "structure.csv")
+  df <- read.csv(path,
+                 colClasses      = c(paper_id    = "character",
+                                     is_sentinel = "logical"),
+                 stringsAsFactors = FALSE)
+  # Rebuild absolute path from rel_path so stale stored paths don't break
+  # previews when the project directory or source namespace changes.
+  data_root <- file.path(getOption("dc_root", "."), "data", "osf", paper_id)
+  if ("rel_path" %in% names(df)) {
+    df$path <- file.path(data_root, df$rel_path)
+  }
+  df
 }
 
 # ── Ground-truth read ─────────────────────────────────────────────────────────
 
 read_gt <- function(paper_id) {
-  path <- file.path(get_gt_dir(), paste0(paper_id, ".csv"))
+  gt_dir <- get_gt_dir()
+  osf_gt <- if (basename(gt_dir) == "osf") gt_dir else file.path(gt_dir, "osf")
+  path   <- file.path(osf_gt, paste0(paper_id, ".csv"))
   if (!file.exists(path)) return(empty_gt())
   tryCatch({
     df <- read.csv(path,
@@ -110,9 +125,10 @@ upsert_gt <- function(gt_df, new_row) {
 
 # Write the full GT data.frame to disk immediately (no batching).
 write_gt <- function(paper_id, gt_df) {
-  gt_dir <- get_gt_dir()
-  if (!dir.exists(gt_dir)) dir.create(gt_dir, recursive = TRUE)
-  path <- file.path(gt_dir, paste0(paper_id, ".csv"))
+  gt_dir  <- get_gt_dir()
+  osf_gt  <- if (basename(gt_dir) == "osf") gt_dir else file.path(gt_dir, "osf")
+  if (!dir.exists(osf_gt)) dir.create(osf_gt, recursive = TRUE)
+  path <- file.path(osf_gt, paste0(paper_id, ".csv"))
   write.csv(gt_df[GT_COLS], path, row.names = FALSE)
   invisible(path)
 }
@@ -124,9 +140,11 @@ write_gt <- function(paper_id, gt_df) {
 paper_is_complete <- function(papers) {
   outputs_dir <- get_outputs_dir()
   gt_dir      <- get_gt_dir()
+  osf_out <- if (basename(outputs_dir) == "osf") outputs_dir else file.path(outputs_dir, "osf")
+  osf_gt  <- if (basename(gt_dir)      == "osf") gt_dir      else file.path(gt_dir,      "osf")
   result <- vapply(papers, function(pid) {
-    struct_path <- file.path(outputs_dir, pid, "structure.csv")
-    gt_path     <- file.path(gt_dir, paste0(pid, ".csv"))
+    struct_path <- file.path(osf_out, pid, "structure.csv")
+    gt_path     <- file.path(osf_gt, paste0(pid, ".csv"))
     if (!file.exists(struct_path) || !file.exists(gt_path)) return(FALSE)
     tryCatch({
       n_struct <- nrow(read.csv(struct_path, stringsAsFactors = FALSE))

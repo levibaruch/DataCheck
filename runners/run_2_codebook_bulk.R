@@ -16,18 +16,21 @@ SUMMARY_CSV <- "./data_check/results/codebook_summary.csv"
 if (!is.null(SEED)) set.seed(SEED)
 
 # ── Discover eligible papers ──────────────────────────────────────────────────
-# A paper is eligible if outputs/<paper_id>/columns.csv exists.
+# A paper is eligible if outputs/<source>/<paper_id>/columns.csv exists.
+# Scans all source subdirectories under outputs/ (osf, dataverse, …).
 
 outputs_root <- "./data_check/outputs"
-all_ids <- basename(list.dirs(outputs_root, recursive = FALSE))
-all_ids <- all_ids[all_ids != ""]
+source_dirs  <- list.dirs(outputs_root, recursive = FALSE, full.names = TRUE)
 
-eligible_ids <- all_ids[
-  file.exists(file.path(outputs_root, all_ids, "columns.csv"))
-]
+eligible_ids <- character(0)
+for (src_dir in source_dirs) {
+  ids <- basename(list.dirs(src_dir, recursive = FALSE))
+  ids <- ids[ids != "" & file.exists(file.path(src_dir, ids, "columns.csv"))]
+  eligible_ids <- c(eligible_ids, ids)
+}
 
 if (length(eligible_ids) == 0) {
-  stop("No eligible papers found in ", outputs_root,
+  stop("No eligible papers found under ", outputs_root,
        " — run run_index_bulk.R first to produce columns.csv files.")
 }
 

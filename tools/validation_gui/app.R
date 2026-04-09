@@ -15,7 +15,10 @@ local({
     if (!dir.exists(file.path(root, "outputs"))) {
       stop("Cannot locate outputs/ directory. Expected at: ", file.path(root, "outputs"))
     }
-    options(dc_root = root)
+    options(
+      dc_root      = root,
+      dc_gt_dir    = file.path(root, "ground_truth")
+    )
   }
 })
 
@@ -701,7 +704,7 @@ server <- function(input, output, session) {
     rv$structure <- struct
     rv$xml       <- load_paper_xml(pid)
 
-    col_path  <- file.path(get_outputs_dir(), pid, "columns.csv")
+    col_path  <- file.path(get_outputs_dir(), "osf", pid, "columns.csv")
     col_names <- character(0)
     if (file.exists(col_path)) {
       tryCatch({
@@ -955,7 +958,7 @@ server <- function(input, output, session) {
   observeEvent(input$confirm_delete_paper, {
     removeModal()
     pid      <- rv$paper_id
-    gt_file  <- file.path(get_gt_dir(), paste0(pid, ".csv"))
+    gt_file  <- file.path(get_gt_dir(), "osf", paste0(pid, ".csv"))
     if (file.exists(gt_file)) file.remove(gt_file)
 
     # Reset GT state and file statuses for this paper
@@ -1017,12 +1020,16 @@ server <- function(input, output, session) {
       papers     <- rv$papers
       cur_paper  <- rv$paper_id
       cur_pos    <- match(cur_paper, papers)
-      next_paper <- if (!is.na(cur_pos) && cur_pos < length(papers))
-        papers[cur_pos + 1L] else NULL
-
       # Mark current paper complete and rebuild labeled choices
       rv$paper_completion[cur_paper] <- TRUE
       new_choices <- make_paper_choices(papers, rv$paper_completion)
+
+      # Jump to the next *unfinished* paper (skip already-complete ones)
+      remaining   <- papers[seq_along(papers) > cur_pos]
+      next_paper  <- {
+        incomplete <- remaining[!rv$paper_completion[remaining]]
+        if (length(incomplete) > 0) incomplete[1L] else NULL
+      }
 
       if (!is.null(next_paper)) {
         showNotification(paste0("Paper complete! Moving to ", next_paper),
@@ -1480,7 +1487,7 @@ server <- function(input, output, session) {
       corr <- sum(!is.na(m$type_gt) & !is.na(m$type) & m$type_gt != m$type,
                   na.rm = TRUE)
     }
-    gt_path <- file.path(get_gt_dir(), paste0(pid, ".csv"))
+    gt_path <- file.path(get_gt_dir(), "osf", paste0(pid, ".csv"))
     cat("\n=== Validation session complete ===\n")
     cat(sprintf("  Annotator:   %s\n",  annotator))
     cat(sprintf("  Paper:       %s\n",  pid))

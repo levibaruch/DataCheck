@@ -14,6 +14,9 @@ source("data_check/pipeline/helper.R")
 # ── Constants ─────────────────────────────────────────────────────────────────
 
 PSYCHDS_OUT_DIR    <- "./data_check/psychds"
+OUTPUT_DIR         <- "./data_check/outputs"
+DATA_DIR           <- "./data_check/data"
+GROUND_TRUTH_DIR   <- "./data_check/ground_truth"
 DATA_SIZE_LIMIT_MB <- 500
 PIPELINE_VERSION   <- "021"
 
@@ -410,7 +413,8 @@ build_property_values <- function(cols_df, labels_df, coverage_df) {
 
 build_dataset_description <- function(paper_id, study_group, property_values,
                                       xml_meta, bulk_row,
-                                      shared_files = NULL) {
+                                      shared_files = NULL,
+                                      source = "osf") {
   # Required schema:name — from XML or fallback
   study_label <- if (is.null(study_group) || study_group == "all") "Data"
                  else paste("Study", toupper(study_group))
@@ -485,8 +489,8 @@ build_dataset_description <- function(paper_id, study_group, property_values,
   desc[["metacheck:conversion_date"]]   <- format(Sys.Date(), "%Y-%m-%d")
   desc[["metacheck:pipeline_status"]]   <- Filter(Negate(is.null), pipeline_status)
   desc[["metacheck:source_repository"]] <- list(
-    platform       = "osf",
-    download_path  = paste0("data/", paper_id, "/")
+    platform      = source,
+    download_path = file.path("data", source, sanitize_id(paper_id))
   )
 
   # Multi-study shared resources
@@ -652,7 +656,7 @@ write_data_csv <- function(df, dest_path) {
 # Returns a named list (the per-study result row for conversion_summary.csv).
 convert_study <- function(paper_id, study_group, files_df, cols_df, labels_df,
                           coverage_df, xml_meta, out_dir,
-                          shared_files = NULL) {
+                          shared_files = NULL, source = "osf") {
 
   dir.create(file.path(out_dir, "data", "raw"), recursive = TRUE,
              showWarnings = FALSE)
@@ -849,7 +853,8 @@ convert_study <- function(paper_id, study_group, files_df, cols_df, labels_df,
     property_values = property_values,
     xml_meta        = xml_meta,
     bulk_row        = bulk_row,
-    shared_files    = shared_files
+    shared_files    = shared_files,
+    source          = source
   )
 
   write_json(dataset_desc, file.path(out_dir, "dataset_description.json"))
@@ -984,6 +989,7 @@ convert_psychds <- function(paper_id) {
   }
 
   # 1. Check bulk_summary.csv
+  paper_row <- NULL  # initialise; populated below if bulk_summary.csv exists
   bulk_path <- "./data_check/results/bulk_summary.csv"
   if (!file.exists(bulk_path))
     bulk_path <- "./data_check/bulk_summary.csv"
@@ -1000,8 +1006,16 @@ convert_psychds <- function(paper_id) {
     }
   }
 
-  # 2. Read pipeline output CSVs
-  out_base <- file.path("./data_check/outputs", paper_id)
+  # 2. Derive source — prefer bulk_summary.csv value, fallback to ID pattern
+  paper_source <- if (!is.null(paper_row) && nrow(paper_row) > 0 &&
+                      "source" %in% names(paper_row) &&
+                      !is.na(paper_row$source[1]) && nzchar(paper_row$source[1]))
+                    paper_row$source[1]
+                  else if (is_dataverse_id(paper_id)) "dataverse"
+                  else "osf"
+
+  # 3. Read pipeline output CSVs
+  out_base <- paper_path("outputs", paper_source, paper_id)
   structure_path  <- file.path(out_base, "structure.csv")
   columns_path    <- file.path(out_base, "columns.csv")
   labels_path     <- file.path(out_base, "labels.csv")
@@ -1012,6 +1026,13 @@ convert_psychds <- function(paper_id) {
 
   structure_df <- read.csv(structure_path, stringsAsFactors = FALSE,
                             colClasses = c(paper_id = "character"))
+  # Rebuild absolute paths from rel_path so stale stored paths don't break
+  # file copies when the project or source namespace has changed.
+  if ("rel_path" %in% names(structure_df)) {
+    data_root <- file.path(DATA_DIR, paper_source, paper_id)
+    structure_df$path <- file.path(data_root, structure_df$rel_path)
+  }
+
   cols_df <- if (file.exists(columns_path))
     read.csv(columns_path, stringsAsFactors = FALSE,
              colClasses = c(paper_id = "character")) else NULL
@@ -1022,8 +1043,8 @@ convert_psychds <- function(paper_id) {
     read.csv(coverage_path, stringsAsFactors = FALSE,
              colClasses = c(paper_id = "character")) else NULL
 
-  # 3. Apply ground-truth overrides
-  structure_df <- apply_ground_truth(structure_df, paper_id)
+  # 4. Apply ground-truth overrides
+  structure_df <- apply_ground_truth(structure_df, paper_source, paper_id)
 
   # 4. Expand sentinel rows
   structure_df <- expand_sentinel_rows(structure_df)
@@ -1051,7 +1072,8 @@ convert_psychds <- function(paper_id) {
     result <- tryCatch(
       convert_study(paper_id, studies[1], structure_df,
                     cols_df, labels_df, coverage_df,
-                    xml_meta, out_dir, shared_files = NULL),
+                    xml_meta, out_dir, shared_files = NULL,
+                    source = paper_source),
       error = function(e) list(
         paper_id = paper_id, study_group = studies[1],
         success = FALSE, error = conditionMessage(e),
@@ -1110,7 +1132,8 @@ convert_psychds <- function(paper_id) {
                       study_cols, study_lbls, study_cov,
                       xml_meta, out_dir,
                       shared_files = if (length(shared_rel_paths) > 0)
-                        shared_rel_paths else NULL),
+                        shared_rel_paths else NULL,
+                      source = paper_source),
         error = function(e) list(
           paper_id = paper_id, study_group = sg,
           success = FALSE, error = conditionMessage(e),

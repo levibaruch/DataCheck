@@ -72,7 +72,8 @@ local({
 
   cat("\n── Stage 2: run_codebook_label ─────────────────────────────────────────\n")
 
-  columns_path <- file.path(OUTPUT_DIR, pid, "columns.csv")
+  src          <- if (is_dataverse_id(pid)) "dataverse" else "osf"
+  columns_path <- paper_path("outputs", src, pid, "columns.csv")
 
   if (!file.exists(columns_path)) {
     cat("  Stage 2 skipped — no columns.csv\n")
@@ -103,6 +104,6 @@ local({
 
   # ── Done ─────────────────────────────────────────────────────────────────────
 
-  cat(sprintf("\n── Outputs: %s\n\n", file.path(OUTPUT_DIR, pid)))
+  cat(sprintf("\n── Outputs: %s\n\n", paper_path("outputs", src, pid)))
 
 })

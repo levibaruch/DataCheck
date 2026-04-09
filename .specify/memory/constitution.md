@@ -1,6 +1,30 @@
 <!--
 SYNC IMPACT REPORT
 ==================
+Version change: 1.3.1 → 1.4.0 (MINOR — Source-Aware Storage: new Principle VI added;
+Principle IV updated with path resolver; constants table and processing order updated;
+ground-truth and test-paper schemas updated to reflect 032-source-aware-storage)
+
+Modified sections:
+  - Principle IV (Centralised Shared Helpers): added `paper_path()` to helper.R
+  - Technical Standards > Key Constants: updated DATA_DIR / OUTPUT_DIR / PSYCHDS_DIR entries to
+    reflect source-namespaced paths; added GROUND_TRUTH_DIR
+  - Pipeline Workflow > Processing Order: step 10 now writes to `outputs/<source>/<id>/`
+  - Pipeline Workflow > Entry Points: test_papers.csv schema updated to `id, source, label`
+
+Added sections:
+  - Principle VI: Source-Aware Storage
+
+Removed sections: None
+
+Templates requiring updates:
+  - .specify/templates/plan-template.md  ✅ No change required (generic)
+  - .specify/templates/spec-template.md  ✅ No change required (generic)
+  - .specify/templates/tasks-template.md ✅ No change required (generic)
+
+---
+
+Previous report:
 Version change: 1.3.0 → 1.3.1 (PATCH — Technical Standards: ggplot/plot-object guidance
 updated from `supplemental` to `output` following addition of `output` file type in feature 026)
 
@@ -86,6 +110,7 @@ live in `prompts.R`. The following capabilities MUST NOT be duplicated across pi
 - LLM classification: `llm_batch()`
 - Rule-based file classification: `classify_by_rules()`
 - Rule-based column classification: `classify_col_type_rules()`
+- Path resolution: `paper_path(source, id, layer)` — maps a (source, id, layer) triple to the canonical filesystem path; ALL file I/O in the pipeline MUST route through this function
 
 **`prompts.R`** — all LLM prompt strings:
 - `STRUCTURE_PROMPT` — file tree classification (used by `0_index.R` → `llm_batch()`)
@@ -118,6 +143,42 @@ free-text strings are prohibited.
 **Rationale**: Consistent codes allow bulk summary analysis and targeted retry logic without
 parsing free-form error messages.
 
+### VI. Source-Aware Storage
+
+All pipeline artifacts MUST be stored under paths namespaced by their data source, using the
+scheme `<layer>/<source>/<id>/` where:
+
+- `<layer>` is one of `data/`, `outputs/`, `psychds/`, or `ground_truth/`
+- `<source>` is a registered source identifier (e.g., `osf`, `dataverse`, `researchbox`)
+- `<id>` is the paper's identifier within that source (sanitized for filesystem safety)
+
+**Rules**:
+- All path construction MUST go through `paper_path(source, id, layer)` in `helper.R`. Hardcoded
+  or inline path strings that bypass this function are prohibited.
+- Adding a new source requires changes only at the source registration site — no other path-logic
+  changes are permitted.
+- IDs containing characters invalid on the filesystem (e.g., `/` or `:` in DOIs) MUST be
+  sanitized using a single consistent rule applied inside `paper_path()`.
+- `psychds/conversion_summary.csv` MUST remain a single unified rollup file spanning all sources
+  (NOT split per-source).
+- Ground-truth annotation is OSF-only. Ground-truth files are stored at
+  `ground_truth/osf/<id>.csv`. No ground-truth paths are defined for other sources.
+- The validation GUI MUST filter its paper selector to OSF papers only. Dataverse and other
+  source papers MUST NOT appear in the GUI.
+- When an unregistered source is encountered, `paper_path()` MUST raise an informative error
+  rather than silently using a wrong path.
+- Missing parent directories in any storage layer MUST be created automatically on first use.
+- When data is detected at a legacy flat path (`data/<id>/`) but the expected source-aware path
+  does not exist, the pipeline MUST log a warning (not a fatal error) to aid migration.
+- The `source` column in `structure.csv` and `bulk_summary.csv` is the authoritative record of a
+  paper's source. Path resolution MUST use this field, not infer source from ID format.
+- `tests/test_papers.csv` schema is `id, source, label` — source MUST be explicit for every row.
+
+**Rationale**: Flat per-paper paths (`data/<id>/`) conflate OSF and Dataverse artifacts, making
+it impossible to route download logic, enforce source-specific rules, or add new sources
+(e.g., ResearchBox) without touching path-construction code everywhere. Centralising path
+resolution into `paper_path()` makes the source namespace transparent to all consumers.
+
 ## Technical Standards
 
 - **Language**: R (no other languages in the pipeline core)
@@ -137,7 +198,10 @@ parsing free-form error messages.
 
 | Constant | Value | Script | Purpose |
 |---|---|---|---|
-| `OUTPUT_DIR` | `./data_check/outputs` | `0_index.R`, `2_codebook_label.R` | Root for per-paper output subdirectories |
+| `DATA_DIR` | `./data_check/data` | `0_index.R` | Root for per-paper raw downloads; resolved to `data/<source>/<id>/` via `paper_path()` |
+| `OUTPUT_DIR` | `./data_check/outputs` | `0_index.R`, `2_codebook_label.R` | Root for per-paper output subdirectories; resolved to `outputs/<source>/<id>/` via `paper_path()` |
+| `PSYCHDS_DIR` | `./data_check/psychds` | `3_psychds_convert.R` | Root for psychDS artifacts; resolved to `psychds/<source>/<id>/` via `paper_path()` |
+| `GROUND_TRUTH_DIR` | `./data_check/ground_truth` | validation GUI | Root for OSF-only ground-truth annotations; resolved to `ground_truth/osf/<id>.csv` via `paper_path()` |
 | `LLM_BATCH_SIZE` | 30 | `0_index.R`, `2_codebook_label.R` | Paths/columns per LLM call |
 | `N_DATA_READ` | 5 | `0_index.R` | Rows sampled per data file |
 | `MAX_COL_TYPE_LLM_CALLS` | 5 | `0_index.R` | Max LLM calls for numeric column classification |
@@ -177,10 +241,10 @@ The canonical processing order for a single paper is:
    - Batch 2 (character-ambiguous, `CHAR_COLUMN_TYPE_PROMPT`): `unknown`/invalid → `text` fallback
 9. Compute column statistics (numeric: mean/sd/se/median/min/max/range/p25/p75/iqr/skewness/
    kurtosis; non-numeric: n/n_missing only)
-10. Write `structure.csv` and `columns.csv` to `outputs/<paper_id>/`
+10. Write `structure.csv` and `columns.csv` to `outputs/<source>/<id>/` (resolved via `paper_path()`)
 11. Append result row to `bulk_summary.csv` (crash-safe)
 12. *(Optional post-processing)* Codebook labelling via `run_codebook_label()` — reads structure
-    and columns CSVs; writes `labels.csv` and `codebook_coverage.csv` to `outputs/<paper_id>/`
+    and columns CSVs; writes `labels.csv` and `codebook_coverage.csv` to `outputs/<source>/<id>/`
 
 Any deviation from this order MUST be documented in the relevant feature spec with justification.
 
@@ -207,4 +271,4 @@ require:
 
 All new features MUST be validated against Principles I–V before merging to `main`.
 
-**Version**: 1.3.1 | **Ratified**: TODO(RATIFICATION_DATE): set when first committed to main | **Last Amended**: 2026-03-30
+**Version**: 1.4.0 | **Ratified**: TODO(RATIFICATION_DATE): set when first committed to main | **Last Amended**: 2026-04-09

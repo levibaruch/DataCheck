@@ -8,7 +8,7 @@ contents using an LLM, and extracts column-level statistics into structured CSVs
 | Script | Purpose |
 |---|---|
 | `run_single.R` | Run the full pipeline (index + codebook label) for one randomly selected paper. Dev/smoke-test entry point. |
-| `run_index_bulk.R` | Process all papers through the index stage. Crash-resilient, auto-resumes from `bulk_summary.csv`. |
+| `runners/run_0_index_bulk.R` | Process all papers through the index stage. Crash-resilient, auto-resumes from `bulk_summary.csv`. |
 | `run_codebook_bulk.R` | Run codebook-label stage across all papers with `columns.csv`. Auto-resumes from `codebook_summary.csv`. |
 | `0_index.R` (`run_index()`) | Process a single paper by ID. Called by the index bulk runner. |
 | `2_codebook_label.R` (`run_codebook_label()`) | Label columns against codebooks for a single paper. Called by the codebook bulk runner. |
@@ -18,9 +18,10 @@ contents using an LLM, and extracts column-level statistics into structured CSVs
 | `report_sweep_grand.R` | Grand cross-paper report: flat CSV with one row per (paper_id × temperature × pipeline stage). No aggregation — post-processing friendly. |
 | `runners/run_psychds_single.R` | Convert one paper to PsychDS format. Dev/smoke-test entry point. Accepts `paper_id` as CLI arg or pre-set variable; falls back to random paper from `results/bulk_summary.csv`. |
 | `runners/run_psychds_bulk.R` | Batch-convert all successfully indexed papers to PsychDS format. Crash-resilient, auto-resumes from `psychds/conversion_summary.csv`. |
+| `runners/run_dataverse_bulk.R` | Batch-index all Harvard Dataverse deposits in `data_check/data/dataverse/`. Crash-resilient, auto-resumes from `bulk_summary.csv`. Writes `source = "dataverse"` rows. |
 | `pipeline/3_psychds_convert.R` (`convert_psychds()`) | Convert a single paper by ID to PsychDS format. Returns list of per-study result rows. |
 | `runners/run_validation_gui.R` | Launch the Shiny validation GUI for manual ground-truth annotation of file type, group, and `is_raw`. Writes `ground_truth/<paper_id>.csv`. These override pipeline classifications in the PsychDS conversion step. |
-| `runners/run_test_validation_gui.R` | Launch the validation GUI in test mode. Reads from `tests/outputs/<paper_id>/`, writes to `tests/ground_truth/<paper_id>.csv`, and shows only the 13 papers in `tests/test_papers.csv`. |
+| `runners/run_test_validation_gui.R` | Launch the validation GUI in test mode. Reads from `tests/outputs/osf/<paper_id>/`, writes to `tests/ground_truth/osf/<paper_id>.csv`, and shows only OSF papers in `tests/test_papers.csv`. |
 
 ---
 
@@ -136,8 +137,8 @@ Paper ID (character string)
 └──────────┬──────────┘
            ▼
 ┌─────────────────────┐
-│  10. Write outputs  │  outputs/<paper_id>/structure.csv  (one row per file)
-│                     │  outputs/<paper_id>/columns.csv   (one row per column)
+│  10. Write outputs  │  outputs/<source>/<paper_id>/structure.csv  (one row per file)
+│                     │  outputs/<source>/<paper_id>/columns.csv   (one row per column)
 └──────────┬──────────┘
            │                    ┌─────────────────────────┐
            │   (optional,       │  [V] Validation GUI      │  runners/run_validation_gui.R
@@ -163,10 +164,10 @@ Paper ID (character string)
            ▼
 ┌─────────────────────┐
 │  12. Codebook       │  2_codebook_label.R  run_codebook_label(paper_id)
-│      labelling      │  Reads: outputs/<paper_id>/structure.csv (codebook/readme files)
-│                     │         outputs/<paper_id>/columns.csv   (data columns to label)
-│                     │  Writes: outputs/<paper_id>/labels.csv        (one row per data column)
-│                     │          outputs/<paper_id>/codebook_coverage.csv (one row per codebook var)
+│      labelling      │  Reads: outputs/<source>/<paper_id>/structure.csv (codebook/readme files)
+│                     │         outputs/<source>/<paper_id>/columns.csv   (data columns to label)
+│                     │  Writes: outputs/<source>/<paper_id>/labels.csv        (one row per data column)
+│                     │          outputs/<source>/<paper_id>/codebook_coverage.csv (one row per codebook var)
 │                     │  Codebook formats: csv/tsv/xlsx/xls/sav/dta (rule-based)
 │                     │                    docx (officer), pdf (pdftools), rtf (regex strip)
 │                     │                    doc (textutil, macOS system binary — no install)
@@ -182,10 +183,10 @@ Paper ID (character string)
            ▼
 ┌─────────────────────┐
 │  13. PsychDS        │  pipeline/3_psychds_convert.R  convert_psychds(paper_id)
-│      conversion     │  Reads: outputs/<paper_id>/structure.csv
-│                     │         outputs/<paper_id>/columns.csv
-│                     │         outputs/<paper_id>/labels.csv
-│                     │         outputs/<paper_id>/codebook_coverage.csv
+│      conversion     │  Reads: outputs/<source>/<paper_id>/structure.csv
+│                     │         outputs/<source>/<paper_id>/columns.csv
+│                     │         outputs/<source>/<paper_id>/labels.csv
+│                     │         outputs/<source>/<paper_id>/codebook_coverage.csv
 │                     │         ground_truth/<paper_id>.csv (optional)
 │                     │         data_check/data/<paper_id>/grobid/*.xml (optional)
 │                     │  Writes: psychds/<paper_id>/dataset_description.json
@@ -214,11 +215,14 @@ Paper ID (character string)
 
 | Constant | Value | Script | Purpose |
 |---|---|---|---|
-| `OUTPUT_DIR` | `./data_check/outputs` | `0_index.R`, `2_codebook_label.R` | Root directory for per-paper output subdirectories |
+| `OUTPUT_DIR` | `./data_check/outputs` | `0_index.R`, `2_codebook_label.R` | Root for per-paper output subdirectories; per-paper path is `outputs/<source>/<paper_id>/` via `paper_path()` |
+| `GROUND_TRUTH_DIR` | `./data_check/ground_truth` | `0_index.R`, `helper.R` | Root for ground-truth annotation CSVs (OSF only: `ground_truth/osf/<paper_id>.csv`) |
+| `DATAVERSE_DATA_DIR` | `./data_check/data/dataverse` | `0_index.R` | Root for Harvard Dataverse deposit directories (`<doi_slug>/` subdirs) |
 | `LLM_BATCH_SIZE` | 30 | `0_index.R`, `2_codebook_label.R` | Paths per LLM call (file classification); 30 improves cross-batch group consistency |
 | `N_DATA_READ` | 5 | `0_index.R` | Rows sampled per data file |
 | `MAX_COL_TYPE_LLM_CALLS` | 5 | `0_index.R` | Max LLM calls for numeric-ambiguous column classification (= 100 columns max) when `!FULL_RUN` |
 | `MAX_CHAR_COL_TYPE_LLM_CALLS` | 3 | `0_index.R` | Max LLM calls for character-ambiguous column classification (Batch 2, = 60 columns max) when `!FULL_RUN` |
+| `MAX_DATA_FILES` | `Inf` | `0_index.R` | Max tabular data files to column-extract per paper; `Inf` = no cap. Set to a finite integer (e.g. `30L`) in the bulk runner as a temporary guard when `combined`/`individual` misclassification inflates N. |
 | `AGGREGATE_THRESHOLD` | 50 | `0_index.R` | Files per folder above which a sentinel row replaces individual paths |
 | `AGGREGATE_EXT_OVERRIDE` | named vector | `0_index.R` | Extension → type map applied after sentinel expansion to correct inherited types |
 | `MAX_DIR_WORDS` | 5 | `0_index.R` | Directory name word limit before truncation |
@@ -235,6 +239,28 @@ Paper ID (character string)
 | Download size per paper | 10 GB | `too_large` |
 | Data file size | 500 MB | file skipped silently |
 | LLM calls per paper | 10 (= 200 file paths) | `too_large` |
+
+## Bulk Runner Config (`runners/run_0_index_bulk.R`)
+
+Flags set at the top of the bulk runner script. All override the same-named constants in `0_index.R` when present.
+
+| Flag | Default | Purpose |
+|---|---|---|
+| `FULL_RUN` | `TRUE` | Bypass all LLM call caps (`MAX_COL_TYPE_LLM_CALLS`, `MAX_CHAR_COL_TYPE_LLM_CALLS`). **Must be `TRUE` for production runs.** The `!FULL_RUN` guard is mandatory on every truncation line in `0_index.R`. |
+| `SKIP_COLUMNS` | `FALSE` | Skip column extraction entirely — produces `structure.csv` only. Useful for rapid file-type indexing passes. |
+| `RERUN_COLUMNS` | `TRUE` | Re-run column extraction for papers that succeeded but have no `columns.csv` on disk. Forces `SKIP_COLUMNS = FALSE`, `COLUMNS_ONLY = TRUE`, `FROM_LOCAL = TRUE`, `DOWNLOAD = FALSE`. Updates existing rows in `bulk_summary.csv` rather than appending. |
+| `FROM_LOCAL` | `TRUE` | Skip downloading; discover paper IDs from existing `data/<paper_id>/` subdirectories instead of XML files. Forces `DOWNLOAD = FALSE`. |
+| `DOWNLOAD` | `TRUE` | Whether to attempt OSF downloads. Automatically set to `FALSE` when `FROM_LOCAL = TRUE`. |
+| `RESUME` | `TRUE` | Skip papers already present in `bulk_summary.csv`. Set `FALSE` to re-run all papers (e.g. after a pipeline change). |
+| `PRIORITISE_GT` | `TRUE` | Move papers that have a `ground_truth/<paper_id>.csv` to the front of the queue. Within each group, `SHUFFLE`/`SEED` ordering still applies. |
+| `GT_DIR` | `./data_check/ground_truth` | Directory scanned to identify ground-truth papers when `PRIORITISE_GT = TRUE`. |
+| `N_RUNS` | `Inf` | Cap on papers to process in this run. `Inf` = all remaining papers. |
+| `SHUFFLE` | `TRUE` | Randomise paper order before processing. |
+| `SEED` | `NULL` | RNG seed for reproducible shuffle. `NULL` = non-deterministic. |
+| `MAX_DATA_FILES` | `30L` | Cap on tabular data files to column-extract per paper. Temporary guard against N explosion from `combined`/`individual` misclassification; set to `Inf` once that is fixed. |
+| `MAX_COL_TYPE_LLM_CALLS` | `5L` | Overrides the `0_index.R` constant for this run. |
+
+---
 
 ## LLM Model
 
@@ -274,11 +300,11 @@ Rscript data_check/runners/run_tests.R     # CLI
 
 | Path | Contents |
 |---|---|
-| `tests/outputs/<paper_id>/` | Per-stage CSVs written by index + codebook label stages |
+| `tests/outputs/<source>/<paper_id>/` | Per-stage CSVs written by index + codebook label stages |
 | `tests/psychds/<paper_id>/` | PsychDS output written by the psychds stage |
 | `tests/test_log.csv` | One row per paper per run; appended each run |
 
-`convert_psychds()` reads from the production path `./data_check/outputs/<paper_id>/`.
+`convert_psychds()` reads from the production path `./data_check/outputs/<source>/<paper_id>/` via `paper_path()`.
 The test runner bridges this via a temporary symlink when the production path does
 not exist, then removes it after the stage completes.
 

@@ -98,7 +98,7 @@ for (i in seq_along(remaining_ids)) {
       stop("no OSF data links found")
     }
 
-    target_dir <- file.path(DATA_DIR, pid)
+    target_dir <- file.path(DATA_DIR, "osf", pid)
 
     # If already downloaded and non-empty, skip
     if (dir.exists(target_dir)) {

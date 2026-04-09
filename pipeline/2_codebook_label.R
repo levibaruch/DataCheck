@@ -30,6 +30,7 @@ llm_model("ollama/gpt-oss:20b-cloud")
 # ── Constants ─────────────────────────────────────────────────────────────────
 
 OUTPUT_DIR             <- "./data_check/outputs"
+GROUND_TRUTH_DIR       <- "./data_check/ground_truth"
 LLM_BATCH_SIZE         <- 20L   # shared constant — needed by llm_batch() in helper.R
 MAX_CODEBOOK_LLM_CALLS    <- 10L   # max LLM calls per codebook file for text parsing (ignored when FULL_RUN = TRUE)
 if (!exists("FULL_RUN")) FULL_RUN <- FALSE
@@ -41,10 +42,11 @@ CODEBOOK_TYPES         <- c("codebook", "readme")
 
 run_codebook_label <- function(paper_id, output_dir = NULL) {
 
+  source  <- if (is_dataverse_id(paper_id)) "dataverse" else "osf"
   eff_dir <- if (!is.null(output_dir)) {
     dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
     output_dir
-  } else paper_output_dir(paper_id)
+  } else paper_output_dir(source, paper_id)
 
   # ── 1. Load inputs ──────────────────────────────────────────────────────────
 

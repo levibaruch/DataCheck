@@ -20,8 +20,10 @@ llm_model("ollama/gpt-oss:20b-cloud")
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 
-DATA_DIR        <- "./data_check/data"
-OUTPUT_DIR      <- "./data_check/outputs"
+DATA_DIR         <- "./data_check/data"
+OUTPUT_DIR       <- "./data_check/outputs"
+PSYCHDS_OUT_DIR  <- "./data_check/psychds"
+GROUND_TRUTH_DIR <- "./data_check/ground_truth"
 ARCHIVE_EXTS    <- c("zip", "gz", "tar", "tgz", "bz2", "xz")
 # Extension-based type overrides applied after aggregate sentinel expansion.
 # Maps lowercase file extension → definitive type for unambiguous file kinds.
@@ -54,6 +56,7 @@ VALID_COL_TYPES <- c("continuous", "binary", "categorical", "ordinal", "date", "
                      LLM_SENTINEL_VAL)
 if (!exists("MAX_COL_TYPE_LLM_CALLS"))      MAX_COL_TYPE_LLM_CALLS      <- 5L
 if (!exists("MAX_CHAR_COL_TYPE_LLM_CALLS")) MAX_CHAR_COL_TYPE_LLM_CALLS <- 3L
+if (!exists("MAX_DATA_FILES"))              MAX_DATA_FILES              <- Inf  # cap on tabular data files to column-extract per paper (Inf = no cap)
 if (!exists("FULL_RUN"))                    FULL_RUN                    <- FALSE
 if (!exists("SKIP_COLUMNS"))               SKIP_COLUMNS                <- FALSE  # TRUE = skip column extraction entirely
 if (!exists("COLUMNS_ONLY"))               COLUMNS_ONLY                <- FALSE  # TRUE = skip download+LLM, read existing structure.csv, run columns only
@@ -84,12 +87,23 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
     message("── Randomly selected paper: ", paper_id)
   }
 
+  is_dv      <- is_dataverse_id(paper_id)
+  source     <- if (is_dv) "dataverse" else "osf"
+
   eff_dir <- if (!is.null(output_dir)) {
     dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
     output_dir
-  } else paper_output_dir(paper_id)
+  } else paper_output_dir(source, paper_id)
 
-  target_dir <- file.path(DATA_DIR, paper_id)
+  target_dir <- paper_path("data", source, paper_id)
+
+  # Warn if data exists at the legacy flat path but not at the new source-aware path
+  legacy_dir <- file.path(DATA_DIR, paper_id)
+  if (!dir.exists(target_dir) && dir.exists(legacy_dir))
+    warning(sprintf(
+      "Legacy data found at '%s'; expected source-aware path '%s' does not exist. ",
+      legacy_dir, target_dir
+    ))
 
   # ── COLUMNS_ONLY: skip download + LLM; read existing structure.csv ───────────
 
@@ -111,7 +125,14 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
   # ── 1. Download ─────────────────────────────────────────────────────────────
 
   t_download_start <- proc.time()[["elapsed"]]
-  if (download) {
+  if (is_dv) {
+    # ── Dataverse: skip download; verify directory exists ────────────────────
+    if (!dir.exists(target_dir))
+      stop("dataverse_dir_missing: no directory found at ", target_dir,
+           " for deposit ", paper_id)
+    t_download <- 0
+    message("── Dataverse deposit: skipping download, reading from ", target_dir)
+  } else if (download) {
     xml_path <- file.path(XML_DIR, paste0(paper_id, ".xml"))
     paper    <- read(xml_path)
     stopifnot(!is.null(paper$id))
@@ -228,6 +249,49 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
     # Refresh file list after explosion
     files <- drop_git(list.files(target_dir, full.names = TRUE, recursive = TRUE))
     files <- files[!(tolower(tools::file_ext(files)) %in% ARCHIVE_EXTS)]
+  }
+
+  # ── 3b-ii. Explode multi-object RData / Rda files into per-object CSVs ───────
+  # An .rda/.rdata may contain several data.frame objects.  Each becomes
+  # <stem>_<varname>.csv alongside the original; original is deleted once at
+  # least one CSV is written.  Single-object files are left untouched —
+  # read_data_head() handles them fine as-is.
+  rdata_paths <- files[tolower(tools::file_ext(files)) %in% c("rda", "rdata")]
+  if (length(rdata_paths) > 0) {
+    rdata_exploded <- FALSE
+    for (rp in rdata_paths) {
+      env <- new.env()
+      ok  <- tryCatch({ load(rp, envir = env); TRUE },
+                      error = function(e) {
+                        warning("Could not load ", basename(rp), ": ", conditionMessage(e))
+                        FALSE
+                      })
+      if (!ok) next
+      dfs <- Filter(is.data.frame, as.list(env))
+      if (length(dfs) < 2) next    # 0 or 1 data frame — no explosion needed
+      stem      <- tools::file_path_sans_ext(rp)
+      n_written <- 0L
+      for (nm in names(dfs)) {
+        df <- dfs[[nm]]
+        if (nrow(df) == 0) next
+        safe_nm  <- gsub("[/\\\\:*?\"<>|]", "_", nm)
+        out_path <- paste0(stem, "_", safe_nm, ".csv")
+        tryCatch(
+          { write.csv(df, out_path, row.names = FALSE); n_written <- n_written + 1L },
+          error = function(e)
+            warning("  could not write ", basename(out_path), ": ", conditionMessage(e))
+        )
+      }
+      if (n_written > 0) {
+        message("  exploded ", basename(rp), " → ", n_written, " CSV(s)")
+        file.remove(rp)
+        rdata_exploded <- TRUE
+      }
+    }
+    if (rdata_exploded) {
+      files <- drop_git(list.files(target_dir, full.names = TRUE, recursive = TRUE))
+      files <- files[!(tolower(tools::file_ext(files)) %in% ARCHIVE_EXTS)]
+    }
   }
 
   # ── 3c. Remove duplicate files ──────────────────────────────────────────────
@@ -396,7 +460,7 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
   # Phase 2: classify aggregate sub-sentinels using Phase 1 results as context.
   # Both phases count toward MAX_LLM_CALLS.
 
-  t_download <- proc.time()[["elapsed"]] - t_download_start
+  if (!is_dv) t_download <- proc.time()[["elapsed"]] - t_download_start
 
   t_llm_start <- proc.time()[["elapsed"]]
   MAX_LLM_CALLS  <- 10
@@ -715,6 +779,12 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
   # "codebook", "code", "asset", "readme", or "other" are excluded by this filter.
   data_files <- file_df[file_df$type == "data" & !file_df$is_sentinel &
                           !is.na(file_df$data_format) & file_df$data_format == "tabular", ]
+  if (is.finite(MAX_DATA_FILES) && nrow(data_files) > MAX_DATA_FILES) {
+    message("── Capping data files: ", nrow(data_files), "sskipping")
+    columns_df   <- NULL
+    columns_out  <- NULL
+    data_files   <- file_df[FALSE, ]  
+    }
   message("── Extracting columns + statistics from ", nrow(data_files), " data file(s)")
 
   MAX_FILE_MB <- 500  # skip data files larger than this
@@ -1066,6 +1136,7 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
     n_combined     = n_combined,
     n_columns      = if (!is.null(columns_df)) nrow(columns_df) else 0L,
     n_source_files = if (!is.null(columns_df)) length(unique(columns_df$source_file)) else 0L,
+    source         = if (is_dv) "dataverse" else "osf",
     type_counts    = table(file_df$type),
     group_counts   = table(file_df$group),
     file_df        = file_df,
