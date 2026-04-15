@@ -1402,3 +1402,89 @@ is_valid_group <- function(group_value) {
   valid_pattern <- "^(ex|pilot)\\d+\\w*$|^shared$"
   !is.na(group_value) && grepl(valid_pattern, group_value, ignore.case = FALSE)
 }
+
+# ── Data Granularity Detection (Feature 037) ──────────────────────────────────
+
+# Participant ID patterns for filename and directory name detection.
+# Used by US1 (filename heuristic) and US2 (aggregate folder series detection).
+# Extensible — add new patterns empirically from error logs as needed.
+PARTICIPANT_ID_PATTERNS <- c(
+  "^\\d+$",                     # purely numeric: 001, 17230
+  "^sub\\d+",                   # sub prefix: sub001, sub_001
+  "^subj\\d+",                  # subj prefix: subj_3, subj3
+  "^s\\d{2,}$",                 # s + ≥2 digits: s01, s001 (avoid single-letter collision)
+  "^[Pp]\\d+",                  # P prefix: P01, p01, P_01
+  "^[Ii][Dd]\\d+",              # ID prefix: ID042, id_042
+  "^participant[_-]?\\d+",      # full word: participant_01, participant01
+  "^pp\\d+",                    # pp prefix: pp03, pp_03
+  "^vp\\d+"                     # vp prefix (German): vp07, vp_07
+)
+
+# Test whether a string matches any participant ID pattern.
+# Vectorised over x; returns TRUE if any pattern matches (case-insensitive).
+# Used on bare filename stems (no extension) and directory names.
+is_participant_id <- function(x) {
+  if (is.na(x) || x == "") return(FALSE)
+  any(vapply(PARTICIPANT_ID_PATTERNS,
+             function(pattern) grepl(pattern, x, ignore.case = TRUE, perl = TRUE),
+             logical(1L)))
+}
+
+# ── Filename pattern detection for granularity inference (US3) ──────────────────
+# Extract repeating structure from a set of filenames (e.g., sub_1.txt, sub_2.txt → sub_\\d+\\.txt)
+# Returns list: pattern (regex for display), examples, count
+detect_filename_pattern <- function(filenames, verbose = TRUE) {
+  if (verbose) cat(sprintf("  [detect] input: %d files\n", length(filenames)))
+
+  if (length(filenames) < 2) {
+    if (verbose) cat("  [detect] FAIL: fewer than 2 files\n")
+    return(NULL)
+  }
+
+  basenames <- tools::file_path_sans_ext(basename(filenames))
+  exts <- tools::file_ext(filenames)
+
+  if (verbose) {
+    cat(sprintf("  [detect] basenames sample: %s\n", paste(head(basenames, 3), collapse=", ")))
+    cat(sprintf("  [detect] extensions: %s\n", paste(unique(exts), collapse=", ")))
+  }
+
+  # Find common pattern by replacing all digit sequences with marker
+  patterns <- unique(gsub("[0-9]+", "NUM", basenames))
+
+  if (verbose) cat(sprintf("  [detect] unique patterns: %d (%s)\n", length(patterns), paste(patterns, collapse=" | ")))
+
+  if (length(patterns) == 1) {
+    # All files follow same pattern with numeric variation
+    # Pattern has "NUM" placeholders; convert to actual regex
+    pattern_base <- gsub("NUM", "[0-9]+", patterns[1], fixed = TRUE)
+
+    if (exts[1] != "") {
+      regex_pattern <- paste0("^", pattern_base, "\\.", exts[1], "$")
+    } else {
+      regex_pattern <- paste0("^", pattern_base, "$")
+    }
+
+    if (verbose) cat(sprintf("  [detect] regex: %s\n", regex_pattern))
+
+    # Test pattern against all filenames
+    matching_idx <- grep(regex_pattern, filenames)
+
+    if (verbose) cat(sprintf("  [detect] matches: %d / %d files\n", length(matching_idx), length(filenames)))
+
+    if (length(matching_idx) > 1) {
+      if (verbose) cat(sprintf("  [detect] SUCCESS: %s\n", regex_pattern))
+      return(list(
+        pattern = regex_pattern,              # Actual regex for matching
+        examples = filenames[matching_idx][1:min(5, length(matching_idx))],
+        count = length(matching_idx)
+      ))
+    } else {
+      if (verbose) cat("  [detect] FAIL: pattern matched <= 1 file\n")
+    }
+  } else {
+    if (verbose) cat("  [detect] FAIL: multiple unique patterns found\n")
+  }
+
+  NULL
+}

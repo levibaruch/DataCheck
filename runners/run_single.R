@@ -32,7 +32,8 @@ local({
   if (length(all_ids) == 0) stop("No paper IDs found in ", XML_DIR)
 
   # IDs must stay as character strings — no numeric coercion
-  pid <- #sample(all_ids, 1L)
+  args <- commandArgs(trailingOnly = TRUE)
+  pid <- if (length(args) > 0) args[1] else sample(all_ids, 1L)
 
   cat("\n══════════════════════════════════════════════════════════════════════\n")
   cat(sprintf("  Paper: %s\n", pid))

@@ -382,3 +382,27 @@ No sentinel rows in the output CSV,
 all file-level, all honest, all free.
 One phase, one batch, one clean propagation,
 a lesson in design: reduction is creation.
+
+---
+
+## 037 — Improve Granularity Detection
+
+A folder fills with files — but are they one or many?
+Does each file hold one person's data, or all of them, uncanny?
+The filenames whisper hints: `sub_1.mat`, `2.dat`, numeric or named,
+patterns emerge from chaos, participant IDs proclaimed.
+
+Three tiers rose up to answer the question deep:
+First, the heuristics, scanning filenames with a peep.
+Then aggregates, where participants nest in folders arranged.
+Finally, the LLM reads patterns the pipeline has ranged.
+
+And when the patterns work — when `^[0-9]+_imOrd\.txt$` rings true —
+the system remembers: apply this rule to all files that match too.
+A database grows with each detected regex, each classification made,
+tracking what worked and what failed, no pattern decayed.
+
+Now every data file knows: am I individual or combined?
+And if the answer came from the model, the source is logged and signed.
+Three layers of detection, from simple to sublime,
+the granularity question answered, at last, in time.

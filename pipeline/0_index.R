@@ -50,6 +50,7 @@ VALID_COL_TYPES <- c("continuous", "binary", "categorical", "ordinal", "date", "
                      LLM_SENTINEL_VAL)
 if (!exists("MAX_COL_TYPE_LLM_CALLS"))      MAX_COL_TYPE_LLM_CALLS      <- 5L
 if (!exists("MAX_CHAR_COL_TYPE_LLM_CALLS")) MAX_CHAR_COL_TYPE_LLM_CALLS <- 3L
+if (!exists("MAX_GRANULARITY_LLM_CALLS"))   MAX_GRANULARITY_LLM_CALLS   <- 1L  # US3: max LLM calls for granularity (aggregate folders with unclear signals)
 if (!exists("MAX_DATA_FILES"))              MAX_DATA_FILES              <- Inf  # cap on tabular data files to column-extract per paper (Inf = no cap)
 if (!exists("FULL_RUN"))                    FULL_RUN                    <- FALSE
 if (!exists("SKIP_COLUMNS"))               SKIP_COLUMNS                <- FALSE  # TRUE = skip column extraction entirely
@@ -368,8 +369,8 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
     # Keep only *direct* children (no slash = no further nesting)
     child_names <- child_names[!grepl("/", child_names, fixed = TRUE)]
     if (length(child_names) == 0) next
-    n_numeric <- sum(grepl("^\\d+$", child_names))
-    if (n_numeric > AGGREGATE_THRESHOLD) {
+    n_participant <- sum(vapply(child_names, is_participant_id, logical(1L)))
+    if (n_participant > AGGREGATE_THRESHOLD) {
       participant_agg_dirs <- c(participant_agg_dirs, d)
     }
   }
@@ -401,13 +402,14 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
       groups <- group_aggregate_folder(members, folder = d)
 
       for (g in groups) {
-        # Detect if this group is a participant series (numeric subfolder structure)
+        # Detect if this group is a participant series (extended pattern detection)
         is_series <- FALSE
         if (d %in% participant_agg_dirs) {
-          # In participant aggregate dirs, check if members follow numeric pattern
+          # In participant aggregate dirs, check if members follow participant ID pattern
+          # (numeric, sub###, s##, P##, ID##, participant##, pp##, vp##, subj##)
           basenames <- basename(dirname(g$members))
-          n_numeric <- sum(grepl("^\\d+$", basenames))
-          is_series <- (n_numeric > (length(g$members) / 2))  # majority numeric subdirs
+          n_participant <- sum(vapply(basenames, is_participant_id, logical(1L)))
+          is_series <- (n_participant > (length(g$members) / 2))  # majority match participant patterns
         }
         g$is_series <- is_series
 
@@ -611,16 +613,17 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
 
       # Create a row for each member file
       member_df <- data.frame(
-        path             = file.path(norm_base, grp$members),
-        rel_path         = grp$members,
-        type             = agg_type,
-        group            = agg_group,
-        aggregate_folder = grp$folder,
-        type_source      = "aggregate_llm",
-        data_granularity = data_gran,
-        is_sentinel      = FALSE,
-        prompt_nr        = sample_row$prompt_nr,
-        stringsAsFactors = FALSE
+        path               = file.path(norm_base, grp$members),
+        rel_path           = grp$members,
+        type               = agg_type,
+        group              = agg_group,
+        aggregate_folder   = grp$folder,
+        type_source        = "aggregate_llm",
+        data_granularity   = data_gran,
+        granularity_source = ifelse(is_data, "folder_heuristic", NA_character_),
+        is_sentinel        = FALSE,
+        prompt_nr          = sample_row$prompt_nr,
+        stringsAsFactors   = FALSE
       )
 
       agg_expanded <- c(agg_expanded, list(member_df))
@@ -655,25 +658,236 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
 
   p1_is_data <- p1_types == "data"
   non_agg_df <- data.frame(
-    path             = file.path(norm_base, non_agg_relpaths),
-    rel_path         = non_agg_relpaths,
-    type             = p1_types,
-    group            = p1_groups,
-    aggregate_folder = NA_character_,
-    type_source      = "llm",
-    data_granularity = ifelse(p1_is_data, "combined", NA_character_),
-    is_sentinel      = FALSE,
-    prompt_nr        = p1_prompt_nrs,
-    stringsAsFactors = FALSE
+    path               = file.path(norm_base, non_agg_relpaths),
+    rel_path           = non_agg_relpaths,
+    type               = p1_types,
+    group              = p1_groups,
+    aggregate_folder   = NA_character_,
+    type_source        = "llm",
+    data_granularity   = ifelse(p1_is_data, "combined", NA_character_),
+    granularity_source = ifelse(p1_is_data, "default_combined", NA_character_),
+    is_sentinel        = FALSE,
+    prompt_nr          = p1_prompt_nrs,
+    stringsAsFactors   = FALSE
   )
 
   file_df          <- rbind(non_agg_df, agg_expanded_df)
+
+
   file_df$paper_id <- paper_id
   file_df$filename <- basename(file_df$path)
   file_df$ext      <- tolower(tools::file_ext(file_df$path))
   file_df$data_format <- ifelse(file_df$type == "data",
                                 classify_data_format(file_df$ext),
                                 NA_character_)
+
+  # ── US1: Filename-pattern granularity heuristic ──────────────────────────────
+  # For non-aggregate data files with no granularity signal yet, apply filename
+  # heuristic: if filename stem matches participant ID pattern, mark "individual".
+  data_idx <- which(file_df$type == "data" & file_df$granularity_source == "default_combined")
+  if (length(data_idx) > 0) {
+    stems <- tools::file_path_sans_ext(file_df$filename[data_idx])
+    is_participant <- vapply(stems, is_participant_id, logical(1L))
+    matched_idx <- data_idx[is_participant]
+    if (length(matched_idx) > 0) {
+      file_df$data_granularity[matched_idx] <- "individual"
+      file_df$granularity_source[matched_idx] <- "filename_heuristic"
+    }
+  }
+
+  # ── US3: LLM-assisted granularity for aggregate data files with unclear signals ─
+  # Target: data files in aggregate folders (granularity_source == "folder_heuristic")
+  # where the folder structure does NOT clearly indicate participant series
+  # (i.e., subdirectory names don't match participant patterns).
+  # Use LLM to infer granularity based on FILENAME PATTERNS, not columns.
+  unclear_agg_idx <- which(file_df$type == "data" &
+                           file_df$granularity_source == "folder_heuristic" &
+                           !is.na(file_df$aggregate_folder) &
+                           nchar(file_df$aggregate_folder) > 0)
+
+  if (length(unclear_agg_idx) > 0) {
+    # For each unclear aggregate, check if its subdirs match participant patterns
+    unclear_agg_folders <- unique(file_df$aggregate_folder[unclear_agg_idx])
+    gran_queries <- list()  # Collect queries for single LLM call
+  
+    for (agg_folder in unclear_agg_folders) {
+
+      # Get subdirs in this aggregate folder (exclude NA in aggregate_folder)
+      subdir_match <- !is.na(file_df$aggregate_folder) & file_df$aggregate_folder == agg_folder & file_df$type == "data"
+
+      subdir_names <- unique(basename(dirname(file_df$rel_path[subdir_match])))
+      # Check if majority match participant patterns
+      n_participant <- sum(vapply(subdir_names, is_participant_id, logical(1L)))
+      has_clear_signal <- (n_participant > (length(subdir_names) / 2))
+
+      if (!has_clear_signal) {
+
+        # No clear participant signal: analyze filename patterns (exclude NA in aggregate_folder)
+        agg_data_files <- file_df$rel_path[
+          !is.na(file_df$aggregate_folder) &
+          file_df$aggregate_folder == agg_folder &
+          file_df$type == "data" &
+          file_df$granularity_source != "filename_heuristic"
+        ]
+
+        if (length(agg_data_files) > 0) {
+          # Detect repeating filename pattern in this aggregate
+          # Use basenames (not full paths) for pattern detection
+          agg_data_basenames <- basename(agg_data_files)
+
+          pattern_info <- detect_filename_pattern(agg_data_basenames, verbose = FALSE)
+
+          if (!is.null(pattern_info) && pattern_info$count >= 2) {
+            # Valid repeating pattern found: prepare for LLM query
+            gran_queries[[agg_folder]] <- list(
+              folder_path = agg_folder,
+              filename_pattern = pattern_info$pattern,  # Actual regex: ^Exp[0-9]+_[0-9]+\.dat$
+              example_files = pattern_info$examples,
+              target_files = agg_data_files  # Track which files to update
+            )
+          } else {
+          }
+        } else {
+        }
+      }
+    }
+
+    # If queries collected, send to LLM in single call
+    if (length(gran_queries) > 0) {
+
+      # Prepare input for LLM: up to MAX_GRANULARITY_LLM_CALLS * LLM_BATCH_SIZE queries
+      max_to_send <- MAX_GRANULARITY_LLM_CALLS * LLM_BATCH_SIZE
+      queries_to_send <- gran_queries[1:min(length(gran_queries), max_to_send)]
+      llm_input <- names(queries_to_send)  # folder names as simple paths for llm_batch
+
+      # Build rich context into user_prefix for the LLM
+      # Use full folder path as identifier (matches llm_input)
+      prefix_details <- lapply(seq_along(queries_to_send), function(i) {
+        q <- queries_to_send[[i]]
+        examples_str <- paste(head(q$example_files, 5), collapse = ", ")
+        fold_id <- names(queries_to_send)[i]  # full folder path (the key in gran_queries)
+        sprintf("%s: pattern=%s examples=%s", fold_id, q$filename_pattern, examples_str)
+      })
+      user_prefix_full <- paste(c("Classify file granularity based on filename patterns:",
+                                   "", "For each folder below, return its granularity:",
+                                   "", unlist(prefix_details)),
+                                collapse = "\n")
+
+
+      # Call LLM with GRANULARITY_PROMPT
+      gran_result <- tryCatch({
+        llm_batch(paths = llm_input, system_prompt = GRANULARITY_PROMPT,
+                  user_prefix = user_prefix_full,
+                  key_col = "folder_path", extra_cols = "granularity",
+                  fallback_vals = list(granularity = NA_character_))
+      }, error = function(e) {
+        message(sprintf("  [US3-llm] ERROR: %s", conditionMessage(e)))
+        NULL
+      })
+
+
+      # Update granularity_source for all files in queried aggregates
+      if (!is.null(gran_result) && nrow(gran_result) > 0) {
+        for (.i in seq_len(nrow(gran_result))) {
+          agg_folder_result <- gran_result$folder_path[.i]
+          gran_val <- gran_result$granularity[.i]
+
+          if (!is.na(gran_val) && gran_val %in% c("individual", "combined")) {
+            # Update all target files in this aggregate
+            target_files <- gran_queries[[agg_folder_result]]$target_files
+            file_idx <- which(file_df$rel_path %in% target_files)
+            if (length(file_idx) > 0) {
+              file_df$data_granularity[file_idx] <- gran_val
+              file_df$granularity_source[file_idx] <- "llm"
+            }
+            message(sprintf("── US3: Inferred granularity '%s' for %d file(s) in %s (pattern: %s)",
+                            gran_val, length(file_idx), basename(agg_folder_result),
+                            gran_queries[[agg_folder_result]]$filename_pattern))
+          }
+        }
+      }
+
+      # Pattern inference: if a pattern was classified as "individual" by LLM,
+      # apply that pattern to ALL other data files (both within same aggregate and other aggregates)
+      # to catch additional individual files not sent to LLM
+      if (!is.null(gran_result) && nrow(gran_result) > 0) {
+        # Collect all individual patterns found
+        individual_patterns <- c()  # character vector of regex patterns
+        for (.i in seq_len(nrow(gran_result))) {
+          agg_folder_result <- gran_result$folder_path[.i]
+          gran_val <- gran_result$granularity[.i]
+          if (gran_val == "individual") {
+            pattern_regex <- gran_queries[[agg_folder_result]]$filename_pattern
+            individual_patterns <- c(individual_patterns, pattern_regex)
+          }
+        }
+
+        # Apply each individual pattern to NON-aggregate data files (flat folders)
+        if (length(individual_patterns) > 0) {
+          # Find all non-aggregate data files NOT yet classified as "individual"
+          non_agg_data_idx <- which(
+            file_df$type == "data" &
+            file_df$data_granularity != "individual" &
+            is.na(file_df$aggregate_folder)
+          )
+
+          for (pattern_regex in individual_patterns) {
+            if (length(non_agg_data_idx) > 0) {
+              # Check which of these match the pattern (match against basenames only)
+              other_files <- file_df$rel_path[non_agg_data_idx]
+              other_basenames <- basename(other_files)
+              pattern_matches <- grep(pattern_regex, other_basenames)
+              if (length(pattern_matches) > 0) {
+                match_idx <- non_agg_data_idx[pattern_matches]
+                file_df$data_granularity[match_idx] <- "individual"
+                file_df$granularity_source[match_idx] <- "llm_pattern_inference"
+              }
+            }
+          }
+        }
+      }
+
+      # Save all detected patterns + LLM classification for validation (false pos/neg detection)
+      tryCatch({
+        regex_db_path <- "data_check/docs/detected_granularity_patterns.csv"
+        dir.create(dirname(regex_db_path), showWarnings = FALSE, recursive = TRUE)
+
+        # For each LLM result, find the matching query and save pattern + classification
+        for (.i in seq_len(nrow(gran_result))) {
+          result_folder <- gran_result$folder_path[.i]
+          llm_classification <- gran_result$granularity[.i]
+
+          if (result_folder %in% names(gran_queries)) {
+            query <- gran_queries[[result_folder]]
+            pattern_regex <- query$filename_pattern
+            example_files <- head(query$example_files, 3)
+
+            db_row <- data.frame(
+              paper_id = paper_id,
+              pattern_regex = pattern_regex,
+              example_file_1 = if (length(example_files) >= 1) example_files[1] else NA_character_,
+              example_file_2 = if (length(example_files) >= 2) example_files[2] else NA_character_,
+              example_file_3 = if (length(example_files) >= 3) example_files[3] else NA_character_,
+              llm_classification = llm_classification,
+              detected_date = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
+              stringsAsFactors = FALSE
+            )
+
+            if (!file.exists(regex_db_path)) {
+              write.csv(db_row, regex_db_path, row.names = FALSE)
+            } else {
+              existing <- read.csv(regex_db_path, stringsAsFactors = FALSE)
+              updated <- rbind(existing, db_row)
+              updated <- updated[!duplicated(updated[, c("pattern_regex", "paper_id")]), ]
+              write.csv(updated, regex_db_path, row.names = FALSE)
+            }
+          }
+        }
+      }, error = function(e) {
+        warning("Failed to save regex patterns: ", conditionMessage(e))
+      })
+    }
+  }
 
   # ── PDF-from-Rmd fallback ────────────────────────────────────────────────────
   # After classification and group assignment, override type to "output" for PDFs
@@ -1088,7 +1302,7 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
   write.csv(
     file_df[, c("paper_id", "path", "rel_path", "filename", "ext",
                 "type", "type_source", "group", "aggregate_folder",
-                "data_granularity", "is_sentinel", "prompt_nr", "data_format")],
+                "data_granularity", "granularity_source", "is_sentinel", "prompt_nr", "data_format")],
     structure_out, row.names = FALSE
   )
   message("── Saved structure → ", structure_out)

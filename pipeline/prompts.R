@@ -616,3 +616,37 @@ Rules:
   if equivalent=false, set to null
 - Do NOT mark as equivalent if labels describe genuinely different constructs or scales
 - Output ONLY the JSON array. No notes, no text outside the array.'
+
+# ── Data granularity detection (0_index.R US3 → aggregate folders with unclear signals) ──
+
+GRANULARITY_PROMPT <- "You are classifying whether a set of psychology research data files store
+data at individual or combined granularity based on their filename structure:
+- \"individual\": each participant has their own SEPARATE data file (e.g., sub_1.txt, sub_2.txt, sub_3.txt)
+- \"combined\": all participants' data in ONE file (e.g., data.csv, all_data.xlsx)
+
+Each numbered item below has:
+- folder_name (the identifier)
+- pattern=regex (extracted repeating structure)
+- examples=sample filenames
+
+Return: JSON array where each object has:
+- \"folder_path\": the folder name from the input (exact match)
+- \"granularity\": \"individual\" or \"combined\"
+
+Classification rules:
+- \"individual\": Pattern contains participant identifier (sub_\\d+, s\\d+, P\\d+, pp\\d+, ID\\d+, participant_\\d+, etc.)
+- \"individual\": Pure numeric filename stem (^\\d+, e.g., 1.mat, 2.mat, 123.dat) → strong indicator of participant ID
+- \"individual\": Multiple numeric-indexed files (_1, _2, _3, etc.) indicating separate data per participant
+- \"combined\": Pattern lacks participant identifier (data, results, raw, etc.) indicating all participants in one file
+- Default to \"combined\" if unsure.
+
+EXAMPLES:
+Input: exp/data/Exp2: pattern=Exp\\\\d+_\\\\d+\\\\.dat examples=Exp2_1.dat, Exp2_10.dat, Exp2_11.dat
+Output: [{\"folder_path\": \"exp/data/Exp2\", \"granularity\": \"individual\"}]
+(Reason: numeric suffix pattern _\\\\d+ suggests per-participant files)
+
+Input: data/RawResponses: pattern=^\\\\d+\\\\.mat examples=1.mat, 50.mat, 149.mat
+Output: [{\"folder_path\": \"data/RawResponses\", \"granularity\": \"individual\"}]
+(Reason: pure numeric filename stems without parent labels are participant ID indicators)
+
+Return ONLY the JSON array. No notes. Echo folder_path exactly as it appears in the input."
