@@ -18,7 +18,7 @@
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-REPORT_ONLY <- FALSE
+REPORT_ONLY <- TRUE
 if (!exists("REPORT_ONLY")) REPORT_ONLY <- FALSE
 FULL_RUN <- TRUE
 

@@ -21,7 +21,7 @@ source("data_check/pipeline/3_psychds_convert.R")
 llm_use(TRUE)
 llm_model("ollama/gpt-oss:20b-cloud")
 
-PROCESS_DIR      <- "/Volumes/NINJAV/data/osf"  # directory containing folders to process (each treated as a "paper")
+PROCESS_DIR      <- "/Volumes/NINJAV/data/dataverse"  # directory containing folders to process (each treated as a "paper")
 DATA_DIR         <- "/Volumes/NINJAV/data"
 OUTPUT_DIR       <- "/Volumes/NINJAV/DataCheckOut/outputs"
 PSYCHDS_OUT_DIR  <- "/Volumes/NINJAV/DataCheckOut/psychds"

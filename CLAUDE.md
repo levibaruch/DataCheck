@@ -55,7 +55,6 @@ Auto-generated from all feature plans. Last updated: 2026-04-14
 - CSV files on local filesystem; `structure.csv`, `columns.csv`, `labels.csv`, `codebook_coverage.csv` (034-classification-parsing-fixes)
 - R (base R only — no new packages) + `helper.R` (`llm_batch()`, `classify_by_rules()`), `0_index.R`, `3_psychds_convert.R`, `prompts.R` (`STRUCTURE_PROMPT_NEW`) (035-sentinel-aggregate-redesign)
 - CSV files — `outputs/<source>/<id>/structure.csv` (modified), `docs/output-schemas.md` (updated) (035-sentinel-aggregate-redesign)
-
 - R (base R, no new packages) + `helper.R` (`classify_col_type_rules()`), `0_index.R` (`COLUMN_TYPE_PROMPT`, `run_index()`) (004-reduce-unknown-coltypes)
 
 ## Project Structure
