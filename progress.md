@@ -1,5 +1,85 @@
 # Progress Log
 
+## 2026-04-15
+
+### Completed ✅
+
+**036** — sanitize-llm-outputs (branch: `035-sentinel-aggregate-redesign`)
+- Add type validation to `llm_batch()` retry loop: invalid types trigger automatic retries (up to 4 attempts)
+- `TYPO_MAP` constant in `helper.R`: 4 initial mappings (coden→code, Code→code, supplimental→supplemental, supp→supplemental); extensible empirically from error logs
+- `validate_type()`, `is_valid_type()`, `is_valid_group()` helpers: apply mapping, check validity (closed set: 10 types), validate group pattern (ex/pilot + digits + optional suffix)
+- Group validation: invalid groups set to "shared" (defensive, no retry); type validation triggers retry with simpleError("llm_validation: ...") prefix
+- `LLM_RETRY_LIMIT` increased from 3 to 4 to accommodate validation failures alongside parsing errors
+- Logging: validation failures logged via existing feature 027 infrastructure with "llm_validation:" prefix for grepping
+- Verification script: `specs/036-sanitize-llm-outputs/verify_validation.R` tests all validation logic with known mistakes
+- Test results: paper 0956797614535937 (known "coden" typo) produces valid "code"; pilot groups validated; 99-file aggregate handles correctly
+
+**035** — sentinel-aggregate-redesign (branch: `035-sentinel-aggregate-redesign`)
+- Eliminated Phase 2 LLM loop; replaced with Phase 1-only propagation for aggregate folder handling
+- `group_aggregate_folder()` helper in `helper.R`: groups file paths by lowercase extension; returns sample paths (up to 5 per group) and `route_individually` flag (TRUE if <AGGREGATE_THRESHOLD)
+- Routing: sample paths from large groups + individual small groups sent to Phase 1 LLM batch
+- Propagation: Phase 1-only results applied to all member files with `type_source = "aggregate_llm"`
+- Series detection restored: participant aggregates (folders with >50% numeric subdirs) marked `is_series = TRUE`, propagated to `data_granularity = "individual"` in structure.csv
+- Removed `expand_sentinel_rows()` from `3_psychds_convert.R`; all output rows file-level (no sentinel rows in structure.csv)
+- Accuracy improvement: aggregate_llm 89.7% (vs 62% sentinel_llm baseline, 74% extension_rule)
+- AGGREGATE_THRESHOLD corrected from 50 → 20 throughout
+- Constitution updated to v1.5.0 with SYNC IMPACT REPORT; Processing Order steps 4-5 updated for Phase 1-only design
+- Updated `docs/output-schemas.md`: removed is_sentinel, replaced sentinel_llm with aggregate_llm in type_source enum
+
+**034** — classification-parsing-fixes (branch: `034-classification-parsing-fixes`)
+- Add `.xlsm` (macro-enabled Excel) support to `read_data_head()` via `readxl::read_excel()` (already handles .xlsm transparently)
+- Fix `.rar` archive extraction: use `system2("unrar", c("e", rar_path, temp_dir))` instead of `untar()` (base untar cannot handle .rar format)
+- Enhance codebook parsing robustness: retry with latin1 encoding when CSV read fails; add header-row detection for malformed CSVs with skipped/merged rows
+- Add `parse_method` column to codebook outputs: tracks whether codebook was parsed via structured rules ("structured") or LLM fallback ("llm")
+
+**033** — llm-prompt-refinements (branch: `033-llm-prompt-refinements`)
+- Iterative refinement of `STRUCTURE_PROMPT` without code changes
+- Tightened classification rules for image/audio/video files: never fallback to `other` for these media types
+- Improved keyword detection for SPSS output files (`.spv` → supplemental, not other)
+- Enhanced E-Prime log file detection (`.log` → output when participant ID in filename, supplemental otherwise)
+- Clarified participant ID detection in aggregate folder context
+- Aggregate threshold reduced from 50 to 20 files (tuned from prompt testing)
+- Accuracy baseline: 74% (extension_rule), target 85%+ for Phase 1 redesign
+
+**032** — source-aware-storage (branch: `032-source-aware-storage`)
+- Implement `paper_path(source, id, layer)` in `helper.R`: centralised path resolver for all file I/O
+- All pipeline artifacts stored under `<layer>/<source>/<id>/` scheme: data/osf/<id>/, data/dataverse/<id>/, outputs/osf/<id>/, etc.
+- Updated `0_index.R`, `2_codebook_label.R`, `3_psychds_convert.R` to use `paper_path()` for all path construction
+- Constitution Principle VI added: source-aware storage rules, ID sanitisation, `paper_path()` mandate
+- Ground-truth annotation OSF-only: `ground_truth/osf/<id>.csv` (Dataverse papers excluded from validation GUI)
+- `psychds/conversion_summary.csv` remains unified rollup (NOT split per-source)
+- `tests/test_papers.csv` schema updated to `id, source, label`
+- Constitution updated to v1.4.0 with Principle VI
+
+**031** — dataverse-source-support (branch: `031-dataverse-source-support`)
+- Add `resolve_dataverse_links()` to `helper.R`: fetches Dataverse dataset metadata via OAI-PMH XML API; extracts file download links
+- Extend `0_index.R` to detect and download from Dataverse alongside OSF
+- Add `paper_path()` resolver to support multiple sources (prerequisite for 032)
+- XML metadata parsing for Dataverse datasets using `xml2` (already installed)
+- New source identifier: `"dataverse"` (parallel to `"osf"`)
+
+**030** — prompt-fixes-skip-columns-aggregate-threshold (branch: `030-prompt-fixes-skip-columns-aggregate-threshold`)
+- Prompt refinement: image/audio/video files never classified as `other` (hard rules)
+- Add `.spv` (SPSS Viewer) → supplemental rule; `.log` context-aware (participant ID = output, else supplemental)
+- SKIP_COLUMNS mode: when true, skip column extraction entirely (files indexed only); used for high-volume aggregate repos
+- AGGREGATE_THRESHOLD tuning: lowered from 50 to 20 files (better detection, reduced Phase 2 workload)
+- Improved participant series detection: numeric-subdir heuristic captures per-participant data folders
+
+**029** — software-file-type (branch: `029-software-file-type`)
+- Clarify `code` type handling for software-specific formats: `.ipynb`, `.do` (Stata), `.sas` (SAS), `.sps` (SPSS syntax)
+- `code` type no longer confused with `supplemental` for syntax/script files
+- STRUCTURE_PROMPT updated with explicit code-type guidance
+- Validation GUI: `code` type keyboard shortcut assigned (number key)
+
+**028** — data-format-subtype (branch: `028-data-format-subtype`)
+- Add `data_format` column to `structure.csv`: tracks data file subtype for files classified as `type = "data"`
+- Subtypes: csv, tsv, txt, xlsx, xls, sav, dta, sas7bdat, rds, rda, rdata, dat, unknown
+- Extracted via `tools::file_ext()` then validated against supported formats
+- Enables downstream pipelines to route by format (e.g. SPSS → CSV conversion for reproducibility)
+- Updated `docs/output-schemas.md` with `data_format` enum
+
+---
+
 ## 2026-03-30
 
 ### Completed ✅

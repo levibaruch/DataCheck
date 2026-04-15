@@ -510,12 +510,34 @@ llm_batch <- function(paths, system_prompt, user_prefix, key_col, extra_cols,
         merged[match(chunk_paths, merged[[key_col]]), ]
       }, error = function(e) e)
 
-      if (!inherits(parsed, "error")) {
-        success <- TRUE
-        break  # clean parse — exit retry loop
+      # Feature 036: After a clean parse, validate the "type" column if present.
+      # Apply typo mapping first (e.g. "coden" → "code"), then check validity.
+      # If any type is still invalid, convert to simpleError so the existing retry
+      # path below handles it identically to a parse failure.
+      if (!inherits(parsed, "error") && "type" %in% names(parsed)) {
+        parsed$type <- vapply(parsed$type, validate_type, character(1L))
+        invalid_types <- parsed$type[!vapply(parsed$type, is_valid_type, logical(1L))]
+        if (length(invalid_types) > 0L) {
+          parsed <- simpleError(sprintf(
+            "llm_validation: invalid type value(s) after mapping: %s",
+            paste(unique(invalid_types), collapse = ", ")
+          ))
+        }
       }
 
-      # Parse failed — record state and decide whether to retry.
+      if (!inherits(parsed, "error")) {
+        # Sanitize invalid group values to "shared" (no retry; defensive only).
+        if ("group" %in% names(parsed)) {
+          invalid_groups <- !vapply(parsed$group, is_valid_group, logical(1L))
+          if (any(invalid_groups)) {
+            parsed$group[invalid_groups] <- "shared"
+          }
+        }
+        success <- TRUE
+        break  # clean parse + valid types — exit retry loop
+      }
+
+      # Parse or validation failed — record state and decide whether to retry.
       last_err      <- parsed
       last_fail_raw <- raw
       if (attempt <= LLM_RETRY_LIMIT) {
@@ -842,11 +864,7 @@ parse_codebook <- function(path) {
         )
         .extract_structured_codebook(df, src)
       },
-      sav = {
-        df <- haven::read_sav(path)
-        .extract_haven_labels(df, src)
-      },
-      dta = { # TODO same as sav, so why seperate?
+      dta =, sav = { 
         df <- haven::read_dta(path)
         .extract_haven_labels(df, src)
       },
@@ -1347,4 +1365,40 @@ group_aggregate_folder <- function(rel_paths_in_folder, folder = "") {
       route_individually = n < AGGREGATE_THRESHOLD
     )
   })
+}
+
+# ── LLM Output Validation (Feature 036) ───────────────────────────────────────
+
+
+# Lookup table of known typos and case variations in LLM file type outputs.
+# Applied during validation to correct common mistakes before checking validity.
+# Extensible: add entries empirically as patterns emerge in error logs.
+TYPO_MAP <- c(
+  "coden"        = "code",          # Common typo
+  "Code"         = "code",          # Case variation
+  "supplimental" = "supplemental",  # Common misspelling
+  "supp"         = "supplemental"   # Abbreviation
+)
+
+# Apply typo mapping to a single file type value.
+# Returns the mapped value if found in typo_map; otherwise returns type_value unchanged.
+# Caller checks validity via is_valid_type() after mapping.
+validate_type <- function(type_value, typo_map = TYPO_MAP) {
+  if (!is.na(type_value) && type_value %in% names(typo_map)) {
+    return(typo_map[[type_value]])
+  }
+  return(as.character(type_value))
+}
+
+# Return TRUE if type_value is in the valid file type set.
+is_valid_type <- function(type_value, valid_types = VALID_FILE_TYPES) {
+  !is.na(type_value) && type_value %in% valid_types
+}
+
+# Return TRUE if group_value matches the valid group pattern.
+# Valid: ex<N>, pilot<N> (optional word char suffix(es)), or "shared".
+# Invalid groups are set to "shared" during final CSV write — they do NOT trigger retries.
+is_valid_group <- function(group_value) {
+  valid_pattern <- "^(ex|pilot)\\d+\\w*$|^shared$"
+  !is.na(group_value) && grepl(valid_pattern, group_value, ignore.case = FALSE)
 }

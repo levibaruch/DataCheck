@@ -25,33 +25,25 @@ if (!exists("OUTPUT_DIR"))       OUTPUT_DIR       <- "./data_check/outputs"
 if (!exists("PSYCHDS_OUT_DIR"))  PSYCHDS_OUT_DIR  <- "./data_check/psychds"
 if (!exists("GROUND_TRUTH_DIR")) GROUND_TRUTH_DIR <- "./data_check/ground_truth"
 ARCHIVE_EXTS    <- c("zip", "gz", "tar", "tgz", "bz2", "xz", "rar")
-# Extension-based type overrides applied after aggregate sentinel expansion.
-# Maps lowercase file extension → definitive type for unambiguous file kinds.
-# AGGREGATE_EXT_OVERRIDE: Extension-based fallback classification rules. Currently
-# validation-only; not applied to final output. Retained for post-LLM logging.
-# Extensions absent from this map (e.g. txt, dat, rda) would fall back unchanged.
-AGGREGATE_EXT_OVERRIDE <- c(
-  r = "code", rmd = "code", qmd = "code", py = "code", m = "code",
-  do = "code", sps = "supplemental", jl = "code", js = "code", sh = "code",
-  bash = "code", pl = "code", rb = "code", cpp = "code", c = "code",
-  h = "code", java = "code", scala = "code", sql = "code",
-  inp = "code", ebs = "code", es = "code",   # Mplus scripts; E-Prime scripts
-  exe = "software", app = "software", jar = "software",
-  msi = "software", dmg = "software",
-  jpg = "asset", jpeg = "asset", png = "asset", gif = "asset",
-  bmp = "asset", tiff = "asset", tif = "asset", svg = "asset",
-  mp4 = "asset", avi = "asset", mov = "asset", mp3 = "asset",
-  wav = "asset", flac = "asset",
-  csv = "data", sav = "data", dta = "data", sas7bdat = "data",
-  xlsx = "data", xls = "data", rds = "data"
-)
+
+
+# Closed set of valid file type values (from output-schemas.md).
+# Any LLM response containing a type not in this set triggers a retry.
+
+
 if (!exists("LLM_BATCH_SIZE"))  LLM_BATCH_SIZE  <- 30
-if (!exists("LLM_RETRY_LIMIT")) LLM_RETRY_LIMIT <- 3L
+if (!exists("LLM_RETRY_LIMIT")) LLM_RETRY_LIMIT <- 4L
 if (!exists("LLM_ERROR_LOG"))   LLM_ERROR_LOG   <- "./data_check/logs/llm_batch_errors.log"
 if (!exists("LLM_SENTINEL_VAL")) LLM_SENTINEL_VAL <- "llm_error"
+
 N_DATA_READ     <- 5
 MAX_TOTAL_DATA_MB <- 10 * 1024  # 10 GB total data read cap per paper across all data files
 MAX_FILE_READ_SEC <- 5 * 60    # per-file read timeout (seconds); file is skipped if exceeded
+
+VALID_FILE_TYPES <- c(
+  "data", "codebook", "code", "software", "output",
+  "supplemental", "readme", "asset", "other", LLM_SENTINEL_VAL
+)
 VALID_COL_TYPES <- c("continuous", "binary", "categorical", "ordinal", "date", "id",
                      "text", "continuous_comma_decimal", "continuous_outliers_excluded",
                      "empty", "constant", "unknown",
@@ -72,6 +64,7 @@ MAX_DIR_WORDS   <- 5
 # Local repository of more xmls. Remove to fallback to psychsci.
 XML_DIR <- "/Volumes/Models/expanded_xml" #"./data-raw/psychsci/grobid_0.8.2-full"
 
+# Repositories that host open data badges and other useless junk
 BADGE_REPOS <- c("tvyxz", "osf.io/tvyxz/", "osf.io/tvyxz")
 
 # ── Pipeline function ─────────────────────────────────────────────────────────

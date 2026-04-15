@@ -34,10 +34,6 @@ TODOs found in pipeline/ source files
 
 ── pipeline/helper.R ───────────────────────────────────────────────────────────
 
-  Line 849 (read_data_head — dta branch):
-    # TODO same as sav, so why seperate?
-    → dta and sav branches appear to share identical logic; consider merging.
-
   Line 873 (read_data_head — structured parse):
     # TODO what the fuck is the point of this? Why would we need to infer group
     # here when we know it upstream?
@@ -48,6 +44,7 @@ TODOs found in pipeline/ source files
     # TODO try agian if it fails! This just hopes it goes well the first time
     → error = function(e) NULL silently swallows failures with no retry;
       add at least one retry or surface the error to the caller.
+    LLMS should never just fail after one call; try three times like other places
 
 ── pipeline/3_psychds_convert.R ────────────────────────────────────────────────
 
@@ -57,11 +54,6 @@ TODOs found in pipeline/ source files
     → TYPE_TO_SUBDIR lookup incomplete — data file types missing, causing
       incorrect fallback to "documentation" subdir; expand TYPE_TO_SUBDIR or
       add explicit data-type handling before the fallback.
-
-  Line 887 (expand_sentinel_rows):
-    # TODO fix this together with the new way of handling sentinel/aggreagtes/
-    → expand_sentinel_rows() needs to be reconciled with the updated
-      sentinel/aggregate handling approach (see sentinel rewrite work).
 
 ================================================================================
 Feature 035: Sentinel Aggregate Redesign — Known Improvements Needed
@@ -209,3 +201,12 @@ The 20-value cutoff is arbitrary. A 7-point Likert scale will correctly route to
 - `617706706` — interesting/complex codebook structure (edge case for codebook labelling)
 - `618774252` — hard codebook (good stress test for extraction)
 - `615569002` — fMRI dataset (raw neuroimaging; unclear taxonomy; skipped during annotation)
+
+
+
+TODO
+Supplemental should be split between Manuscript and Supplemental, since manuscripts are qualitatively different and usefull to seperate/
+
+
+
+TODO : there is no comphensive logging right now that would be useful for an user. Only a collection os CSV's. This should be implemented at some point
