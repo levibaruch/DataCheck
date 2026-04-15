@@ -67,6 +67,14 @@ Paper ID (character string)
 │     classification  │    Assigns type/group for all individual (non-aggregate) files.
 │                     │    Batches 2+: user_prefix includes compact experiment-map summary
 │                     │    for cross-batch group label consistency.
+│                     │    Key hard-case rules in STRUCTURE_PROMPT (feature 033):
+│                     │      .log in data/raw/task folder → data (not output)
+│                     │      tabular file with scores/processed/cleaned → data (not output)
+│                     │      pretest folder/file → ex<N> or shared (never pilot<N>)
+│                     │      prior/replication tabular files → data (not supplemental)
+│                     │      example_/dummy/placeholder files → other
+│                     │      .yaml/.cfg/.ini/.toml in experiment folder → software
+│                     │      .sql → data (exception: query/script/procedure → code)
 │                     │  Phase 2: llm_batch(sub-sentinel descriptors, SENTINEL_PROMPT)
 │                     │    Runs after Phase 1; receives full Phase 1 experiment map as context.
 │                     │    Assigns type/group per sub-sentinel series.

@@ -1,6 +1,28 @@
 <!--
 SYNC IMPACT REPORT
 ==================
+Version change: 1.4.0 → 1.5.0 (MINOR — Sentinel Aggregate Redesign: Phase 1-only propagation;
+AGGREGATE_THRESHOLD corrected 50 → 20; Processing Order step 4 updated for Phase 1-only
+file-level classification; no sentinel rows in output; series detection restored for 
+per-participant aggregates. Feature 035 — aggregate_llm accuracy 89.7%.)
+
+Modified sections:
+  - Technical Standards > Key Constants: AGGREGATE_THRESHOLD corrected from 50 → 20
+  - Pipeline Workflow > Processing Order: step 4 updated to reflect Phase 1-only propagation;
+    step 5 updated to note that aggregate sample paths classified in Phase 1; no Phase 2;
+    all output rows file-level (no sentinel rows)
+  - Principle III > Resource Limits: implicit acknowledgement that Phase 2 removed (max 10 LLM
+    calls per paper covers Phase 1 only)
+
+Added sections: None
+Removed sections: None (Phase 2 details removed implicitly by Processing Order rewrite)
+
+Templates requiring updates:
+  - .specify/templates/plan-template.md  ✅ No change required (generic)
+  - .specify/templates/spec-template.md  ✅ No change required (generic)
+  - .specify/templates/tasks-template.md ✅ No change required (generic)
+
+Previous report:
 Version change: 1.3.1 → 1.4.0 (MINOR — Source-Aware Storage: new Principle VI added;
 Principle IV updated with path resolver; constants table and processing order updated;
 ground-truth and test-paper schemas updated to reflect 032-source-aware-storage)
@@ -206,7 +228,7 @@ resolution into `paper_path()` makes the source namespace transparent to all con
 | `N_DATA_READ` | 5 | `0_index.R` | Rows sampled per data file |
 | `MAX_COL_TYPE_LLM_CALLS` | 5 | `0_index.R` | Max LLM calls for numeric column classification |
 | `MAX_CHAR_COL_TYPE_LLM_CALLS` | 3 | `0_index.R` | Max LLM calls for character column classification |
-| `AGGREGATE_THRESHOLD` | 50 | `0_index.R` | Files per folder above which a sentinel row replaces individual paths |
+| `AGGREGATE_THRESHOLD` | 20 | `0_index.R` | Folders with ≥20 files of same extension treated as aggregate; sample paths classified in Phase 1 LLM, results propagated to all members |
 | `MAX_DIR_WORDS` | 5 | `0_index.R` | Directory name word limit before truncation |
 | `MAX_CODEBOOK_LLM_CALLS` | 3 | `2_codebook_label.R` | Max LLM calls per paper for codebook text parsing |
 | `MAX_CODEBOOK_FILE_MB` | 100 | `2_codebook_label.R` | Codebook files larger than this (MB) are skipped |
@@ -230,9 +252,12 @@ The canonical processing order for a single paper is:
 1. Resolve OSF links → fail with `no_links` if none found
 2. Download files → fail with `download_failed` or `too_large` on limit breach
 3. Unpack archives via `unpack_archive()`
-4. Build file tree — folders with >50 files (`AGGREGATE_THRESHOLD`) collapsed to a sentinel row
-   → fail with `too_large` if >200 total paths
-5. Classify file paths via `llm_batch()` + `classify_by_rules()` → assigns `type` and `group`
+4. Build file tree — group aggregate folders (≥`AGGREGATE_THRESHOLD` files per extension group)
+   via `group_aggregate_folder()`. Collect sample paths from groups ≥threshold; route groups
+   <threshold individually. Fail with `too_large` if >200 total paths (non-aggregate + samples + singletons)
+5. Classify all paths in Phase 1 via `llm_batch()` + `classify_by_rules()` → assigns `type` and `group`
+   (sample paths from aggregate groups, non-aggregate files, singletons). Propagate Phase 1 results
+   to aggregate group members with `type_source = "aggregate_llm"`
 6. Read data heads via `read_data_head()` for files classified as `data`
 7. Rule-based column classification via `classify_col_type_rules()` — assigns `col_type` where
    deterministic rules apply; ambiguous columns left for LLM
@@ -241,10 +266,13 @@ The canonical processing order for a single paper is:
    - Batch 2 (character-ambiguous, `CHAR_COLUMN_TYPE_PROMPT`): `unknown`/invalid → `text` fallback
 9. Compute column statistics (numeric: mean/sd/se/median/min/max/range/p25/p75/iqr/skewness/
    kurtosis; non-numeric: n/n_missing only)
-10. Write `structure.csv` and `columns.csv` to `outputs/<source>/<id>/` (resolved via `paper_path()`)
+10. Write `structure.csv` and `columns.csv` to `outputs/<source>/<id>/` (resolved via `paper_path()`).
+    All rows in `structure.csv` are file-level; no sentinel rows. Aggregate folder members marked
+    with `type_source = "aggregate_llm"` and `aggregate_folder` column value.
 11. Append result row to `bulk_summary.csv` (crash-safe)
 12. *(Optional post-processing)* Codebook labelling via `run_codebook_label()` — reads structure
     and columns CSVs; writes `labels.csv` and `codebook_coverage.csv` to `outputs/<source>/<id>/`
+    (no sentinel expansion needed; all rows in `structure.csv` are file-level)
 
 Any deviation from this order MUST be documented in the relevant feature spec with justification.
 

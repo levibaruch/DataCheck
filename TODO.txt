@@ -8,112 +8,204 @@ Open items are marked  [ ]
 Done items are marked  [x]
 
 
-Mistakes found during the ground truth annotations, or unclarities found during annotation
+
+collumns that are send to LLM should have date as a selector
+────────────────────────────────────────────────────────────────────────
+  0956797614535937
+  software: Python online task scripts — code vs software boundary
+────────────────────────────────────────────────────────────────────────
+  [v2] running...
+── Unpacking 1 archive(s)
+  skipping (already unpacked): online_materials.zip
+Querying LLM [==================================================] 1/1 00:00:05
+
+── File inventory ──────────────────────────────
+
+  code / shared  coden / shared   data / shared readme / shared 
+             25               1               2               1 
+
+sanatize outputs! (coden)
 
 
 
-617706706 -> interesting codebook
+================================================================================
+TODOs found in pipeline/ source files
+================================================================================
 
-RDATA should be exploded like XLSX when there is data detected (so nog gplot)
+── pipeline/helper.R ───────────────────────────────────────────────────────────
 
-Raw video files are data when they are raw data. 
+  Line 849 (read_data_head — dta branch):
+    # TODO same as sav, so why seperate?
+    → dta and sav branches appear to share identical logic; consider merging.
 
-Example video of data -> sup
+  Line 873 (read_data_head — structured parse):
+    # TODO what the fuck is the point of this? Why would we need to infer group
+    # here when we know it upstream?
+    → .infer_group() called after structured parse despite group being known
+      before this point; review whether call is redundant or masking a bug.
 
-PIcture of materials used -> Supplemental
+  Line 931 (read_data_head — error handler):
+    # TODO try agian if it fails! This just hopes it goes well the first time
+    → error = function(e) NULL silently swallows failures with no retry;
+      add at least one retry or surface the error to the caller.
 
-SQL -> Raw Combined data
+── pipeline/3_psychds_convert.R ────────────────────────────────────────────────
 
-615586560 Gini calculator. How do I detemine this?I would say output?
- 
- .log is often raw data
+  Line 623 (copy_files_to_psychds — subdir resolution):
+    # TODO Currently this works poorrly; since datafiles are not included here,
+    # most types fall back to documentation. I think at least
+    → TYPE_TO_SUBDIR lookup incomplete — data file types missing, causing
+      incorrect fallback to "documentation" subdir; expand TYPE_TO_SUBDIR or
+      add explicit data-type handling before the fallback.
 
- Transcript of an interview is raw individual data
+  Line 887 (expand_sentinel_rows):
+    # TODO fix this together with the new way of handling sentinel/aggreagtes/
+    → expand_sentinel_rows() needs to be reconciled with the updated
+      sentinel/aggregate handling approach (see sentinel rewrite work).
 
- 614557697 Example of paper where group membership of files i simpossible wihtout reading the paper
+================================================================================
+Feature 035: Sentinel Aggregate Redesign — Known Improvements Needed
+================================================================================
 
- 615569002 -> FMRI data that I dont understand. I think its raw data?
-
- 616649660(6 or 1): .inp is code, since it does analytics
-
- +616684682: A JASP is hard. They are both data and code in one. I really dont know how to deal with this for now
-
- 622119391 screenshots of a survey are assets
-
- 617724426 Model files in .txt, do we onsider these models outputs or code? They are written in code
-
- 617729817 archive.txt -> data
-
-617735807 Figure that is actually an asset (asset used as figure! Therefore LLM labelled as output). I dont think this is fixable; just author Mistakes
-
-617730814
-      Impossible to know dataset grouping from dataname
-
-Continious versus ordinal detection is not so good. Revisit these rules.
-
-Qualtrics detectoin not working always. Too many times I see the "ImportID in the first variable. Maybe detect it for more collumns in more depth? Seems to happen when 
-there is no qualtrics in the first one, but in second one. Maybe check N=x rows?
-
-618774252 is a good paper with a hard codebook
-
-Maybe we can detect used measurement tools in the paper?
-
-617734827 Intermediate results that are furhter processed are data
-
-Many autors kindly supply the same dataset in .sav and other forms. This is nice, but will require an equivilance test later down the line; we have a lot of duplicate data
-The same problem comes across when there is data and "cleaned" data. What do we keep? Maybe both?
-
-.RAR is not currently extracted.
-
-Recheck all .ebs or .es (i cnanot remember why)
-
-615595607 If the first row is just automatically generated headers, or stuff like (V1, V2, V3), make sure that other rows are checked as dataset headers. Maybe check if there is some thing like (if row x is all text for only this row, that is probably not part of the dataset)
-
-616647518 xslx is not exploded
-
-617730892 pdf was somehow detected as a tabular dataset?
+  [DEV] data_granularity detection: individual vs combined distinction needs improvement
+    → Current: Detects participant series as "individual" via >AGGREGATE_THRESHOLD numeric
+      subdirs (e.g., "1/", "2/", "3/" containing per-participant data)
+    → Problem: Original series detection logic "very bad and missed many detections"
+    → Impact: Downstream data intake relies on this distinction for per-participant handling
+    → Action: Review and improve detect_series() logic in helper.R; consider pattern
+      matching on file naming (e.g., "participant_01_data.csv") and folder structure
+      heuristics beyond just numeric dir names. Document detection rationale in spec.
 
 
-6177372128 configs are software
+TODO's during GT_coding
 
-We need to handle long versus wide datasets somehow. This isnt working
+## Part 1 — Classification Decisions Made During Annotation
 
-617617659 many .mat files
+These are judgment calls you made while labelling that are not yet encoded in the pipeline. Each one is a candidate rule or prompt clarification.
 
-618773095 .jasp files
+### `.jasp` files — data + code hybrid
 
-619831964 .pdf not labelled as output while it has the same name as a .rmd file. Probably should make a rule for that. Rdata with glmermod = output
+Papers `616684682` and `618773095`. A `.jasp` file is a ZIP archive containing both a data table and analysis scripts. There is no clean answer for the current taxonomy. Options:
+- Treat as `"data"` (it contains the dataset and is the primary input)
+- Treat as `"software"` (it is a self-contained analysis environment)
+- Unpack it (it's a ZIP) and classify contents individually
 
-61984421 wide ipv long codebook
+For now, `.jasp` is unhandled by the override and the LLM tends to classify it inconsistently. This needs a spec decision before implementing. The note `618773095 .jasp files` records a second encounter — common enough to act on.
 
-315593071 ехперимент 1, but folders contians both: GT = shared
+---
 
-0956797615581(5)5 -> datasets in both wide and long. Gmmmm How do we handle this> What is best for our use case?
+### Intermediate results that are further processed → data, not output
 
-615605818 -> correlational additional study I consider shared
+Paper `617734827`. Files that are outputs of step 1 but inputs to step 2 (e.g., cleaned or scored intermediate CSVs) should be classified as `"data"`, not `"output"`. The LLM tends to call anything with "results" or "scores" in the name an output. The distinguishing signal is whether the file is read by downstream analysis scripts — but that requires cross-file relationship analysis which the pipeline does not currently do. For now, the prompt rule is: **if a file could plausibly be an analysis input, prefer `data` over `output`**.
 
-615619206 dupliate datasets
+---
 
-616654131 is data from another experiment supplemental or data? I consider it data, since it is used in the experiment/analysis, right?
+### Model text files in `.txt` → code or output, not data
 
-616685770 Pretest = experiment, not pilot
+Paper `617724426`. Text files containing Mplus model syntax, BUGS/JAGS/Stan code, or R model objects written as text are code. The pipeline currently routes unknown `.txt` files to the LLM, which handles this inconsistently. A filename heuristic (e.g., `model.txt`, `syntax.txt`) could route these to `"code"`. Text files named `archive.txt` (paper `617729817`) are data exports — the opposite case. Context matters here.
 
-617753562 .xlsm not exploded
+---
 
-619869505(?) ,rar not extracted
+### Figure that is an asset but named like an output → unfixable author error
 
-620929302 how do we handle dummy files and datasets? other?
+Paper `617735807`. Some researchers commit the same file as both a manuscript figure (`Figure1.tif`) and a dataset supplement. The Phase 1 LLM labels figure-named image files as `"output"` rather than `"asset"` because it sees "Figure" in the name. **Your conclusion: this is an author error and not worth special-casing.** There is no automatic correction here — individual image files go straight through the LLM with no extension override to fall back on.
 
-620941840 datasets sometimes have codebook variables that explain not per variable, but per gooiing (v1-10 means x). This happens more often than I want
+---
 
-614553944 codebook describes 5 non-labelled collumns frommt he raw data (so no headers; explanation given). I think this is such bad manners that we should account for it
+### Datasets in both wide and long format → keep both, note the duplication
 
-614564191 many different individual tabular files might give an opportunity to algorithmically concate these into a combined file; aka check if all collumns are the same with simular valuepypes, concenate and add aprticipant nr (maybe file name) as a collumn. This would be a great way to use the currently under/not- utilized individual datasets
+Paper `0956797615581(5)5`. When a researcher provides the same data in wide format (one row per participant, one column per trial) and long format (one row per trial), both files are legitimate data, but they are semantically duplicates. **Current pipeline behaviour:** the duplicate detection check compares filenames and byte sizes — wide vs. long will always differ in both. There is no current mechanism to flag semantic duplicates. For now, label both as `"data"`, note that the long format is preferred for psychDS conversion.
 
-615569002 Skipped, I dont understand these fmri datasets, so cannot judge the correctness of the predictions right now.
+---
 
-There exist R packages to read in .mat ifles. We should do this for the ones we have; especially considering the previous concation logic for individual files that are tabular
+### "Correlational additional study" / additional studies in shared folder → shared
 
-Many csv codebooks include more than one collumns (include means, explanations.) we need to find a way to keep this information but still parse them correctly and preferably without LLM extraciton.
-Also LLM css extraction seems to take long. maybe first convert it more properly than we do now? 
+Papers `315593071` and `615605818`. When a folder clearly contains files spanning multiple studies and there is no per-study subfolder structure, the correct `study_group` is `"shared"`. The pipeline's aggregate sentinel logic should already handle this, but it depends on the LLM correctly inferring from folder structure. When in doubt during GT annotation, assign `"shared"`.
 
+---
+
+### Config files → software
+
+Paper `6177372128`. Configuration files (`.cfg`, `.ini`, `.toml`, `.yaml`, `.json` used purely for settings) should be `"software"`, not `"other"` or `"code"`. Currently none of these extensions are in `AGGREGATE_EXT_OVERRIDE`. The LLM usually gets `.json` wrong (it often says `"data"` because JSON holds structured content). A targeted override or prompt example would help.
+
+---
+
+### Dummy / placeholder files → other
+
+Paper `620929302`. Some repositories include clearly synthetic or placeholder files (e.g., `example_data.csv`, `dummy.sav`, `test_output.csv`). The correct label is `"other"`. There is no current rule for this — the LLM typically labels them as `"data"`. A filename heuristic covering `"example"`, `"dummy"`, `"test"`, `"placeholder"` could catch these before the LLM.
+
+---
+
+## Part 2 — Pipeline Bugs Found During Annotation
+
+These are cases where the pipeline produced an incorrect or failing result that can be traced to a specific code path.
+
+---
+
+### `.mat` files not readable (MATLAB data)
+
+Paper `617617659`. Many `.mat` files exist in downloaded repos. `m = "code"` in `AGGREGATE_EXT_OVERRIDE` — but this is the extension for MATLAB **scripts**; `.mat` files are MATLAB **data files** and are not in the override at all, so they route to the LLM. More importantly, `read_data_head()` has no `.mat` branch, so column extraction always returns `NULL` for these files.
+
+The `R.matlab` package can read `.mat` files. It is not currently installed. **Fix direction (two steps):** (1) add `mat = "data"` to `AGGREGATE_EXT_OVERRIDE`, and (2) add a `.mat` branch to `read_data_head()` using `R.matlab::readMat()` — but only after confirming the package is available (or making it optional with `tryCatch`).
+
+---
+
+### Codebook describes columns by position, not name
+
+Paper `614553944`. Some codebooks list variables as "column 1", "column 2" without providing actual column names. The codebook label pipeline (`2_codebook_label.R`) matches on variable names — positional references will never match. The coverage score for such papers will always be 0% for all columns. No current mitigation. Long-term fix: detect positional reference patterns in the codebook and attempt position-based matching.
+
+---
+
+## Part 3 — Ideas for Improvement
+
+These are feature ideas triggered by annotation experience.
+
+---
+
+### Detect used measurement tools from the paper XML
+
+The XML metadata extracted from papers often contains method section text that names standardised instruments (BDI, PHQ-9, STAI, NEO-FFI, etc.). If we detect instrument names in the paper metadata, we could (a) improve column type labelling (Likert scales on a known instrument = ordinal), and (b) improve codebook coverage scores by knowing which variables to expect.
+
+---
+
+### Concatenate individual tabular files with matching schemas
+
+Paper `614564191`. When a paper stores one CSV per participant (a common pattern in longitudinal and reaction-time studies), the pipeline currently indexes them as `n_individual` files but does not concatenate them. If all files in a detected aggregate series have identical column names and compatible value types, they could be stacked into a single wide CSV with an added `source_file` column (participant identifier derived from the filename). This would make them usable for codebook matching and psychDS conversion. This directly leverages the `data_granularity = "individual"` classification that already exists.
+
+---
+
+### Read `.mat` files using `R.matlab`
+
+As noted in the bug section — with the `R.matlab` package, MATLAB `.mat` files can be read into R data frames. Many psychology labs (especially those using SPM for fMRI or EEGLab for EEG) store behavioural data alongside neuroimaging data in `.mat` format. This would unlock column extraction for a non-trivial fraction of the corpus.
+
+---
+
+### Better CSV codebook parsing: convert before LLM extraction
+
+Many CSV codebooks include multiple columns per variable (label, description, mean, SD, allowed values). The current approach sends the raw CSV text to the LLM, which is slow and produces inconsistent output. A pre-processing step that: (1) detects the "variable name" column via header name matching (`variable`, `var`, `name`, `colname`), (2) extracts only that column plus a candidate "label" column, and (3) passes a cleaned two-column table to the LLM — would reduce token usage and improve consistency. The user noted this step already takes noticeably long.
+
+---
+
+### Flag format duplicates (same data in `.sav` and `.csv`)
+
+The current duplicate detection (`0_index.R`) compares filename + byte size. Multi-format duplicates (same dataset in `.sav`, `.csv`, `.dta`) have different byte sizes and will never match. A downstream deduplication step could compare column names + basic statistics (n, mean of first numeric column) across files in the same directory to detect semantically equivalent datasets. For now, both files are indexed and labelled `"data"` — which inflates `n_combined` counts and leads to double-labelled columns in `columns.csv`.
+
+---
+
+
+### Revisit continuous vs. ordinal classification rules
+
+The current rule in `classify_col_type_rules()` (`helper.R:342`):
+- `> 20 unique integer values` → continuous (no LLM)
+- `3–20 unique integer values` → LLM (ordinal vs. continuous)
+- `= 2 unique values` → binary
+
+The 20-value cutoff is arbitrary. A 7-point Likert scale will correctly route to the LLM. But a count variable (number of errors, 0–15) will also route to the LLM and get labelled ordinal because it looks like a rating scale. The column **name** is the stronger signal here — `n_errors`, `rt_ms`, `score_raw` are continuous regardless of unique value count. Consider adding name-based rules to `classify_col_type_rules()` before the unique-value check, similar to how the ID rule fires first.
+
+---
+
+### Interesting reference papers for codebook testing
+
+- `617706706` — interesting/complex codebook structure (edge case for codebook labelling)
+- `618774252` — hard codebook (good stress test for extraction)
+- `615569002` — fMRI dataset (raw neuroimaging; unclear taxonomy; skipped during annotation)

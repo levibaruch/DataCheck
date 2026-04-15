@@ -3,15 +3,21 @@
 # Usage: Rscript report_quality.R [options]
 # See specs/016-pipeline-quality-report/contracts/cli.md for full contract.
 #
-# Always writes quality_report_YYYY-MM-DD.md to the working directory.
+# Always writes quality_report_YYYY-MM-DD.md to results/ next to this script.
 #
 # Options:
-#   --bulk              PATH   bulk_summary.csv path          [./bulk_summary.csv]
-#   --codebook          PATH   codebook_summary.csv path      [./codebook_summary.csv]
-#   --outputs-dir       PATH   per-paper outputs root         [./outputs]
+#   --bulk              PATH   bulk_summary.csv path          [<script_dir>/results/bulk_summary.csv]
+#   --codebook          PATH   codebook_summary.csv path      [<script_dir>/results/codebook_summary.csv]
+#   --outputs-dir       PATH   per-paper outputs root         [<script_dir>/outputs]
 #   --unknown-threshold INT    % unknown to flag as outlier   [30]
 #   --top-n             INT    rows in performance lists      [10]
 #   --sections          CSV    bulk,coltypes,codebook,timing  [all]
+
+# Resolve the directory this script lives in, regardless of working directory.
+HERE <- tryCatch(
+  normalizePath(dirname(sys.frame(1)$ofile)),
+  error = function(e) getwd()
+)
 
 # ---------------------------------------------------------------------------
 # Argument parsing
@@ -20,9 +26,9 @@
 parse_args <- function() {
   argv <- commandArgs(trailingOnly = TRUE)
   result <- list(
-    bulk              = "./bulk_summary.csv",
-    codebook          = "./codebook_summary.csv",
-    outputs_dir       = "./outputs",
+    bulk              = file.path(HERE, "results", "bulk_summary.csv"),
+    codebook          = file.path(HERE, "results", "codebook_summary.csv"),
+    outputs_dir       = file.path(HERE, "outputs"),
     unknown_threshold = 30L,
     top_n             = 10L,
     sections          = "all"
@@ -164,7 +170,7 @@ section_bulk_overview <- function(bulk_df) {
       tbl <- sort(table(failed$error_code), decreasing = TRUE)
       cat("Failure breakdown:\n")
       for (nm in names(tbl)) {
-        cnt <- as.integer(tbl[[nm]])
+        cnt <- as.integer(tbl[nm])
         pct <- cnt / n_failed * 100
         cat(sprintf("  %-20s: %4d (%5.1f%% of failures)\n", nm, cnt, pct))
       }
@@ -204,7 +210,7 @@ section_col_type_dist <- function(columns_df, bulk_df, unknown_threshold) {
   tbl <- sort(table(ct), decreasing = TRUE)
   cat(sprintf("  %-15s %8s  %8s\n", "col_type", "count", "percent"))
   for (nm in names(tbl)) {
-    cnt <- as.integer(tbl[[nm]])
+    cnt <- as.integer(tbl[nm])
     cat(sprintf("  %-15s %8d  %7.1f%%\n", nm, cnt, cnt / n_cols * 100))
   }
   cat("\n")
@@ -331,7 +337,8 @@ section_timing <- function(bulk_df, top_n) {
 # ---------------------------------------------------------------------------
 
 write_md_report <- function(md_sections) {
-  out_path <- sprintf("quality_report_%s.md", format(Sys.Date(), "%Y-%m-%d"))
+  dir.create(file.path(HERE, "results"), recursive = TRUE, showWarnings = FALSE)
+  out_path <- file.path(HERE, "results", sprintf("quality_report_%s.md", format(Sys.Date(), "%Y-%m-%d")))
   date_str <- format(Sys.Date(), "%Y-%m-%d")
 
   header <- c(

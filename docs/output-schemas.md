@@ -19,8 +19,7 @@ One row per file discovered in the paper's OSF repository.
 | `type_source` | character | How `type` was determined — see [Type Source Values](#type-source-values) |
 | `group` | character | Experiment/study group — see [Groups](#groups) |
 | `aggregate_folder` | character \| NA | Relative path of the aggregate folder this file was expanded from; `NA` for non-aggregate files |
-| `data_granularity` | character \| NA | `"individual"` (part of a detected participant series), `"combined"` (classified individually), or `NA` (non-data file) |
-| `is_sentinel` | logical | `TRUE` if row represents a collapsed folder (>50 files) — always `FALSE` in current output; retained for compatibility |
+| `data_granularity` | character \| NA | `"individual"` (part of detected participant series with numeric subfolder structure), `"combined"` (atomic unit in flat aggregate or non-series), or `NA` (non-data file) |
 | `prompt_nr` | integer \| NA | LLM prompt batch index used to classify this file; `NA` for rule-classified files |
 | `data_format` | character \| NA | Sub-classification for `type = "data"` rows: `"tabular"` (column-extractable) or `"raw"` (binary recordings, matrices, media); `NA` for all non-data rows. Determined by file extension via `classify_data_format()` — never set by the LLM. Unknown extensions fall back to `"tabular"`. |
 
@@ -29,8 +28,9 @@ One row per file discovered in the paper's OSF repository.
 | Value | Meaning |
 |---|---|
 | `"llm"` | Type assigned by Phase 1 LLM classification of an individual (non-aggregate) file |
-| `"extension_rule"` | Type assigned by `AGGREGATE_EXT_OVERRIDE` lookup applied per-file after aggregate expansion |
-| `"sentinel_llm"` | Type inherited from Phase 2 sentinel LLM classification for files with ambiguous extensions |
+| `"aggregate_llm"` | Type assigned by Phase 1 LLM classification of a sample file from an extension group in an aggregate folder; propagated to all member files in that group |
+| `"extension_rule"` | Type assigned by `AGGREGATE_EXT_OVERRIDE` lookup (validation only; not applied to results) |
+| `"rmd_pair_rule"` | Type overridden to `"output"` because the PDF shares its stem with a `.Rmd`/`.qmd`/`.tex` source file in the same directory (post-classification fallback) |
 
 ### File Types
 

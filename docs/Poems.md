@@ -313,3 +313,72 @@ Twenty now. The series routes through Phase 2.
 The sentinel classifies the whole group as true.
 And SKIP_COLUMNS waits by the door, coat in hand:
 "Just index the files — columns can wait, as planned."
+
+---
+
+## 031 — Dataverse Source Support
+
+The data lived in only one place —
+OSF repositories, the sole case.
+But the world keeps its research in many a vault,
+Dataverse among them, no longer an exalt.
+Now `paper_path()` knows the source it was fed,
+whether OSF or Dataverse, the pipeline's well-read.
+XML metadata harvested, papers retrieved,
+another archive's treasure now believed.
+
+---
+
+## 032 — Source-Aware Storage
+
+Each paper's outputs, agnostic, alone,
+sat in `outputs/`, a single unknown zone.
+Now the directories remember their birth:
+`outputs/osf/<paper_id>/`, `outputs/dataverse/<paper_id>/` — their worth.
+The psychDS, the logs, the CSV rows,
+all organized by where the data flows.
+One pipeline, two sources, each in its place,
+reproducible storage, a source-aware space.
+
+---
+
+## 033 — LLM Prompt Refinements
+
+The prompts were good, but the model still squinted —
+misclassifying files, details hinted.
+A sentence refined, a clause rearranged,
+examples tightened, the threshold changed.
+No new code, no new packages in sight,
+just words on a page, tuned just right.
+The LLM whispers now what it should say,
+and fewer mistakes mark the classification day.
+
+---
+
+## 035 — Sentinel Aggregate Redesign
+
+The sentinel sat in the middle — a ghost,
+a collapsed folder masquerading as host.
+Phase 1 classified it; Phase 2 expanded its name,
+then spread that verdict to each file the same.
+But the expansion was fragile, the sentinel crude,
+and 62% accuracy meant misclassified data, not good.
+
+Then came the redesign — one simple shift:
+group by extension, sample the rift.
+Send sample paths to Phase 1, let the LLM decide,
+propagate the verdict to all files inside.
+No Phase 2 loop, no expansion needed at all,
+just file-level rows and type_source called `aggregate_llm` for the haul.
+
+Twenty files now triggers the aggregate path,
+not fifty — a threshold that splits down the math.
+Participant series still marked as they are,
+`data_granularity = "individual"` — no change to that star.
+And the accuracy climbed — 89.7% proved
+that simplicity, when it's elegant, soothes.
+
+No sentinel rows in the output CSV,
+all file-level, all honest, all free.
+One phase, one batch, one clean propagation,
+a lesson in design: reduction is creation.

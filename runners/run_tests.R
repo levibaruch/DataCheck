@@ -545,6 +545,22 @@ generate_report <- function() {
   }))))
   BR()
 
+  # ── Appendix: STRUCTURE_PROMPT ──────────────────────────────────────────────
+  L("---")
+  BR()
+  L("## Appendix: STRUCTURE_PROMPT (File Classification System Prompt)")
+  BR()
+  L("This prompt was used for Phase 1 LLM file classification in this test run.")
+  L("Include for future comparison and prompt iteration.")
+  BR()
+  L("```")
+  source("data_check/pipeline/prompts.R", local = TRUE)
+  # Extract just the STRUCTURE_PROMPT string (first element)
+  prompt_lines <- strsplit(STRUCTURE_PROMPT, "\n")[[1]]
+  L(prompt_lines)
+  L("```")
+  BR()
+
   # Write
   dir.create(REPORT_DIR, recursive = TRUE, showWarnings = FALSE)
   out_path <- file.path(REPORT_DIR, paste0("test_report_", date_str, ".md"))

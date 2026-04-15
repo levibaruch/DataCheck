@@ -1,0 +1,290 @@
+STRUCTURE_PROMPT — Classification Error Analysis
+================================================
+Based on normal_report_2026-04-01.md (92 papers, 6372 annotated files)
+
+FILE-POOLED (secondary):   κ = 0.807 | Macro F1 = 67.6% | Micro F1 = 86.7% | MCC = 0.808
+PAPER-AVERAGED (primary):  κ = ?     | Macro F1 = ?      |                   MCC = ?
+(re-run report to get paper-averaged figures)
+
+⚠ WEIGHTING CAVEAT — READ BEFORE INTERPRETING CLUSTER SIZES
+-------------------------------------------------------------
+All error counts in this document are FILE-POOLED. A single large repository (one
+paper with ~2000 annotated files) can dominate every count and percentage. This
+means:
+
+  - A cluster with 131 errors might be entirely one paper's problem. If
+    paper-averaged metrics show a small gap, the cluster is low systemic priority.
+  - A cluster with only 20 errors spread across 15 papers is far more important
+    to fix than 131 errors from a single outlier repo.
+
+The paper-averaged report (re-run after code update) is the correct reference for
+prioritising prompt fixes. Until then, treat the cluster sizes below as upper
+bounds — the true paper-averaged impact of each cluster may be much smaller.
+
+Clusters most likely to be dominated by single large repos:
+  - Cluster 1 (.mat): 131/132 errors likely from one MATLAB-heavy paper
+  - Cluster 8 (libraries): 94+126 errors likely from one repo with a committed
+    jsPsych/jQuery library tree
+  - Cluster 7 (other collapse): partly explained by cluster 8
+
+The 19-point gap between Macro and Micro F1 signals that rare classes drive most
+of the error. The bulk of misclassifications fall into eight clusters below.
+
+
+CLUSTER 0 — .mp4 participant recordings (1550 files classified as data — NOT in GT)
+------------------------------------------------------------------------------------
+⚠ This cluster does NOT appear in the accuracy report because annotated papers
+  happen not to contain this pattern. It was found by inspecting full pipeline
+  outputs directly. It is likely the highest-impact practical bug.
+
+Root cause: eye-tracking studies store per-participant gaze recordings as .mp4
+files with paths like:
+  videos/tracking/causal/participant_1/participant_1_actual_eyes_clip_1_1.mp4
+
+The prompt's disambiguation rule fires correctly: "participant-named files →
+data". The LLM is following the rule as written. But .mp4 is a binary video
+format — read_data_head() cannot extract columns from it, and column extraction
+will silently fail or produce garbage for all 1550 files.
+
+Across all pipeline outputs: 1550 .mp4 → data, 212 .mp4 → asset, 13 → supplemental.
+The vast majority of the 1550 are participant eye-tracking clips from at least one
+large eye-tracking study.
+
+This is a rule collision:
+  participant-named file rule  →  data   (fires on filename pattern)
+  .mp4 is a video format       →  asset  (fires on extension)
+  The filename rule wins, which is wrong here.
+
+Three legitimate .mp4 classifications exist depending on context:
+  - participant_N_eyes_clip.mp4 in videos/tracking/  → recording of participant
+    (raw measurement; arguably `data`, but unprocessable by read_data_head)
+  - Fig4_Supp8_Gratitude.mp4 in Expert_touch_videos/ → result video → `output`
+  - ME_Video_Public.mp4 in Materials/Instructions/   → instruction video → `asset`
+  - DistractorVideo5.mp4 in Distractor_Stimuli/      → stimulus → `asset`
+
+The participant eye-tracking case is semantically ambiguous — the video IS the
+observation — but practically identical to `output` from the pipeline's
+perspective: read_data_head() cannot extract columns from it either way.
+Classifying participant recordings as `output` rather than `data` prevents
+spurious column extraction while still acknowledging they are research artefacts.
+
+Recommended fix — two-part:
+
+PART A (prompt): keep `data` as the type for participant recordings; it is
+semantically correct. Add context-based priority for media files:
+  1. Inside stimuli/stim/materials/sounds/images, or filename contains
+     stim/stimulus/trial/item/distractor → asset
+  2. Filename contains figure/fig/plot/graph/results → output
+  3. Participant-named media (recording of a participant) → data
+  4. Default for ambiguous media → asset
+The participant-naming rule continues to fire, but only produces `data` for
+media formats when folder/filename context clearly indicates a recording.
+
+PART B (pipeline/schema): introduce a `data_format` sub-field on `data`-typed
+files so the pipeline knows whether to attempt column extraction:
+  tabular  — .csv, .tsv, .sav, .dta, .xlsx, .xls, .dat, .txt (row/column data)
+  signal   — .edf, .bdf, .acq, .mat (binary signal/matrix recordings)
+  media    — .mp4, .avi, .mov, .wav, .mp3 (audio/video recordings of participants)
+  object   — .rds, .rda, .rdata (serialised R objects)
+
+Column extraction runs only when data_format = tabular. All other data_format
+values are indexed (type = data, group assigned) but skipped by the column stage.
+This is more principled than reclassifying recordings as `output` — it preserves
+semantic accuracy while giving the pipeline the gating signal it needs.
+
+Note: .wav and .mp3 may be stimuli (asset) OR participant recordings (data/media)
+depending on context — the same priority logic applies.
+
+
+CLUSTER 1 — .mat files (131 / 132 errors file-pooled, data → other)
+---------------------------------------------------------------------
+⚠ Likely dominated by a single MATLAB-heavy paper. Check paper-averaged report
+  to assess whether this is systemic (many papers affected) or a one-off.
+
+Root cause: `.mat` was explicitly listed under `data` in the deprecated prompt
+("matrices (.mat)") but removed when the extension enumeration was replaced with
+semantic reasoning. `.mat` has no semantic signal — the extension looks like
+"material" or "mathematics", not "data matrix". Without an explicit rule the LLM
+defaults to `other`.
+
+Complication: `.mat` can be EITHER raw participant data (observations stored as a
+MATLAB matrix) OR script output (processed results saved by a MATLAB script). A
+blanket `data` rule would swap false negatives for false positives.
+
+Recommended fix: decision heuristic mirroring the .rds/.rdata rule:
+  - Participant/subject-named .mat files → data
+  - Filename contains result, output, model, fit, figure, plot → output
+  - Folder context (data/ vs results/) as tiebreaker
+  - Truly ambiguous → data (missing a dataset is worse than a spurious
+    column extraction run; false negatives are the more costly error here)
+
+
+CLUSTER 2 — .spv and .log actively mis-routed by the prompt
+------------------------------------------------------------
+Root cause: the prompt contradicts the annotation standard on two extensions.
+
+  .spv: prompt says → supplemental
+        ground truth says → output
+        All .spv misclassifications ("Output and Syntax - Study 1.spv",
+        "PROCESS Output, Study 2.spv") are the LLM correctly following
+        a wrong prompt rule. SPSS Viewer files are script-generated output.
+
+  .log: prompt says → output ("log files (.log, .out)")
+        ground truth says → data
+        In psychology repos, .log files are PsychoPy / E-Prime behavioral
+        logs — they ARE the raw trial-by-trial participant data, not a
+        computational byproduct. The prompt applies a general computing
+        definition that conflicts with domain practice.
+
+Recommended fix:
+  .spv  → output (not supplemental)
+  .log  → data when filename or folder context suggests a behavioural task
+           (e.g. path contains "data/", subject/participant naming, task names);
+           → output when context suggests a processing log (e.g. "pipeline.log",
+           "error.log", folder named "logs/" or "output/")
+
+
+CLUSTER 3 — Output CSVs predicted as data (35 errors, output → data)
+---------------------------------------------------------------------
+Root cause: the prompt distinguishes data from supplemental for figure-named
+CSVs ("graph", "figure", "plot" → supplemental) but never addresses the
+data / output boundary for CSVs. The fallback rule ("when provenance is
+ambiguous, prefer supplemental") does not help here — the LLM sees a .csv,
+neither supplemental keyword fires, and it defaults to data.
+
+Examples:
+  R_Code/..._Figure 3.csv                          GT=output  Pred=data
+  R_Code/..._Table 1.csv                           GT=output  Pred=data
+  Regression_residuals_for_input.../residuals.csv  GT=output  Pred=data
+
+Recommended fix: extend the figure/table CSV rule to cover output, not just
+supplemental. Filename contains "figure", "fig", "table", "graph", "plot",
+"residual", "results" AND file is inside a code/ or R_Code/ folder → output.
+
+
+CLUSTER 4 — .py / .R files in Materials/ contexts predicted as other (17 errors)
+----------------------------------------------------------------------------------
+Root cause: the prompt's code rule is extension-based ("regardless of language")
+but the LLM gives heavy weight to folder context. `Materials/` signals non-code;
+deeply nested paths like `online_materials/online_materials/testing/fas-sif/`
+look like web-testing infrastructure. The LLM treats these as non-research files
+despite the unambiguous .py / .R extension.
+
+Examples:
+  Materials/online_materials/testing/fas-sif/testing-fas-sif-1.py  → other
+  2AFC_analysis/analysis-gen.R                                       → other
+
+Recommended fix: add an explicit note that experiment scripts living inside
+Materials/, stimuli/, or online_materials/ are still code. Extension takes
+priority over folder name for code classification.
+
+
+CLUSTER 5 — .doc / .spv output files predicted as supplemental (≈20 errors)
+-----------------------------------------------------------------------------
+Root cause: the prompt says "classify as output when the filename or folder
+context clearly indicates a script-generated artefact. When provenance is
+ambiguous, prefer supplemental." The word "clearly" plus the supplemental
+fallback creates a strong prior against output. A .doc named "Output and Syntax
+- Study 1.doc" is ambiguous enough that the LLM takes the supplemental escape
+hatch, even though the word "Output" is in the filename.
+
+Examples:
+  Output and Syntax - Study 1.doc    GT=output  Pred=supplemental
+  PROCESS Output - Study 2.doc       GT=output  Pred=supplemental
+
+Recommended fix: add filename keywords that should trigger output regardless
+of format: filename starts with or contains "output", "syntax output",
+"PROCESS output" → output. Narrow the "prefer supplemental" fallback to cases
+where neither output nor supplemental keywords are present.
+
+
+CLUSTER 6 — Stimulus images inside codebook HTML folders predicted as supplemental
+-----------------------------------------------------------------------------------
+Root cause: the asset rule requires either a stimuli/stim/materials/sounds/images
+folder name OR a stim/stimulus/trial/item filename keyword. The path
+`Data/DetailedCodebook.HTML.pages/images/` has `images/` as the immediate parent
+(which is on the asset folder list) but the grandparent path
+`DetailedCodebook.HTML.pages/` signals document context strongly enough that the
+LLM ignores the folder-name rule.
+
+Examples:
+  Data/DetailedCodebook.HTML.pages/images/flag1.jpg   GT=asset  Pred=supplemental
+  Data/DetailedCodebook.HTML.pages/images/money.jpg   GT=asset  Pred=supplemental
+
+These are genuine experimental stimuli (flag images) that happen to also be
+embedded in a codebook document.
+
+Recommended fix: the folder-name rule for asset (images/, stimuli/, etc.) should
+apply even when the parent context is a document folder, OR annotators should
+consider whether images embedded in codebook HTML are really stimuli or
+illustrations — the annotation itself may need review here.
+
+
+CLUSTER 8 — Bundled third-party libraries (major driver of other → code/supplemental)
+------------------------------------------------------------------------------------
+⚠ Likely dominated by one or two repos with a committed jsPsych/jQuery library
+  tree. The 94+126 file counts may collapse to 1–2 papers in paper-averaged view.
+  If so, the fix is still valuable (it would fully repair those papers) but the
+  systemic prevalence is lower than the file counts suggest.
+
+Root cause: researchers sometimes commit entire third-party code libraries into
+their OSF repo (jsPsych, jQuery, PsychoPy plugins, etc.). These are irrelevant to
+the research and annotated as `other`. The LLM has no concept of "bundled library"
+— it sees .js → code, .md → supplemental, .html → supplemental, and classifies
+each file on its own merits.
+
+This is the dominant explanation for:
+  other → code         (94 errors file-pooled) — .js library files called code
+  other → supplemental (126 errors file-pooled, partly) — library .md / .html docs
+  .js  96.0% error rate (95/99 files)   — nearly all JS is library code
+  .md  95.4% error rate (62/65 files)   — library README / changelog files
+
+Since the full folder path is always present in the prompt, the LLM has all the
+signals it needs — it just isn't told to use them. Detectable from the path alone:
+  - .min.js in the filename → minified/bundled file, unambiguously a library
+  - Known library names anywhere in the path: jsPsych/, node_modules/,
+    bower_components/, vendor/, jQuery/, bootstrap/, src/
+  - Lock/manifest files: package.json, package-lock.json, yarn.lock → other
+
+Recommended fix: add an explicit rule to the prompt that paths containing
+node_modules/, vendor/, bower_components/, src/, or .min.js, or known library
+folder names (jsPsych, jQuery, bootstrap) → other, regardless of extension. The full
+path is always available so this is purely a prompt omission, not a structural
+limitation.
+
+
+CLUSTER 7 — `other` class collapse (F1 = 4.8%, 293/308 files wrong, file-pooled)
+----------------------------------------------------------------------------------
+⚠ Two distinct sub-problems with different paper-averaged profiles:
+  (a) Library files (Cluster 8) — probably 1–2 papers, high per-paper F1 impact
+      but low breadth. Fix: library detection rule in prompt.
+  (b) Residual `other` (OS metadata, config, dotfiles scattered across many repos)
+      — likely affects many papers at low volume each. Fix: better enumeration or
+      remove `other` from LLM output entirely (see options A/B/C below).
+  The paper-averaged report will show which sub-problem dominates.
+
+Root cause: `other` is a residual category — its defining characteristic is the
+absence of positive signal. LLMs anchor classification on what a file resembles,
+not on what it fails to resemble. Every `other` file gets routed to the positive
+class it most superficially resembles:
+  126 → supplemental  (markdown files, loose docs — largely library docs)
+   94 → code          (JS, PHP files — largely library code)
+   47 → asset         (GIFs, media)
+   12 → readme / data
+
+The prompt says "MUST NOT be used as a catch-all for ambiguous research files"
+and lists only OS-metadata/config examples. This makes `other` effectively
+unlearnable from filenames alone.
+
+Note: the `other` class collapse is the primary driver of the 19-point Macro/Micro
+F1 gap. Resolving clusters 7 and 8 together would raise Macro F1 substantially.
+
+Recommended fix (three options, increasing aggressiveness):
+  A. Accept the collapse — treat `other` as unclassifiable from path alone and
+     remove it from Macro F1 calculation (report as a known limitation).
+  B. Enumerate the specific file patterns that constitute `other` more precisely
+     so the LLM has positive signal: .DS_Store, Thumbs.db, package.json,
+     *rc.json, *config.json, dotfiles — and nothing else.
+  C. Remove `other` as a prompt output category entirely and post-process:
+     apply rule-based classification for known OS-metadata patterns after the LLM
+     step, so the LLM never needs to predict `other`.

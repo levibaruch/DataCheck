@@ -185,6 +185,14 @@ unpack_archive <- function(path) {
     tryCatch({
       if (ext == "zip") {
         utils::unzip(path, exdir = dest)
+      } else if (ext == "rar") {
+        # Requires unrar to be installed (e.g. brew install rar on macOS).
+        # system2 returns 127 when the binary is not found; non-zero → error.
+        ret <- system2("unrar", c("x", "-y", shQuote(normalizePath(path)),
+                                  shQuote(dest)),
+                       stdout = FALSE, stderr = FALSE)
+        if (ret != 0) stop("unrar exited with code ", ret,
+                           " (is unrar installed?)")
       } else {
         # tar, tgz, tar.gz, tar.bz2, tar.xz — untar auto-detects compression
         utils::untar(path, exdir = dest)
@@ -255,7 +263,9 @@ RAW_EXTENSIONS     <- c(
   # Video
   "mp4", "avi", "mov", "mkv", "wmv", "m4v", "flv", "webm", "3gp",
   # Generic binary
-  "bin", "raw"
+  "bin", "raw",
+  # Document formats — never tabular; guard against LLM mis-classifying a PDF as data
+  "pdf", "docx", "doc", "odt", "rtf"
 )
 
 # Takes a character vector of lowercase file extensions (no leading dot).
@@ -395,79 +405,131 @@ clean_llm_values <- function(df) {
 
 # Run an LLM prompt over a character vector in batches, joining results by a
 # key column.  Returns a data.frame with columns c(key_col, extra_cols).
+#
+# Args:
+#   paths         — character vector of file paths to classify (one row per path)
+#   system_prompt — LLM system prompt (role/task description)
+#   user_prefix   — text prepended to each chunk's numbered path list
+#   key_col       — name of the column the LLM echoes back as the join key (usually "path")
+#   extra_cols    — names of the classification columns expected in the LLM JSON response
+#   fallback_vals — named list; values used when the LLM omits a field for a specific row
+#   sentinel_cols — subset of extra_cols that receive LLM_SENTINEL_VAL (not fallback) on
+#                   total chunk failure, marking those rows as "LLM never answered"
+#   paper_id      — passed through to the error log only (for traceability)
+#   stage_name    — passed through to the error log only (e.g. "file_type", "col_type")
 llm_batch <- function(paths, system_prompt, user_prefix, key_col, extra_cols,
                       fallback_vals,
                       sentinel_cols = NULL,
                       paper_id      = NULL,
                       stage_name    = NULL) {
+  # Divide paths into fixed-size chunks (LLM_BATCH_SIZE = 20).
+  # Each chunk becomes one LLM call so prompts stay within the model's context window.
   chunks     <- split(paths, ceiling(seq_along(paths) / LLM_BATCH_SIZE))
-  all_parsed <- vector("list", length(chunks))
+  all_parsed <- vector("list", length(chunks))  # pre-allocated; filled in loop below
 
   for (i in seq_along(chunks)) {
+    # Honour a user-initiated abort: if a sentinel file exists, stop immediately
+    # rather than continuing to fire LLM calls for the rest of the paper.
     if (exists("SKIP_FILE") && file.exists(SKIP_FILE))
       stop("user_skip: skip signal detected — user requested paper be aborted")
 
     chunk_paths <- chunks[[i]]
+
+    # Build the numbered list that appears in the prompt, e.g.:
+    #   1. data/raw/survey.csv
+    #   2. data/raw/codebook.pdf
+    # The numbers let the model refer to items and help detect truncation.
     chunk_text  <- paste(seq_along(chunk_paths), chunk_paths, sep = ". ", collapse = "\n")
+
+    # Assemble the full user-turn message: caller-supplied prefix + numbered paths +
+    # strict JSON-only instruction.  The trailing instruction is appended here (not
+    # in the caller) so every llm_batch call enforces the same output contract.
     chunk_input <- paste0(user_prefix, "\n\n", chunk_text,
                           "\n\nReturn ONLY a JSON array with exactly ", length(chunk_paths),
                           " objects — one per path above. Echo every path character-for-character.",
                           " No truncation. No notes. No text outside the array.")
 
+    # The columns we must find in the parsed response.
     needed_cols    <- c(key_col, extra_cols)
+
+    # Pre-build a fallback data.frame for this chunk.  Used in two places:
+    #   1. Per-row: fill NAs left by merge when the LLM omitted a row's key.
+    #   2. Whole-chunk: returned when all retries are exhausted.
     chunk_fallback <- as.data.frame(
       c(list(paths = chunk_paths),
         setNames(lapply(fallback_vals, rep, length(chunk_paths)), extra_cols)),
       stringsAsFactors = FALSE
     )
-    names(chunk_fallback)[1] <- key_col
+    names(chunk_fallback)[1] <- key_col  # rename generic "paths" to the caller's key name
 
-    attempt       <- 1L
-    last_raw      <- NULL
-    last_err      <- NULL
-    last_fail_raw <- NULL
+    # ── Retry state ──────────────────────────────────────────────────────────
+    attempt       <- 1L    # current attempt number (1-indexed)
+    last_raw      <- NULL  # most recent raw LLM response object
+    last_err      <- NULL  # the error from the most recent failed parse attempt
+    last_fail_raw <- NULL  # raw response from the last *failed* attempt (for log)
     success       <- FALSE
 
     while (TRUE) {
+      # Respect an optional temperature override set by callers (e.g. the sweep runner).
+      # Falls back to the model's default when the option is not set.
       llm_params <- if (!is.null(getOption("llm_temperature"))) list(temperature = getOption("llm_temperature")) else list()
       raw        <- llm(system_prompt = system_prompt, text = chunk_input, params = llm_params)
       last_raw   <- raw
 
+      # Try to parse and validate the response.  tryCatch returns either the
+      # merged data.frame (success) or the error object (failure) — checked below.
       parsed <- tryCatch({
+        # extract_json() strips markdown fences; fromJSON parses the array;
+        # clean_llm_values() strips stray backtick characters from string fields.
         result <- clean_llm_values(jsonlite::fromJSON(extract_json(raw$answer), flatten = TRUE))
+
+        # Validate that the model returned all required columns.
         if (!all(needed_cols %in% names(result))) {
           stop("Response missing fields: ",
                paste(setdiff(needed_cols, names(result)), collapse = ", "))
         }
+
         # Deduplicate LLM response on the key column before merging — duplicate
         # echoed keys (e.g. same basename returned twice) cause a many-to-many
         # join that drops rows.  Keep first occurrence of each key.
         result <- result[!duplicated(result[[key_col]]), needed_cols, drop = FALSE]
+
+        # Left-join the LLM result onto the original chunk paths so that:
+        #   a) every input path is represented in the output (all.x = TRUE), and
+        #   b) paths the LLM silently dropped get NA filled with fallback_vals below.
         merged <- merge(
           data.frame(x = chunk_paths, stringsAsFactors = FALSE) |> setNames(key_col),
           result,
           by = key_col, all.x = TRUE
         )
+
+        # Fill any NAs introduced by missing rows with the caller-supplied fallback.
         for (col in extra_cols) merged[[col]][is.na(merged[[col]])] <- fallback_vals[[col]]
+
+        # merge() does not guarantee row order — restore the original chunk_paths order.
         merged[match(chunk_paths, merged[[key_col]]), ]
       }, error = function(e) e)
 
       if (!inherits(parsed, "error")) {
         success <- TRUE
-        break
+        break  # clean parse — exit retry loop
       }
 
+      # Parse failed — record state and decide whether to retry.
       last_err      <- parsed
       last_fail_raw <- raw
       if (attempt <= LLM_RETRY_LIMIT) {
         message(sprintf("\u2500\u2500 LLM chunk %d retry %d/%d \u2500\u2500", i, attempt, LLM_RETRY_LIMIT))
         attempt <- attempt + 1L
       } else {
-        break
+        break  # retry budget exhausted — fall through to failure handler
       }
     }
 
+    # ── Post-retry: record result or apply sentinel fallback ─────────────────
     if (success) {
+      # If we succeeded but only after retrying, log the details so we can
+      # review which prompts caused transient failures.
       if (attempt > 1L) {
         pid   <- if (!is.null(paper_id))   paper_id   else "<unknown>"
         stage <- if (!is.null(stage_name)) stage_name else "<unknown>"
@@ -482,7 +544,8 @@ llm_batch <- function(paths, system_prompt, user_prefix, key_col, extra_cols,
       }
       all_parsed[[i]] <- parsed
     } else {
-      # All retries exhausted — log the failure
+      # All retries exhausted — log the failure and substitute sentinel values
+      # so downstream stages can detect which rows were never answered by the LLM.
       pid   <- if (!is.null(paper_id))   paper_id   else "<unknown>"
       stage <- if (!is.null(stage_name)) stage_name else "<unknown>"
       dir.create(dirname(LLM_ERROR_LOG), recursive = TRUE, showWarnings = FALSE)
@@ -495,7 +558,10 @@ llm_batch <- function(paths, system_prompt, user_prefix, key_col, extra_cols,
           file = LLM_ERROR_LOG, append = TRUE)
       warning("Chunk ", i, " failed after ", LLM_RETRY_LIMIT, " retries: ",
               conditionMessage(last_err), "; using sentinel")
-      # Build error_fallback: sentinel_cols get LLM_SENTINEL_VAL, others get fallback_vals
+
+      # Build error_fallback: sentinel_cols get LLM_SENTINEL_VAL (a special marker
+      # meaning "LLM never classified this") while non-sentinel cols get their normal
+      # fallback_vals (a best-guess default that won't confuse downstream aggregation).
       error_fallback <- chunk_fallback
       for (col in extra_cols) {
         val <- if (col %in% sentinel_cols) LLM_SENTINEL_VAL else fallback_vals[[col]]
@@ -505,6 +571,7 @@ llm_batch <- function(paths, system_prompt, user_prefix, key_col, extra_cols,
     }
   }
 
+  # Combine all chunks back into a single data.frame with the same columns.
   do.call(rbind, all_parsed)
 }
 
@@ -726,6 +793,31 @@ parse_codebook <- function(path) {
           )
           if (is.null(raw) || nrow(raw) == 0) return(NULL)
         }
+
+        # ── Wide-format detection ─────────────────────────────────────────────
+        # Some codebooks are stored in wide format: variables as columns, statistics
+        # as rows (e.g. first column contains "mean", "sd", "label", ...).
+        # Detect by checking whether ≥50% of first-column values are known statistic
+        # names; if so, transpose so that variable names become the first column.
+        WIDE_STAT_NAMES <- c("mean", "sd", "se", "min", "max", "median",
+                             "n")
+        col1_vals <- trimws(tolower(as.character(raw[, 1])))
+        col1_vals <- col1_vals[nzchar(col1_vals)]
+        if (length(col1_vals) > 0 &&
+            mean(col1_vals %in% WIDE_STAT_NAMES) >= 0.5) {
+          message("  wide-format codebook detected — transposing: ", src)
+          var_names  <- as.character(raw[1, ])          # variable names (header row)
+          stat_names <- as.character(raw[, 1])           # stat names (first column)
+          traw <- as.data.frame(t(raw[, -1, drop = FALSE]),
+                                stringsAsFactors = FALSE)
+          names(traw) <- stat_names[-1]
+          traw <- cbind(data.frame(variable = var_names[-1],
+                                   stringsAsFactors = FALSE),
+                        traw)
+          raw <- traw
+          rownames(raw) <- NULL
+        }
+
         # Scan rows 1..CODEBOOK_HEADER_LOOKAHEAD for a row whose values match the
         # expected codebook column patterns.
         header_row <- NA_integer_
@@ -754,7 +846,7 @@ parse_codebook <- function(path) {
         df <- haven::read_sav(path)
         .extract_haven_labels(df, src)
       },
-      dta = {
+      dta = { # TODO same as sav, so why seperate?
         df <- haven::read_dta(path)
         .extract_haven_labels(df, src)
       },
@@ -778,7 +870,7 @@ parse_codebook <- function(path) {
   rich_lines <- if (is.character(result) && !is.data.frame(result)) result else NULL
 
   if (!is.null(result) && is.data.frame(result) && nrow(result) > 0) {
-    result$group        <- .infer_group(result$group)
+    result$group        <- .infer_group(result$group) # TODO what the fuck is the point of this? Why would we need to infer group here when we know it upstream?
     result$parse_method <- "structured"
     return(result)
   }
@@ -836,7 +928,7 @@ parse_codebook <- function(path) {
         group             = .infer_group(ec),
         stringsAsFactors  = FALSE
       )
-    }, error = function(e) NULL)
+    }, error = function(e) NULL) # TODO try agian if it fails! This just hopes it goes well the first time
   }
 
   result <- do.call(rbind, Filter(Negate(is.null), all_vars))
@@ -878,6 +970,39 @@ match_column_labels <- function(columns_df, codebook_vars_df,
   if (is.null(columns_df)       || nrow(columns_df) == 0)       return(make_empty())
 
   norm_col <- normalize_varname(columns_df$column_name)
+
+  # ── Range variable expansion ──────────────────────────────────────────────────
+  # Codebooks sometimes describe item batteries with range notation, e.g. "V1–V10".
+  # Expand such entries to individual rows before matching so each variable gets a
+  # label.  Unicode en-dash (\u2013) and ASCII hyphen are both accepted.
+  range_pat  <- "^([A-Za-z]*)\\s*(\\d+)\\s*[-\u2013]\\s*(\\d+)$"
+  range_rows <- grep(range_pat, codebook_vars_df$codebook_variable, perl = TRUE)
+  if (length(range_rows) > 0) {
+    expanded <- Filter(Negate(is.null), lapply(range_rows, function(i) {
+      parts <- regmatches(
+        codebook_vars_df$codebook_variable[i],
+        regexec(range_pat, codebook_vars_df$codebook_variable[i], perl = TRUE)
+      )[[1]]
+      prefix <- parts[2]
+      start  <- as.integer(parts[3])
+      end    <- as.integer(parts[4])
+      if (is.na(start) || is.na(end) || start > end) return(NULL)
+      row <- codebook_vars_df[i, , drop = FALSE]
+      do.call(rbind, lapply(seq(start, end), function(n) {
+        row$codebook_variable <- paste0(prefix, n)
+        row
+      }))
+    }))
+    if (length(expanded) > 0) {
+      codebook_vars_df <- rbind(
+        codebook_vars_df[-range_rows, , drop = FALSE],
+        do.call(rbind, expanded)
+      )
+      message("  range expansion: ", length(range_rows), " range(s) → ",
+              nrow(do.call(rbind, expanded)), " individual variable(s)")
+    }
+  }
+
   norm_var <- normalize_varname(codebook_vars_df$codebook_variable)
 
   n                <- nrow(columns_df)
@@ -1180,104 +1305,46 @@ extract_plain_text <- function(path) {
   )
 }
 
-# ── Aggregate series detection ────────────────────────────────────────────────
+# ── Aggregate extension grouping ──────────────────────────────────────────────
 
-# detect_series: group files within an aggregate folder by common filename prefix.
+# group_aggregate_folder: group files within an aggregate folder by extension.
 #
-# Algorithm:
-#   1. Strip extension, then strip trailing variable suffix starting at the first
-#      separator ([-_]) before a segment that contains at least one digit.
-#   2. Files whose prefix equals their full stem (no suffix stripped), or whose
-#      prefix is < 2 characters, are singletons → returned for Phase 1 processing.
-#   3. Files whose stripped prefix appears only once (no pair) → singletons.
-#   4. Remaining groups of 2+ files form series, each collapsing to one sub-sentinel.
-#   5. If no series are found, the entire folder becomes ONE fallback sentinel
-#      (is_series = FALSE), and singletons is returned empty.
+# Each distinct lowercase extension forms one group. Groups with >= AGGREGATE_THRESHOLD
+# members produce a sentinel (sample_paths sent to Phase 1 LLM; type/group propagated
+# to all members with type_source = "aggregate_llm"). Groups below the threshold are
+# routed individually to Phase 1 LLM classification.
 #
 # Arguments:
 #   rel_paths_in_folder  character vector of relative paths of all files in the
 #                        aggregate folder (may span subdirectories for participant
 #                        aggregates).
+#   folder               the aggregate folder name (stored on each group for
+#                        use as aggregate_folder in structure.csv)
 #
-# Returns a list:
-#   $sub_sentinels  data.frame with one row per series (or one fallback row):
-#                     prefix, file_count, dominant_ext,
-#                     sample_files (list-column of up to 5 basenames),
-#                     folder_members (list-column of all rel_paths in this series),
-#                     is_series (TRUE = detected series, FALSE = fallback sentinel)
-#   $singletons     character vector of rel_paths routed back to Phase 1
+# Returns a list of groups, each a list with:
+#   $ext               lowercase extension shared by all members (character)
+#   $folder            the aggregate folder name (character)
+#   $members           all rel_paths in this group (character vector)
+#   $sample_paths      up to 5 evenly-spaced paths from members (character vector)
+#   $route_individually TRUE if length(members) < AGGREGATE_THRESHOLD
 
-detect_series <- function(rel_paths_in_folder) {
-  if (length(rel_paths_in_folder) == 0) {
-    return(list(
-      sub_sentinels = data.frame(
-        prefix         = character(0),
-        file_count     = integer(0),
-        dominant_ext   = character(0),
-        sample_files   = I(list()),
-        folder_members = I(list()),
-        is_series      = logical(0),
-        stringsAsFactors = FALSE
-      ),
-      singletons = character(0)
-    ))
-  }
+group_aggregate_folder <- function(rel_paths_in_folder, folder = "") {
+  if (length(rel_paths_in_folder) == 0) return(list())
 
-  basenames <- basename(rel_paths_in_folder)
-  exts      <- tolower(tools::file_ext(basenames))
-  stems     <- tools::file_path_sans_ext(basenames)
+  exts        <- tolower(tools::file_ext(basename(rel_paths_in_folder)))
+  unique_exts <- unique(exts)
 
-  # Strip trailing variable suffix: first separator ([-_]) before a segment
-  # that contains at least one digit, through to end-of-string.
-  prefixes <- sub("([-_])[A-Za-z0-9]*[0-9][A-Za-z0-9]*([-_].*)?$", "",
-                  stems, perl = TRUE)
-
-  # Mark singletons: prefix unchanged (no suffix stripped) or too short
-  singleton_mask <- (prefixes == stems) | (nchar(prefixes) < 2L)
-
-  # Also mark as singleton if the prefix group would have only one member
-  if (any(!singleton_mask)) {
-    pfx_counts      <- table(prefixes[!singleton_mask])
-    lone_pfx        <- names(pfx_counts[pfx_counts < 2L])
-    singleton_mask  <- singleton_mask | (!singleton_mask & prefixes %in% lone_pfx)
-  }
-
-  series_prefixes <- unique(prefixes[!singleton_mask])
-
-  if (length(series_prefixes) == 0) {
-    # No series found — single fallback sentinel for the whole folder
-    dom_ext <- names(sort(table(exts), decreasing = TRUE))[1]
-    sub_sentinels <- data.frame(
-      prefix         = "mixed",
-      file_count     = length(rel_paths_in_folder),
-      dominant_ext   = dom_ext,
-      sample_files   = I(list(head(basenames, 5L))),
-      folder_members = I(list(rel_paths_in_folder)),
-      is_series      = FALSE,
-      stringsAsFactors = FALSE
-    )
-    return(list(sub_sentinels = sub_sentinels, singletons = character(0)))
-  }
-
-  # Build one sub-sentinel per detected series
-  sentinel_rows <- lapply(series_prefixes, function(pfx) {
-    idx         <- which(!singleton_mask & prefixes == pfx)
-    members     <- rel_paths_in_folder[idx]
-    member_exts <- exts[idx]
-    dom_ext     <- names(sort(table(member_exts), decreasing = TRUE))[1]
-    data.frame(
-      prefix         = pfx,
-      file_count     = length(members),
-      dominant_ext   = dom_ext,
-      sample_files   = I(list(head(basename(members), 5L))),
-      folder_members = I(list(members)),
-      is_series      = TRUE,
-      stringsAsFactors = FALSE
+  lapply(unique_exts, function(e) {
+    members <- rel_paths_in_folder[exts == e]
+    n       <- length(members)
+    srt     <- sort(members)
+    samp    <- if (n <= 5L) srt else srt[round(seq(1, n, length.out = 5L))]
+    list(
+      ext               = e,
+      folder            = folder,
+      members           = members,
+      sample_paths      = samp,
+      route_individually = n < AGGREGATE_THRESHOLD
     )
   })
-
-  list(
-    sub_sentinels = do.call(rbind, sentinel_rows),
-    singletons    = rel_paths_in_folder[singleton_mask]
-  )
 }

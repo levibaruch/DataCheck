@@ -8,11 +8,11 @@ library(metacheck)
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 
-DATA_DIR          <- "./data_check/data"
-XML_DIR           <- "./data-raw/psychsci/grobid_0.8.2-full"
+DATA_DIR          <- "/Volumes/NINJAV/data"
+XML_DIR           <- "/Users/levibaruch/Downloads/expanded_xml"
 PROGRESS_CSV      <- "./data_check/download_progress.csv"
 BADGE_REPOS       <- c("tvyxz", "osf.io/tvyxz/", "osf.io/tvyxz")
-DOWNLOAD_TIMEOUT_SEC <- 10 * 60  # 10 minutes; set to NULL to disable
+DOWNLOAD_TIMEOUT_SEC <- NULL # TODO Timelimit is now not epr paper but per run. very stupid
 
 # ── Discover all papers ───────────────────────────────────────────────────────
 

@@ -13,10 +13,18 @@ source("data_check/pipeline/helper.R")
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 
-PSYCHDS_OUT_DIR    <- "./data_check/psychds"
-OUTPUT_DIR         <- "./data_check/outputs"
-DATA_DIR           <- "./data_check/data"
-GROUND_TRUTH_DIR   <- "./data_check/ground_truth"
+if (!exists("PSYCHDS_OUT_DIR")) {
+  PSYCHDS_OUT_DIR <- "./data_check/psychds"
+}
+if (!exists("OUTPUT_DIR")) {
+  OUTPUT_DIR <- "./data_check/outputs"
+}
+if (!exists("DATA_DIR")) {
+  DATA_DIR <- "./data_check/data"
+}
+if (!exists("GROUND_TRUTH_DIR")) {
+  GROUND_TRUTH_DIR <- "./data_check/ground_truth"
+}
 DATA_SIZE_LIMIT_MB <- 500
 PIPELINE_VERSION   <- "021"
 
@@ -612,8 +620,8 @@ place_non_data_file <- function(src_path, file_type, filename, study_root) {
     dest    <- file.path(study_root, dest_nm)
     psychds_path <- dest_nm
   } else {
-    subdir  <- TYPE_TO_SUBDIR[[file_type]]
-    if (is.null(subdir)) subdir <- "documentation"
+    subdir  <- TYPE_TO_SUBDIR[[file_type]] # TODO Currently this works poorrly; since datafiles are not included here, most types fall back to documentation. I think at least 
+    if (is.null(subdir)) subdir <- "documentation" 
     dest    <- file.path(study_root, subdir, filename)
     psychds_path <- file.path(subdir, filename)
   }
@@ -677,8 +685,6 @@ convert_study <- function(paper_id, study_group, files_df, cols_df, labels_df,
     ext      <- tolower(tools::file_ext(filename))
     is_raw   <- if ("data_granularity" %in% names(row))
                   identical(row$data_granularity, "individual")
-                else
-                  isTRUE(row$is_raw)  # backward compat with old structure.csv
     gt_val   <- isTRUE(row$ground_truth_validated)
 
     # Size check (FR-013, US4/T028)
@@ -876,43 +882,6 @@ convert_study <- function(paper_id, study_group, files_df, cols_df, labels_df,
   )
 }
 
-# ── Internal: expand_sentinel_rows ───────────────────────────────────────────
-
-# For sentinel rows (is_sentinel == TRUE), replace with individual files on disk.
-expand_sentinel_rows <- function(structure_df) {
-  non_sentinel <- structure_df[!isTRUE(structure_df$is_sentinel) &
-                                 !is.na(structure_df$is_sentinel) &
-                                 structure_df$is_sentinel == FALSE, ]
-  sentinel     <- structure_df[!is.na(structure_df$is_sentinel) &
-                                 structure_df$is_sentinel == TRUE, ]
-  if (nrow(sentinel) == 0) return(structure_df)
-
-  expanded <- lapply(seq_len(nrow(sentinel)), function(i) {
-    s    <- sentinel[i, ]
-    dir  <- dirname(s$path)
-    if (!dir.exists(dir)) return(NULL)
-    files <- list.files(dir, full.names = TRUE, recursive = FALSE)
-    if (length(files) == 0) return(NULL)
-    rows <- lapply(files, function(f) {
-      ext      <- tolower(tools::file_ext(f))
-      override <- AGGREGATE_EXT_OVERRIDE[[ext]]
-      row      <- s
-      row$path     <- f
-      row$filename <- basename(f)
-      row$ext      <- ext
-      row$rel_path <- sub(paste0(".*", s$paper_id, "/"), "", f)
-      row$is_sentinel <- FALSE
-      if (!is.null(override)) row$type <- override
-      row
-    })
-    do.call(rbind, rows)
-  })
-  expanded <- Filter(Negate(is.null), expanded)
-  if (length(expanded) > 0)
-    rbind(non_sentinel, do.call(rbind, expanded))
-  else
-    non_sentinel
-}
 
 # ── Internal: co-location heuristic ──────────────────────────────────────────
 
@@ -1045,9 +1014,6 @@ convert_psychds <- function(paper_id) {
 
   # 4. Apply ground-truth overrides
   structure_df <- apply_ground_truth(structure_df, paper_source, paper_id)
-
-  # 4. Expand sentinel rows
-  structure_df <- expand_sentinel_rows(structure_df)
 
   # 5. Detect studies
   data_mask <- !is.na(structure_df$type) & structure_df$type == "data"
