@@ -92,16 +92,10 @@
 # - Output ONLY the JSON array. No notes or text before or after the array.'
 
 
-# AB TEST v0 (rule based, pre-2026-04) 
+# AB TEST v0 (rule based, pre-2026-04) — body only
+# Concatenate with SINGLE_HEADER (Phase 1) or AGGREGATE_HEADER (Phase 2)
 
-STRUCTURE_PROMPT_v0 <- 'You are classifying files in a psychology research data repository.
-You will receive a file tree. For each path return a JSON array (same order).
-Each element: {"path": "<exact path>", "type": "<type>", "group": "<group>"}
-
-File organisation varies widely — use the full path and folder context, not just
-the extension, to infer each file\'s purpose.
-
-TYPE — what this file is for:
+STRUCTURE_PROMPT_v0 <- '── TYPE ──────────────────────────────────────────────────────────────────────
   data         : contains research measurements — observations, recordings, or
                  matrices intended for analysis. The extension alone is not
                  sufficient: a .csv or .xlsx may be a codebook, a .txt may be
@@ -196,17 +190,11 @@ Hard cases — use filename and folder context to decide:
 Echo every path exactly. Output ONLY the JSON array.'
 
 
- 
-# AB TEST v1 (rule-based, 2026-04) — kept for comparison
 
-STRUCTURE_PROMPT_v1 <- 'You are classifying files in a psychology research data repository.
-You will receive a file tree. For each path return a JSON array (same order).
-Each element: {"path": "<exact path>", "type": "<type>", "group": "<group>"}
+# AB TEST v1 (rule-based, 2026-04) — body only
+# Concatenate with SINGLE_HEADER (Phase 1) or AGGREGATE_HEADER (Phase 2)
 
-File organisation varies widely — use the full path and folder context, not just
-the extension, to infer each file\'s purpose.
-
-TYPE — what this file is for:
+STRUCTURE_PROMPT_v1 <- '── TYPE ──────────────────────────────────────────────────────────────────────
   data         : contains research measurements — observations, recordings, or
                  matrices intended for analysis. The extension alone is not
                  sufficient: a .csv or .xlsx may be a codebook, a .txt may be
@@ -332,7 +320,9 @@ Echo every path exactly. Output ONLY the JSON array.'
 # end AB TEST v1
 
 # AB TEST v2 (principle-based, 2026-04)
-STRUCTURE_PROMPT <- 'You are classifying files in a psychology research data repository.
+# ── File classification headers and body (0_index.R → llm_batch()) ─────────────
+
+SINGLE_HEADER <- 'You are classifying files in a psychology research data repository.
 You will receive a file tree. Return a JSON array in the same order.
 Each element: {"path": "<exact path>", "type": "<type>", "group": "<group>"}
 
@@ -340,7 +330,28 @@ CORE PRINCIPLE: classify by purpose, inferred from the filename and full folder 
 Extension is a weak signal — a .csv can be data, a codebook, or supplemental.
 A .txt can be participant data. Ask: what was this file made for?
 
-── TYPE ──────────────────────────────────────────────────────────────────────
+'
+
+AGGREGATE_HEADER <- 'You are classifying a folder of files. All files share the same extension and parent directory. Your classification applies to the folder as a whole.
+
+You will receive one JSON object per folder:
+
+{
+  "path":      "<folder/.ext key>",
+  "ext":       "<shared extension>",
+  "n_files":   <total file count>,
+  "filenames": ["<sample filename>", ...]
+}
+
+Respond with a JSON array (one element per input object):
+{"path": "<exact path>", "type": "<type>", "group": "<group>"}
+
+'
+
+# Shared taxonomy and rules for both single-file and aggregate classification.
+# Concatenate with SINGLE_HEADER (Phase 1) or AGGREGATE_HEADER (Phase 2).
+
+STRUCTURE_PROMPT <- '── TYPE ──────────────────────────────────────────────────────────────────────
 data         : contains research measurements — tabular observations, signals,
                or matrices intended for analysis
 codebook     : primary purpose is describing what variables mean. Keywords in
@@ -348,14 +359,14 @@ codebook     : primary purpose is describing what variables mean. Keywords in
                variable_key, var_desc, data_guide, labels, legend, metadata;
                or "variables" at the start/end of the filename.
 code         : source file or notebook whose purpose is to generate analyses —
-               scripts, syntax files, notebooks (.Rmd, .qmd, .ipynb)
+               scripts (.R, .py), syntax files, notebooks (.Rmd, .qmd, .ipynb).
 software     : program or config file whose purpose is to run the experiment —
                task runners, stimulus apps, compiled binaries (.exe, .app,
                .jar, .msi, .dmg), experiment parameter/config files.
                Task/experiment runtime files → always software: E-Prime
                (.ebs2, .es2, .wndpos, .edat, .edat2, .emrg), PsychoPy
                (.psyexp), OpenSesame (.opensesame, .osexp).
-               Documents (.pdf, .docx, .doc, .txt, .rtf) are NEVER software,
+               Documents (.pdf, .docx, .doc, .rtf) are NEVER software,
                even when inside experiment or task folders.
 output       : artefact produced by executing a script — rendered notebooks,
                figures, graphs, log files, SPSS output (.spv), computational
@@ -432,6 +443,8 @@ code vs software — use purpose, not extension:
     structured config format (.yaml, .yml, .json, .cfg, .ini, .toml) or a
     binary runtime file. Human-authored text documents are NOT config files.
   config file with "analysis", "model", or "params" in name → code
+  .js is almost always software (jsPsych), but if the filename clearly indicates an analysis script
+    (e.g. "regression_analysis.js") → code.
 
 "Supplemental Experiment N" / "Supplemental Study N" folders → group "shared"
 Archive and previous-version folders → type of contents, group "shared"
@@ -560,46 +573,6 @@ Rules:
 
 # ── Label deduplication (2_codebook_label.R → llm()) ─────────────────────────
 
-# ── Aggregate sentinel classification (0_index.R → llm_batch(), Phase 2) ─────
-
-SENTINEL_PROMPT <- 'You are classifying aggregate folder series in a psychology research data repository.
-Each entry describes a series of files collapsed to a single descriptor.
-For each descriptor return a JSON array (same order).
-Each element: {"path": "<exact descriptor string>", "type": "<type>", "group": "<group>"}
-
-Descriptor format: folder/[prefix: "PREFIX", N files, .EXT, samples: FILE1, FILE2, ...]
-  or: folder/[mixed, N files, .EXT, samples: ...] for an unsorted collection
-
-TYPE — use the same definitions as file classification:
-  data         : series of research measurements (participant-level recordings, responses)
-  asset        : stimulus media presented to participants
-  code         : executable scripts or notebooks whose purpose is to generate analyses
-  software     : series of experiment programs, compiled binaries, task tools,
-                 or experiment configuration files
-  output       : script-generated artefacts — rendered notebooks, figures, graphs,
-                 log files, computational byproducts
-  supplemental : human-authored research material — manuscripts, instruments, consent
-                 forms. Ambiguous provenance → supplemental.
-  other        : no research content
-
-GROUP — use the same rules as file classification:
-  "ex<N>"   : clearly tied to a numbered experiment or study
-  "pilot<N>": clearly a pilot study
-  "shared"  : everything else
-
-Key signals for aggregate series:
-- Participant-named series (participant IDs, subject codes) with tabular extensions → data
-- Participant-named media series (subject IDs in filenames, .wav/.mp4 etc.) → data
-- Task-condition prefixes (e.g. "FlowerInsectCong-", "RaceEvalCong-") within an IAT folder → data,
-  use the prior-batch experiment context to assign the correct group
-- Numbered or stimulus-keyword media files (.jpg, .png, .wav) → asset (NEVER other)
-- Figure/graph/plot series named files (.jpg, .png, .svg) outside stimuli folder → output
-- Script collections → code
-- Use the Known experiment structure context (if provided) to assign group labels consistent
-  with how merged data files from the same experiment were already classified
-
-Echo every descriptor string exactly. Output ONLY the JSON array.'
-
 # ── Label deduplication (2_codebook_label.R → llm()) ─────────────────────────
 
 LABEL_MERGE_PROMPT <- 'You are reviewing whether multiple label definitions for the same
@@ -622,7 +595,7 @@ Rules:
 GRANULARITY_PROMPT <- "You are classifying whether a set of psychology research data files store
 data at individual or combined granularity based on their filename structure:
 - \"individual\": each participant has their own SEPARATE data file (e.g., sub_1.txt, sub_2.txt, sub_3.txt)
-- \"combined\": all participants' data in ONE file (e.g., data.csv, all_data.xlsx)
+- \"combined\": all participants' data in ONE file (e.g., data.csv, all_data.xlsx, experiment1_results.sav, study_4_data.dat)
 
 Each numbered item below has:
 - folder_name (the identifier)

@@ -421,7 +421,10 @@ llm_batch <- function(paths, system_prompt, user_prefix, key_col, extra_cols,
                       fallback_vals,
                       sentinel_cols = NULL,
                       paper_id      = NULL,
-                      stage_name    = NULL) {
+                      stage_name    = NULL,
+                      input_type    = "filepath") {
+  # input_type: "filepath" (default) = file paths as numbered list; "json_descriptor" = JSON array
+
   # Divide paths into fixed-size chunks (LLM_BATCH_SIZE = 20).
   # Each chunk becomes one LLM call so prompts stay within the model's context window.
   chunks     <- split(paths, ceiling(seq_along(paths) / LLM_BATCH_SIZE))
@@ -435,18 +438,40 @@ llm_batch <- function(paths, system_prompt, user_prefix, key_col, extra_cols,
 
     chunk_paths <- chunks[[i]]
 
-    # Build the numbered list that appears in the prompt, e.g.:
-    #   1. data/raw/survey.csv
-    #   2. data/raw/codebook.pdf
-    # The numbers let the model refer to items and help detect truncation.
-    chunk_text  <- paste(seq_along(chunk_paths), chunk_paths, sep = ". ", collapse = "\n")
+    # For JSON descriptors, extract the "path" field from each JSON string for matching.
+    # Store both the full JSON (for fallback) and extracted paths (for merge logic).
+    if (input_type == "json_descriptor") {
+      # Extract path field from JSON: {"path": "...", ...} → extract the path value
+      chunk_match_keys <- vapply(chunk_paths, function(json_str) {
+        # Simple extraction: find "path": "..." and get the value
+        m <- regmatches(json_str, regexpr('"path"\\s*:\\s*"([^"]+)"', json_str), invert = FALSE)
+        if (length(m[[1]]) > 0) {
+          sub('^.*"path"\\s*:\\s*"([^"]+)".*$', '\\1', json_str)
+        } else {
+          NA_character_
+        }
+      }, character(1L))
+    } else {
+      chunk_match_keys <- chunk_paths
+    }
 
-    # Assemble the full user-turn message: caller-supplied prefix + numbered paths +
+    # Format input for LLM based on input_type:
+    # - filepath: numbered list (e.g., "1. path/to/file.csv\n2. path/to/file2.csv")
+    # - json_descriptor: JSON array (e.g., "[{...}, {...}]")
+    if (input_type == "json_descriptor") {
+      # For JSON descriptors, format as a JSON array
+      chunk_text <- paste0("[\n", paste(chunk_paths, collapse = ",\n"), "\n]")
+    } else {
+      # Default filepath format: numbered list
+      chunk_text <- paste(seq_along(chunk_paths), chunk_paths, sep = ". ", collapse = "\n")
+    }
+
+    # Assemble the full user-turn message: caller-supplied prefix + input +
     # strict JSON-only instruction.  The trailing instruction is appended here (not
     # in the caller) so every llm_batch call enforces the same output contract.
     chunk_input <- paste0(user_prefix, "\n\n", chunk_text,
                           "\n\nReturn ONLY a JSON array with exactly ", length(chunk_paths),
-                          " objects — one per path above. Echo every path character-for-character.",
+                          " objects — one per input above. Echo every path character-for-character.",
                           " No truncation. No notes. No text outside the array.")
 
     # The columns we must find in the parsed response.
@@ -456,11 +481,11 @@ llm_batch <- function(paths, system_prompt, user_prefix, key_col, extra_cols,
     #   1. Per-row: fill NAs left by merge when the LLM omitted a row's key.
     #   2. Whole-chunk: returned when all retries are exhausted.
     chunk_fallback <- as.data.frame(
-      c(list(paths = chunk_paths),
+      c(list(keys = chunk_match_keys),
         setNames(lapply(fallback_vals, rep, length(chunk_paths)), extra_cols)),
       stringsAsFactors = FALSE
     )
-    names(chunk_fallback)[1] <- key_col  # rename generic "paths" to the caller's key name
+    names(chunk_fallback)[1] <- key_col  # rename generic "keys" to the caller's key name
 
     # ── Retry state ──────────────────────────────────────────────────────────
     attempt       <- 1L    # current attempt number (1-indexed)
@@ -470,9 +495,7 @@ llm_batch <- function(paths, system_prompt, user_prefix, key_col, extra_cols,
     success       <- FALSE
 
     while (TRUE) {
-      # Respect an optional temperature override set by callers (e.g. the sweep runner).
-      # Falls back to the model's default when the option is not set.
-      llm_params <- if (!is.null(getOption("llm_temperature"))) list(temperature = getOption("llm_temperature")) else list()
+      llm_params <- list(temperature = LLM_TEMPERATURE, think = LLM_THINK_LEVEL)
       raw        <- llm(system_prompt = system_prompt, text = chunk_input, params = llm_params)
       last_raw   <- raw
 
@@ -514,7 +537,7 @@ llm_batch <- function(paths, system_prompt, user_prefix, key_col, extra_cols,
         #   a) every input path is represented in the output (all.x = TRUE), and
         #   b) paths the LLM silently dropped get NA filled with fallback_vals below.
         merged <- merge(
-          data.frame(x = chunk_paths, stringsAsFactors = FALSE) |> setNames(key_col),
+          data.frame(x = chunk_match_keys, stringsAsFactors = FALSE) |> setNames(key_col),
           result,
           by = key_col, all.x = TRUE
         )
@@ -522,8 +545,8 @@ llm_batch <- function(paths, system_prompt, user_prefix, key_col, extra_cols,
         # Fill any NAs introduced by missing rows with the caller-supplied fallback.
         for (col in extra_cols) merged[[col]][is.na(merged[[col]])] <- fallback_vals[[col]]
 
-        # merge() does not guarantee row order — restore the original chunk_paths order.
-        merged[match(chunk_paths, merged[[key_col]]), ]
+        # merge() does not guarantee row order — restore the original chunk_match_keys order.
+        merged[match(chunk_match_keys, merged[[key_col]]), ]
       }, error = function(e) e)
 
       # Feature 036: After a clean parse, validate the "type" column if present.
@@ -935,7 +958,7 @@ parse_codebook <- function(path) {
 
   for (i in seq_len(max_calls)) {
     chunk_text <- paste(chunks[[i]], collapse = "\n")
-    llm_params <- if (!is.null(getOption("llm_temperature"))) list(temperature = getOption("llm_temperature")) else list()
+    llm_params <- list(temperature = LLM_TEMPERATURE, think = LLM_THINK_LEVEL)
     raw <- tryCatch(
       llm(system_prompt = CODEBOOK_PARSE_PROMPT,
           text = paste0("Extract all variable definitions from this codebook text:\n\n",
@@ -1115,7 +1138,7 @@ match_column_labels <- function(columns_df, codebook_vars_df,
       })
       prompt_body <- paste0("Variables to check:\n",
                             jsonlite::toJSON(batch_input, auto_unbox = TRUE))
-      llm_params <- if (!is.null(getOption("llm_temperature"))) list(temperature = getOption("llm_temperature")) else list()
+      llm_params <- list(temperature = LLM_TEMPERATURE, think = LLM_THINK_LEVEL)
       merge_resp <- tryCatch(
         llm(system_prompt = label_merge_prompt, text = prompt_body, params = llm_params),
         error = function(e) {
@@ -1178,7 +1201,7 @@ match_column_labels <- function(columns_df, codebook_vars_df,
         "\n\nCodebook variables (unmatched):\n", var_list
       )
 
-      llm_params <- if (!is.null(getOption("llm_temperature"))) list(temperature = getOption("llm_temperature")) else list()
+      llm_params <- list(temperature = LLM_TEMPERATURE, think = LLM_THINK_LEVEL)
       llm_resp <- tryCatch(
         llm(system_prompt = column_match_prompt, text = prompt_body, params = llm_params),
         error = function(e) {
@@ -1344,9 +1367,9 @@ extract_plain_text <- function(path) {
 # group_aggregate_folder: group files within an aggregate folder by extension.
 #
 # Each distinct lowercase extension forms one group. Groups with >= AGGREGATE_THRESHOLD
-# members produce a sentinel (sample_paths sent to Phase 1 LLM; type/group propagated
-# to all members with type_source = "aggregate_llm"). Groups below the threshold are
-# routed individually to Phase 1 LLM classification.
+# members produce a sentinel (sample_paths sent to Phase 2 LLM as filenames array in
+# JSON descriptor; type/group propagated to all members with type_source = "aggregate_llm").
+# Groups below the threshold are routed individually to Phase 1 LLM classification.
 #
 # Arguments:
 #   rel_paths_in_folder  character vector of relative paths of all files in the
@@ -1359,7 +1382,7 @@ extract_plain_text <- function(path) {
 #   $ext               lowercase extension shared by all members (character)
 #   $folder            the aggregate folder name (character)
 #   $members           all rel_paths in this group (character vector)
-#   $sample_paths      up to 5 evenly-spaced paths from members (character vector)
+#   $sample_paths      up to 5 evenly-spaced paths from members; become filenames array in Phase 2 JSON descriptor (character vector)
 #   $route_individually TRUE if length(members) < AGGREGATE_THRESHOLD
 
 group_aggregate_folder <- function(rel_paths_in_folder, folder = "") {

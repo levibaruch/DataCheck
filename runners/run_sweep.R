@@ -113,8 +113,9 @@ run_one <- function(paper_id, temperature, repeat_num, sweep_base_dir) {
   t_start <- proc.time()[["elapsed"]]
   timestamp <- format(Sys.time(), "%Y-%m-%dT%H:%M:%S")
 
-  on.exit(options(llm_temperature = NULL))
-  options(llm_temperature = temperature)
+  prev_temperature <- if (exists("LLM_TEMPERATURE")) LLM_TEMPERATURE else 0.7
+  on.exit(LLM_TEMPERATURE <<- prev_temperature)
+  LLM_TEMPERATURE <<- temperature
 
   index_ok  <- FALSE
   no_data   <- FALSE

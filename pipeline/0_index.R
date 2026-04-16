@@ -38,7 +38,7 @@ if (!exists("LLM_SENTINEL_VAL")) LLM_SENTINEL_VAL <- "llm_error"
 
 N_DATA_READ     <- 5
 MAX_TOTAL_DATA_MB <- 10 * 1024  # 10 GB total data read cap per paper across all data files
-MAX_FILE_READ_SEC <- 5 * 60    # per-file read timeout (seconds); file is skipped if exceeded
+MAX_FILE_READ_SEC <- 1 * 60    # per-file read timeout (seconds); file is skipped if exceeded
 
 VALID_FILE_TYPES <- c(
   "data", "codebook", "code", "software", "output",
@@ -70,9 +70,17 @@ BADGE_REPOS <- c("tvyxz", "osf.io/tvyxz/", "osf.io/tvyxz")
 
 # ── Pipeline function ─────────────────────────────────────────────────────────
 
-run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
+run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structure_prompt_version = "current") {
 
   t_start <- proc.time()[["elapsed"]]
+
+  # Select STRUCTURE_PROMPT body based on version (for AB testing)
+  structure_body <- switch(structure_prompt_version,
+    "v0"      = STRUCTURE_PROMPT_v0,
+    "v1"      = STRUCTURE_PROMPT_v1,
+    "current" = STRUCTURE_PROMPT,
+    STRUCTURE_PROMPT  # default
+  )
 
   # ── 0. Resolve paper ────────────────────────────────────────────────────────
 
@@ -431,9 +439,8 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
 
   non_agg_relpaths <- c(rel_paths[!is_aggregate], extra_singletons)
 
-  # Phase 1 LLM batch: non-aggregate files + singletons + aggregate sample paths.
-  # No Phase 2 — all paths classified in a single pass.
-  llm_paths <- c(non_agg_relpaths, agg_sample_paths)
+  # Phase 1: individual (non-aggregate) files only. Aggregates classified in Phase 2.
+  llm_paths <- non_agg_relpaths
 
   # ── 6. LLM: classify all paths in a single phase ────────────────────────────
 
@@ -441,10 +448,12 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
 
   t_llm_start   <- proc.time()[["elapsed"]]
   MAX_LLM_CALLS <- 10
-  n_llm_calls   <- ceiling(length(llm_paths) / LLM_BATCH_SIZE)
-  if (!FULL_RUN && n_llm_calls > MAX_LLM_CALLS) {
-    stop("too_large: ", length(llm_paths), " paths would require ",
-         n_llm_calls, " LLM calls (max ", MAX_LLM_CALLS, ")")
+  n_p1_calls <- ceiling(length(llm_paths) / LLM_BATCH_SIZE)
+  n_p2_calls <- ceiling(length(agg_groups_list) / LLM_BATCH_SIZE)
+  if (!FULL_RUN && (n_p1_calls + n_p2_calls) > MAX_LLM_CALLS) {
+    stop("too_large: ", length(llm_paths), " individual + ", length(agg_groups_list),
+         " aggregate paths would require ", n_p1_calls + n_p2_calls,
+         " LLM calls (max ", MAX_LLM_CALLS, ")")
   }
 
   # Build a compact experiment-map summary from prior batch results to pass as
@@ -518,6 +527,14 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
     )
   }
 
+  build_agg_descriptors <- function(agg_groups_list) {
+    vapply(agg_groups_list, function(g) {
+      fnames <- paste0('"', paste(basename(g$sample_paths), collapse = '", "'), '"')
+      sprintf('{"path": "%s/.%s", "ext": "%s", "n_files": %d, "filenames": [%s]}',
+              g$folder, g$ext, g$ext, length(g$members), fnames)
+    }, character(1))
+  }
+
   update_experiment_map <- function(exp_map, batch_result) {
     grp_values <- batch_result$group
     for (i in seq_along(grp_values)) {
@@ -548,6 +565,7 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
   type_map         <- list()
   last_entry       <- NULL
   structure_parsed <- NULL
+  agg_parsed       <- NULL
 
   if (length(llm_paths) > 0) {
     chunks <- split(llm_paths, ceiling(seq_along(llm_paths) / LLM_BATCH_SIZE))
@@ -557,7 +575,7 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
                         build_structure_summary(experiment_map, type_map, last_entry)
       batch_result <- llm_batch(
         paths         = chunks[[i]],
-        system_prompt = STRUCTURE_PROMPT,
+        system_prompt = paste0(SINGLE_HEADER, structure_body),
         user_prefix   = prefix,
         key_col       = "path",
         extra_cols    = c("type", "group"),
@@ -571,6 +589,33 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
       experiment_map   <- update_experiment_map(experiment_map, batch_result)
       type_map         <- update_type_map(type_map, batch_result)
       last_entry       <- batch_result[nrow(batch_result), ]
+    }
+  }
+
+  # ── Phase 2: classify aggregate folder sentinels ────────────────────────────
+  if (length(agg_groups_list) > 0) {
+    agg_descriptors <- build_agg_descriptors(agg_groups_list)
+    agg_chunks      <- split(agg_descriptors, ceiling(seq_along(agg_descriptors) / LLM_BATCH_SIZE))
+
+    for (i in seq_along(agg_chunks)) {
+      prefix <- if (i == 1) "Classify these aggregate folders:" else
+                  build_sentinel_summary(experiment_map, type_map)
+      batch_result <- llm_batch(
+        paths         = agg_chunks[[i]],
+        system_prompt = paste0(AGGREGATE_HEADER, structure_body),
+        user_prefix   = prefix,
+        key_col       = "path",
+        extra_cols    = c("type", "group"),
+        fallback_vals = list(type = "other", group = "shared"),
+        sentinel_cols = "type",
+        paper_id      = paper_id,
+        stage_name    = "file-type Phase 2",
+        input_type    = "json_descriptor"
+      )
+      batch_result$prompt_nr <- i
+      agg_parsed      <- rbind(agg_parsed, batch_result)
+      experiment_map  <- update_experiment_map(experiment_map, batch_result)
+      type_map        <- update_type_map(type_map, batch_result)
     }
   }
 
@@ -590,14 +635,15 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
 
   if (length(agg_groups_list) > 0) {
     for (grp in agg_groups_list) {
-      # Look up the first sample path in structure_parsed to get type/group
-      sample_idx <- match(grp$sample_paths[1], structure_parsed$path)
-      if (is.na(sample_idx)) {
-        warning("Sample path not found in Phase 1 results: ", grp$sample_paths[1])
+      # Look up the aggregate in Phase 2 results by composite key (folder/.ext)
+      key     <- paste0(grp$folder, "/.", grp$ext)
+      agg_idx <- match(key, agg_parsed$path)
+      if (is.na(agg_idx)) {
+        warning("Aggregate key not found in Phase 2 results: ", key)
         next
       }
 
-      sample_row <- structure_parsed[sample_idx, ]
+      sample_row <- agg_parsed[agg_idx, ]
       agg_type   <- sample_row$type
       agg_group  <- sample_row$group
 
@@ -953,14 +999,22 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
                        file_df$ext)
     src_exts <- c("rmd", "qmd", "tex")
     for (.i in pdf_idx) {
-      stem    <- tools::file_path_sans_ext(file_df$rel_path[.i])
-      has_src <- any(paste0(stem, "\x01", src_exts) %in% src_keys)
-      if (has_src) {
+      stem         <- tools::file_path_sans_ext(file_df$rel_path[.i])
+      matched_keys <- paste0(stem, "\x01", src_exts)
+      src_idx      <- which(src_keys %in% matched_keys)
+      if (length(src_idx) > 0) {
         file_df$type[.i]        <- "output"
         file_df$type_source[.i] <- "rmd_pair_rule"
         file_df$data_format[.i] <- NA_character_
         message("  PDF compiled from source — type set to output: ",
                 file_df$filename[.i])
+        for (.j in src_idx) {
+          file_df$type[.j]        <- "code"
+          file_df$type_source[.j] <- "rmd_pair_rule"
+          file_df$data_format[.j] <- NA_character_
+          message("  Source file for compiled PDF — type set to code: ",
+                  file_df$filename[.j])
+        }
       }
     }
   }
@@ -1006,7 +1060,9 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
   .read_state$limit_hit <- FALSE
 
   extract_column_info <- function(path, rel_path, group) {
+    message(sprintf("Processing: %s (group: %s)", basename(path), group))
     file_mb <- file.info(path)$size / 1048576
+    message(sprintf("  file size: %.1f MB", file_mb))
     if (!is.na(file_mb) && file_mb > MAX_FILE_MB) {
       message("  skipping (too large: ", round(file_mb), " MB): ", basename(path))
       return(NULL)
@@ -1356,7 +1412,7 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL) {
   write.csv(
     file_df[, c("paper_id", "path", "rel_path", "filename", "ext",
                 "type", "type_source", "group", "aggregate_folder",
-                "data_granularity", "granularity_source", "is_sentinel", "prompt_nr", "data_format")],
+                "data_granularity", "granularity_source", "prompt_nr", "data_format")],
     structure_out, row.names = FALSE
   )
   message("── Saved structure → ", structure_out)
