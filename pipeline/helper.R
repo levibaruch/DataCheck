@@ -483,6 +483,22 @@ llm_batch <- function(paths, system_prompt, user_prefix, key_col, extra_cols,
         # clean_llm_values() strips stray backtick characters from string fields.
         result <- clean_llm_values(jsonlite::fromJSON(extract_json(raw$answer), flatten = TRUE))
 
+        # Feature 038: Validate response count — LLM must return exactly one object per input path.
+        # Incomplete responses (fewer objects than paths sent) indicate an error condition
+        # and should trigger retry, not silent fallback fill.
+        if (nrow(result) != length(chunk_paths)) {
+          # Log incomplete response detection before raising error (for operator visibility)
+          pid   <- if (!is.null(paper_id))   paper_id   else "<unknown>"
+          stage <- if (!is.null(stage_name)) stage_name else "<unknown>"
+          dir.create(dirname(LLM_ERROR_LOG), recursive = TRUE, showWarnings = FALSE)
+          cat(sprintf("[%s] paper_id=%s stage=%s chunk=%d n_items=%d paths_sent=%d paths_received=%d incomplete_detected=TRUE attempt=%d\n--- raw response ---\n%s\n---\n\n",
+                      format(Sys.time(), "%Y-%m-%dT%H:%M:%S"),
+                      pid, stage, i, length(chunk_paths), length(chunk_paths), nrow(result), attempt,
+                      raw$answer),
+              file = LLM_ERROR_LOG, append = TRUE)
+          stop("Incomplete LLM response: expected ", length(chunk_paths), " objects, received ", nrow(result))
+        }
+
         # Validate that the model returned all required columns.
         if (!all(needed_cols %in% names(result))) {
           stop("Response missing fields: ",
@@ -1472,7 +1488,7 @@ detect_filename_pattern <- function(filenames, verbose = TRUE) {
 
     if (verbose) cat(sprintf("  [detect] matches: %d / %d files\n", length(matching_idx), length(filenames)))
 
-    if (length(matching_idx) > 1) {
+    if (length(matching_idx) >= 8) {
       if (verbose) cat(sprintf("  [detect] SUCCESS: %s\n", regex_pattern))
       return(list(
         pattern = regex_pattern,              # Actual regex for matching
@@ -1483,7 +1499,34 @@ detect_filename_pattern <- function(filenames, verbose = TRUE) {
       if (verbose) cat("  [detect] FAIL: pattern matched <= 1 file\n")
     }
   } else {
-    if (verbose) cat("  [detect] FAIL: multiple unique patterns found\n")
+    # Multiple patterns found — return all with example counts for each
+    if (verbose) cat("  [detect] Multiple patterns found, returning all\n")
+
+    # Convert each pattern template to regex and count matches
+    multiple_patterns <- list()
+    for (p in patterns) {
+      pattern_base <- gsub("NUM", "[0-9]+", p, fixed = TRUE)
+      if (exts[1] != "") {
+        regex_pattern <- paste0("^", pattern_base, "\\.", exts[1], "$")
+      } else {
+        regex_pattern <- paste0("^", pattern_base, "$")
+      }
+      matching_idx <- grep(regex_pattern, filenames)
+      if (length(matching_idx) >= 8) {  # Require min 8 matches per pattern
+        multiple_patterns[[regex_pattern]] <- list(
+          examples = filenames[matching_idx][1:min(3, length(matching_idx))],
+          count = length(matching_idx)
+        )
+      }
+    }
+
+    if (length(multiple_patterns) > 0) {
+      if (verbose) cat(sprintf("  [detect] SUCCESS: %d patterns\n", length(multiple_patterns)))
+      return(list(
+        multiple_patterns = multiple_patterns,  # List of pattern → {examples, count}
+        examples = head(filenames, 5)            # Overall examples
+      ))
+    }
   }
 
   NULL

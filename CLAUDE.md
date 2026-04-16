@@ -1,6 +1,6 @@
 # data_check Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-04-14
+Auto-generated from all feature plans. Last updated: 2026-04-15
 
 ## Active Technologies
 - R (base R only — no new packages; `haven`/`readxl`/`jsonlite` already present) + `llm_batch()`, `extract_json()` (existing helpers in `helper.R`); `jsonlite::fromJSON` (005-codebook-column-labelling)
@@ -56,6 +56,10 @@ Auto-generated from all feature plans. Last updated: 2026-04-14
 - R (base R only — no new packages) + `helper.R` (`llm_batch()`, `classify_by_rules()`), `0_index.R`, `3_psychds_convert.R`, `prompts.R` (`STRUCTURE_PROMPT_NEW`) (035-sentinel-aggregate-redesign)
 - CSV files — `outputs/<source>/<id>/structure.csv` (modified), `docs/output-schemas.md` (updated) (035-sentinel-aggregate-redesign)
 - R (base R, no new packages) + `helper.R` (`classify_col_type_rules()`), `0_index.R` (`COLUMN_TYPE_PROMPT`, `run_index()`) (004-reduce-unknown-coltypes)
+- R 4.5 (base R only — no new packages per constitution.md Principle IV) + `helper.R` (`llm_batch()`, `is_participant_id()`), `prompts.R` (`GRANULARITY_PROMPT`), `0_index.R` (integration) (037-improve-granularity-detection)
+- CSV files on local filesystem (`structure.csv`) (037-improve-granularity-detection)
+- R 4.5 (base R, no new packages per constitution.md Principle IV) + `metacheck` (llm()), `jsonlite` (fromJSON, extract_json), existing helpers in `helper.R` (038-llm-fallback-retry)
+- CSV files on local filesystem; append-only error logs (`llm_batch_errors.log`) (038-llm-fallback-retry)
 
 ## Project Structure
 
@@ -73,9 +77,9 @@ tests/
 R (base R, no new packages): Follow standard conventions
 
 ## Recent Changes
+- 038-llm-fallback-retry: Added R 4.5 (base R, no new packages per constitution.md Principle IV) + `metacheck` (llm()), `jsonlite` (fromJSON, extract_json), existing helpers in `helper.R`
+- 037-improve-granularity-detection: Added R 4.5 (base R only — no new packages per constitution.md Principle IV) + `helper.R` (`llm_batch()`, `is_participant_id()`), `prompts.R` (`GRANULARITY_PROMPT`), `0_index.R` (integration)
 - 035-sentinel-aggregate-redesign: Added R (base R only — no new packages) + `helper.R` (`llm_batch()`, `classify_by_rules()`), `0_index.R`, `3_psychds_convert.R`, `prompts.R` (`STRUCTURE_PROMPT_NEW`)
-- 034-classification-parsing-fixes: Added R (base R + already-installed: `readxl`, `haven`, `metacheck`) + `readxl` (xlsm), `system2` (unrar via shell), `haven` (codebook parsing) — all presen
-- 033-llm-prompt-refinements: Added R (base R only) + None — prompt string edit only
 
 
 <!-- MANUAL ADDITIONS START -->

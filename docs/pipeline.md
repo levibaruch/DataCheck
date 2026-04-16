@@ -67,6 +67,9 @@ Paper ID (character string)
 │     classification  │    Assigns type/group for all individual (non-aggregate) files.
 │                     │    Batches 2+: user_prefix includes compact experiment-map summary
 │                     │    for cross-batch group label consistency.
+│                     │    Feature 038: Incomplete response validation — if LLM returns fewer
+│                     │    objects than paths sent, system detects and retries (max 4 attempts).
+│                     │    See quickstart.md for log monitoring and operator guidance.
 │                     │    Key hard-case rules in STRUCTURE_PROMPT (feature 033):
 │                     │      .log in data/raw/task folder → data (not output)
 │                     │      tabular file with scores/processed/cleaned → data (not output)

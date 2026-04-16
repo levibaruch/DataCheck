@@ -566,6 +566,18 @@ ui <- page_sidebar(
   sidebar = sidebar(
     width    = 300,
     fillable = TRUE,
+    div(
+      style = "display:flex; align-items:flex-end; gap:6px; margin-bottom:4px;",
+      div(style = "flex:1;",
+          selectInput("sort_by", "Sort papers by",
+                      choices  = c("Number" = "number",
+                                   "Completedness" = "completedness",
+                                   "Repo size" = "size"),
+                      selected = "number",
+                      width    = "100%")),
+      div(style = "padding-bottom:1px;",
+          checkboxInput("sort_desc", "\u2193 Desc", value = FALSE))
+    ),
     selectInput("paper_id", "Paper", choices = character(0)),
     uiOutput("progress_bar_ui"),
     tags$hr(),
@@ -653,7 +665,8 @@ server <- function(input, output, session) {
     skipped            = integer(0),
     xml                = NULL,     # list(title, abstract, body) or NULL
     col_names          = character(0),
-    paper_completion   = logical(0),  # named logical: paper_id → complete?
+    paper_completion   = character(0), # named character: paper_id → "complete"|"partial"|"none"
+    paper_size         = integer(0),   # named integer:   paper_id → n_files in structure.csv
     label_update_only  = FALSE,       # TRUE = updateSelectInput is label-only, skip paper reload
     bulk_selected      = integer(0)   # indices of files selected for bulk labelling
   )
@@ -677,12 +690,47 @@ server <- function(input, output, session) {
     removeModal()
     papers     <- discover_papers()
     completion <- paper_is_complete(papers)
+    sizes      <- get_paper_sizes(papers)
     rv$papers           <- papers
     rv$paper_completion <- completion
+    rv$paper_size       <- sizes
     updateSelectInput(session, "paper_id",
                       choices  = make_paper_choices(papers, completion),
                       selected = if (length(papers) > 0) papers[1] else NULL)
   })
+
+  # ── Sort controls ────────────────────────────────────────────────────────────
+
+  sort_papers <- function(papers, by, desc) {
+    if (length(papers) == 0) return(papers)
+    ord <- switch(by,
+      number = order(papers, decreasing = desc),
+      completedness = {
+        rank <- c(complete = 0L, partial = 1L, none = 2L)
+        v <- rank[rv$paper_completion[papers]]
+        v[is.na(v)] <- 2L
+        order(v, decreasing = desc)
+      },
+      size = order(rv$paper_size[papers], decreasing = desc),
+      order(papers, decreasing = desc)   # fallback
+    )
+    papers[ord]
+  }
+
+  observeEvent(
+    list(input$sort_by, input$sort_desc),
+    {
+      req(length(rv$papers) > 0, !is.null(input$sort_by))
+      cur    <- isolate(input$paper_id)
+      sorted <- sort_papers(rv$papers, input$sort_by, isTRUE(input$sort_desc))
+      rv$papers <- sorted   # keep rv$papers in sync so auto-advance respects sort
+      choices <- make_paper_choices(sorted, rv$paper_completion)
+      updateSelectInput(session, "paper_id",
+                        choices  = choices,
+                        selected = cur)
+    },
+    ignoreInit = TRUE
+  )
 
   # ── T008: Paper selection ────────────────────────────────────────────────────
 
@@ -973,7 +1021,7 @@ server <- function(input, output, session) {
     load_file(1L)
 
     # Update paper completion label in selector
-    rv$paper_completion[pid] <- FALSE
+    rv$paper_completion[pid] <- "none"
     rv$label_update_only     <- TRUE
     updateSelectInput(session, "paper_id",
                       choices  = make_paper_choices(rv$papers, rv$paper_completion),
@@ -1021,13 +1069,13 @@ server <- function(input, output, session) {
       cur_paper  <- rv$paper_id
       cur_pos    <- match(cur_paper, papers)
       # Mark current paper complete and rebuild labeled choices
-      rv$paper_completion[cur_paper] <- TRUE
+      rv$paper_completion[cur_paper] <- "complete"
       new_choices <- make_paper_choices(papers, rv$paper_completion)
 
       # Jump to the next *unfinished* paper (skip already-complete ones)
       remaining   <- papers[seq_along(papers) > cur_pos]
       next_paper  <- {
-        incomplete <- remaining[!rv$paper_completion[remaining]]
+        incomplete <- remaining[rv$paper_completion[remaining] != "complete"]
         if (length(incomplete) > 0) incomplete[1L] else NULL
       }
 

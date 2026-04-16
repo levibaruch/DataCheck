@@ -150,11 +150,12 @@ for (pid in eligible) {
   if (is.null(gt) || is.null(str) || nrow(gt) == 0) next
 
   # Skip partially annotated papers — only include papers where every file
-  # in structure.csv has a corresponding GT row
-  if (!all(str$rel_path %in% gt$rel_path)) next
+  # in structure.csv has a corresponding GT row, and vice versa
+  if (!all(str$rel_path %in% gt$rel_path) || !all(gt$rel_path %in% str$rel_path)) next
 
   keep_str <- intersect(
-    c("rel_path", "type", "group", "data_granularity", "data_format", "type_source"),
+    c("rel_path", "type", "group", "data_granularity", "data_format",
+      "type_source", "granularity_source"),
     names(str)
   )
   m <- merge(
@@ -239,7 +240,7 @@ per_paper_full <- do.call(rbind, Filter(Negate(is.null), lapply(sort(unique(acc$
   da <- a[!is.na(a$type_gt) & a$type_gt == "data", ]
   dg <- da[!is.na(da$data_granularity_gt), ]
   df <- da[!is.na(da$data_format_gt), ]
-  n_group <- sum(!is.na(da$group_gt))
+  n_group <- sum(!is.na(a$group_gt))
   n_dg    <- nrow(dg)
   n_df    <- nrow(df)
 
@@ -260,7 +261,7 @@ per_paper_full <- do.call(rbind, Filter(Negate(is.null), lapply(sort(unique(acc$
     macro_f1  = s$macro_f1,
     mcc       = s$mcc,
     type_acc  = s$accuracy,
-    group_acc = pct_num(sum(!is.na(da$group_gt) & !is.na(da$group) & da$group_gt == da$group), n_group),
+    group_acc = pct_num(sum(!is.na(a$group_gt) & !is.na(a$group) & a$group_gt == a$group), n_group),
     dg_acc    = pct_num(sum(!is.na(dg$data_granularity) & dg$data_granularity_gt == dg$data_granularity), n_dg),
     df_acc    = pct_num(sum(!is.na(df$data_format) & df$data_format_gt == df$data_format), n_df),
     top_err   = top_err,
@@ -270,10 +271,16 @@ per_paper_full <- do.call(rbind, Filter(Negate(is.null), lapply(sort(unique(acc$
 })))
 
 # Paper-averaged summary scalars
-pa_kappa    <- mean(per_paper_full$kappa,    na.rm = TRUE)
-pa_macro_f1 <- mean(per_paper_full$macro_f1, na.rm = TRUE)
-pa_mcc      <- mean(per_paper_full$mcc,      na.rm = TRUE)
-pa_accuracy <- mean(per_paper_full$type_acc, na.rm = TRUE)
+pa_kappa      <- mean(per_paper_full$kappa,     na.rm = TRUE)
+pa_macro_f1   <- mean(per_paper_full$macro_f1,  na.rm = TRUE)
+pa_mcc        <- mean(per_paper_full$mcc,        na.rm = TRUE)
+pa_accuracy   <- mean(per_paper_full$type_acc,   na.rm = TRUE)
+pa_group_acc  <- mean(per_paper_full$group_acc,  na.rm = TRUE)
+pa_dg_acc     <- mean(per_paper_full$dg_acc,     na.rm = TRUE)
+pa_df_acc     <- mean(per_paper_full$df_acc,     na.rm = TRUE)
+n_papers_group <- sum(!is.na(per_paper_full$group_acc))
+n_papers_dg    <- sum(!is.na(per_paper_full$dg_acc))
+n_papers_df    <- sum(!is.na(per_paper_full$df_acc))
 
 # Per-paper per-class F1 (for box plots and paper-averaged per-class table)
 per_paper_class_f1 <- do.call(rbind, Filter(Negate(is.null), lapply(sort(unique(acc$paper_id)), function(pid) {
@@ -361,8 +368,6 @@ ext_stats <- ext_stats[order(-ext_stats$n_errors), ]
 # ── Group confusion matrix ────────────────────────────────────────────────────
 
 grp_valid <- acc[
-  !is.na(acc$type_gt) & acc$type_gt == "data" &
-  !is.na(acc$type)    & acc$type    == "data" &
   !is.na(acc$group_gt) & !is.na(acc$group), ]
 
 if (nrow(grp_valid) > 0) {
@@ -481,8 +486,8 @@ tn_n <- sum(!is.na(acc$type_gt))
 data_acc_rows <- acc[!is.na(acc$type_gt) & acc$type_gt == "data", ]
 dg_acc_rows   <- data_acc_rows[!is.na(data_acc_rows$data_granularity_gt), ]
 df_acc_rows   <- data_acc_rows[!is.na(data_acc_rows$data_format_gt), ]
-gc <- sum(!is.na(data_acc_rows$group_gt) & !is.na(data_acc_rows$group) & data_acc_rows$group_gt == data_acc_rows$group)
-gn <- sum(!is.na(data_acc_rows$group_gt))
+gc <- sum(!is.na(acc$group_gt) & !is.na(acc$group) & acc$group_gt == acc$group)
+gn <- sum(!is.na(acc$group_gt))
 dc <- sum(!is.na(dg_acc_rows$data_granularity) & dg_acc_rows$data_granularity_gt == dg_acc_rows$data_granularity)
 dn <- nrow(dg_acc_rows)
 dfc <- sum(!is.na(df_acc_rows$data_format) & df_acc_rows$data_format_gt == df_acc_rows$data_format)
@@ -506,13 +511,16 @@ L("_Paper-averaged and file-pooled metrics diverge when a small number of large 
 BR()
 L("![Paper-averaged vs file-pooled summary](summary_compare.png)")
 BR()
-L("**Subfield performance** (conditional on type = data, file-pooled):")
+L("**Subfield performance:**")
 BR()
-L("| Task | Accuracy | N |")
-L("|---|---|---|")
-L(sprintf("| Group classification | %s | %d files |", pct(gc, gn), gn))
-L(sprintf("| data_granularity classification | %s | %d files |", pct(dc, dn), dn))
-L(sprintf("| data_format (raw vs tabular) | %s | %d files |", pct(dfc, dfn), dfn))
+L("| Task | **Paper-averaged** | File-pooled | N files | N papers |")
+L("|---|---|---|---|---|")
+L(sprintf("| Group classification | **%s** | %s | %d | %d |",
+  fmt1(pa_group_acc), pct(gc, gn), gn, n_papers_group))
+L(sprintf("| data_granularity classification | **%s** | %s | %d | %d |",
+  fmt1(pa_dg_acc), pct(dc, dn), dn, n_papers_dg))
+L(sprintf("| data_format (raw vs tabular) | **%s** | %s | %d | %d |",
+  fmt1(pa_df_acc), pct(dfc, dfn), dfn, n_papers_df))
 BR()
 L("---")
 BR()
@@ -562,12 +570,14 @@ BR()
 L("_TP/FP/FN are file-pooled counts. Precision/Recall/FPR/FNR are file-pooled._")
 BR()
 
+divergence <- pa_class_metrics$pa_f1 - pa_class_metrics$fp_f1
 pa_metrics_tbl <- data.frame(
   Class          = pa_class_metrics$class,
   `Paper-avg F1` = sapply(pa_class_metrics$pa_f1, fmt1),
   SD             = sapply(pa_class_metrics$pa_f1_sd, fmt1),
   `N papers`     = pa_class_metrics$n_papers,
   `File-pool F1` = sapply(pa_class_metrics$fp_f1, fmt1),
+  `Δ (pa−fp)`    = sapply(divergence, function(d) if (is.na(d)) "—" else sprintf("%+.1f pp", d)),
   TP             = class_metrics$tp,
   FP             = class_metrics$fp,
   FN             = class_metrics$fn,
@@ -590,9 +600,9 @@ BR()
 
 # ── 4. Subfield Breakdowns ────────────────────────────────────────────────────
 
-L("## 4. Subfield Classification (data files only)")
+L("## 4. Subfield Classification")
 BR()
-L("_Group and data_granularity tasks apply only to files the LLM correctly identified as type = data._")
+L("_Group classification applies to all files. data_granularity and data_format apply only to files with type = data._")
 BR()
 
 L("### 4a. Group confusion matrix")
@@ -602,6 +612,36 @@ if (!is.null(cm_grp) && nrow(cm_grp) > 0) {
   L(md_table(cbind(data.frame(`group \\ pred` = rownames(cm_grp_df), check.names = FALSE), cm_grp_df)))
   BR()
   L("![Group confusion matrix](group_conf.png)")
+} else {
+  L("_Insufficient data._")
+}
+BR()
+
+L("### 4a-ii. Group accuracy by file type")
+BR()
+L("_For each file type, fraction of files where the predicted group matches ground truth._")
+BR()
+if (nrow(grp_valid) > 0) {
+  type_grp_metrics <- do.call(rbind, lapply(sort(unique(grp_valid$type_gt)), function(tp) {
+    rows <- grp_valid[grp_valid$type_gt == tp, ]
+    n    <- nrow(rows)
+    # File-level accuracy
+    file_acc <- 100 * sum(rows$group_gt == rows$group, na.rm = TRUE) / n
+    # Paper-level accuracy: per-paper mean
+    paper_accs <- sapply(unique(rows$paper_id), function(pid) {
+      pr <- rows[rows$paper_id == pid, ]
+      if (nrow(pr) == 0) return(NA_real_)
+      100 * sum(pr$group_gt == pr$group, na.rm = TRUE) / nrow(pr)
+    })
+    pa_acc  <- mean(paper_accs, na.rm = TRUE)
+    n_papers_tp <- sum(!is.na(paper_accs))
+    data.frame(`File type` = tp, `N files` = n, `N papers` = n_papers_tp,
+               `Paper-avg group acc` = fmt1(pa_acc),
+               `File-pooled group acc` = fmt1(file_acc),
+               stringsAsFactors = FALSE, check.names = FALSE)
+  }))
+  type_grp_metrics <- type_grp_metrics[order(-type_grp_metrics[["N files"]]), ]
+  L(md_table(type_grp_metrics))
 } else {
   L("_Insufficient data._")
 }
@@ -630,6 +670,184 @@ if (!is.null(cm_df) && nrow(cm_df) > 0) {
   L("_Insufficient data._")
 }
 BR()
+L("---")
+BR()
+
+# ── 4d. Accuracy by type_source ──────────────────────────────────────────────
+
+L("### 4d. Accuracy by classification method (type_source)")
+BR()
+L("_Paper-averaged = mean of per-paper accuracies (each paper equal weight). File-pooled = raw counts across all files._")
+BR()
+
+src_data_4d <- list()  # store for heatmap
+
+if ("type_source" %in% names(acc)) {
+  src_levels <- sort(unique(acc$type_source[!is.na(acc$type_source) &
+                 !acc$type_source %in% c("extension_rule", "sentinel_llm")]))
+
+  src_tbl <- do.call(rbind, lapply(src_levels, function(src) {
+    rows <- acc[!is.na(acc$type_source) & acc$type_source == src, ]
+
+    # File-pooled
+    n_type   <- sum(!is.na(rows$type_gt) & !is.na(rows$type))
+    fp_type  <- if (n_type > 0) 100 * sum(rows$type_gt == rows$type, na.rm = TRUE) / n_type else NA_real_
+    grp_rows <- rows[!is.na(rows$group_gt) & !is.na(rows$group), ]
+    fp_grp   <- if (nrow(grp_rows) > 0) 100 * sum(grp_rows$group_gt == grp_rows$group) / nrow(grp_rows) else NA_real_
+    dg_rows  <- rows[!is.na(rows$data_granularity_gt) & !is.na(rows$data_granularity), ]
+    fp_dg    <- if (nrow(dg_rows) > 0) 100 * sum(dg_rows$data_granularity_gt == dg_rows$data_granularity) / nrow(dg_rows) else NA_real_
+
+    # Paper-averaged
+    pids <- unique(rows$paper_id)
+    pa_type <- mean(sapply(pids, function(p) {
+      r <- rows[rows$paper_id == p & !is.na(rows$type_gt) & !is.na(rows$type), ]
+      if (nrow(r) == 0) return(NA_real_)
+      100 * sum(r$type_gt == r$type) / nrow(r)
+    }), na.rm = TRUE)
+    pa_grp <- mean(sapply(pids, function(p) {
+      r <- rows[rows$paper_id == p & !is.na(rows$group_gt) & !is.na(rows$group), ]
+      if (nrow(r) == 0) return(NA_real_)
+      100 * sum(r$group_gt == r$group) / nrow(r)
+    }), na.rm = TRUE)
+    pa_dg <- mean(sapply(pids, function(p) {
+      r <- rows[rows$paper_id == p & !is.na(rows$data_granularity_gt) & !is.na(rows$data_granularity), ]
+      if (nrow(r) == 0) return(NA_real_)
+      100 * sum(r$data_granularity_gt == r$data_granularity) / nrow(r)
+    }), na.rm = TRUE)
+
+    src_data_4d[[src]] <<- c(pa_type = pa_type, pa_grp = pa_grp, pa_dg = pa_dg,
+                               fp_type = fp_type, fp_grp = fp_grp, fp_dg = fp_dg)
+
+    data.frame(
+      `Method`               = src,
+      `N files`              = n_type,
+      `N papers`             = length(pids),
+      `Type — paper avg`     = fmt1(pa_type),
+      `Type — file pool`     = fmt1(fp_type),
+      `Group — paper avg`    = fmt1(pa_grp),
+      `Group — file pool`    = fmt1(fp_grp),
+      `Granularity — paper avg` = fmt1(pa_dg),
+      `Granularity — file pool` = fmt1(fp_dg),
+      check.names = FALSE, stringsAsFactors = FALSE
+    )
+  }))
+  L(md_table(src_tbl))
+  BR()
+  L("![Accuracy by type_source heatmap](src_heatmap.png)")
+} else {
+  L("_type_source column not available._")
+}
+BR()
+
+if ("granularity_source" %in% names(acc)) {
+  L("### 4e. Granularity accuracy by granularity_source")
+  BR()
+  L("_Applies only to data files with a granularity ground truth annotation._")
+  BR()
+  dg_all <- acc[!is.na(acc$data_granularity_gt) & !is.na(acc$data_granularity) &
+                !is.na(acc$granularity_source), ]
+  if (nrow(dg_all) > 0) {
+    gsrc_levels <- sort(unique(dg_all$granularity_source))
+    gsrc_tbl <- do.call(rbind, lapply(gsrc_levels, function(gs) {
+      rows    <- dg_all[dg_all$granularity_source == gs, ]
+      n       <- nrow(rows)
+      fp_acc  <- 100 * sum(rows$data_granularity_gt == rows$data_granularity) / n
+      pids_g  <- unique(rows$paper_id)
+      pa_acc  <- mean(sapply(pids_g, function(p) {
+        r <- rows[rows$paper_id == p, ]
+        if (nrow(r) == 0) return(NA_real_)
+        100 * sum(r$data_granularity_gt == r$data_granularity) / nrow(r)
+      }), na.rm = TRUE)
+      data.frame(
+        `granularity_source`  = gs,
+        `N files`             = n,
+        `N papers`            = length(pids_g),
+        `Paper-avg acc`       = fmt1(pa_acc),
+        `File-pooled acc`     = fmt1(fp_acc),
+        check.names = FALSE, stringsAsFactors = FALSE
+      )
+    }))
+    L(md_table(gsrc_tbl))
+    BR()
+    L("![Granularity accuracy by source heatmap](gran_src_heatmap.png)")
+  } else {
+    L("_Insufficient data._")
+  }
+  BR()
+}
+
+L("### 4f. Type accuracy — file type × classification method")
+BR()
+L("_Paper-averaged accuracy for each combination of ground-truth file type and classification method. Reveals which file types suffer most under each method._")
+BR()
+
+if ("type_source" %in% names(acc)) {
+  ft_src_srcs  <- sort(unique(acc$type_source[!is.na(acc$type_source) &
+                   !acc$type_source %in% c("extension_rule", "sentinel_llm")]))
+  ft_src_types <- sort(unique(acc$type_gt[!is.na(acc$type_gt)]))
+
+  # Build paper-avg matrix (file types × methods)
+  pa_mat <- matrix(NA_real_, nrow = length(ft_src_types), ncol = length(ft_src_srcs),
+                   dimnames = list(ft_src_types, ft_src_srcs))
+  fp_mat <- pa_mat
+  n_mat  <- matrix(0L, nrow = length(ft_src_types), ncol = length(ft_src_srcs),
+                   dimnames = list(ft_src_types, ft_src_srcs))
+
+  for (tp in ft_src_types) {
+    for (src in ft_src_srcs) {
+      rows <- acc[!is.na(acc$type_gt) & acc$type_gt == tp &
+                  !is.na(acc$type_source) & acc$type_source == src &
+                  !is.na(acc$type), ]
+      if (nrow(rows) == 0) next
+      n_mat[tp, src]  <- nrow(rows)
+      fp_mat[tp, src] <- 100 * sum(rows$type_gt == rows$type) / nrow(rows)
+      pa_mat[tp, src] <- mean(sapply(unique(rows$paper_id), function(p) {
+        r <- rows[rows$paper_id == p, ]
+        if (nrow(r) == 0) return(NA_real_)
+        100 * sum(r$type_gt == r$type) / nrow(r)
+      }), na.rm = TRUE)
+    }
+  }
+
+  # Markdown table: paper-avg with N in parentheses
+  tbl_df <- as.data.frame(matrix("—", nrow = length(ft_src_types),
+                                  ncol = length(ft_src_srcs),
+                                  dimnames = list(ft_src_types, ft_src_srcs)))
+  for (tp in ft_src_types)
+    for (src in ft_src_srcs)
+      if (!is.na(pa_mat[tp, src]))
+        tbl_df[tp, src] <- sprintf("%s (n=%d)", fmt1(pa_mat[tp, src]), n_mat[tp, src])
+
+  L(md_table(cbind(data.frame(`File type` = rownames(tbl_df), check.names = FALSE), tbl_df)))
+  BR()
+  L("![File type × method accuracy heatmap — paper avg](type_method_heatmap.png)")
+} else {
+  L("_type_source column not available._")
+}
+BR()
+
+L("### 4g. Type accuracy — file type × classification method (file-pooled)")
+BR()
+L("_Same breakdown as 4f but file-pooled: each file contributes one vote. Large repositories dominate._")
+BR()
+
+if ("type_source" %in% names(acc) && exists("fp_mat")) {
+  tbl_fp <- as.data.frame(matrix("—", nrow = length(ft_src_types),
+                                  ncol = length(ft_src_srcs),
+                                  dimnames = list(ft_src_types, ft_src_srcs)))
+  for (tp in ft_src_types)
+    for (src in ft_src_srcs)
+      if (!is.na(fp_mat[tp, src]))
+        tbl_fp[tp, src] <- sprintf("%s (n=%d)", fmt1(fp_mat[tp, src]), n_mat[tp, src])
+
+  L(md_table(cbind(data.frame(`File type` = rownames(tbl_fp), check.names = FALSE), tbl_fp)))
+  BR()
+  L("![File type × method accuracy heatmap — file pool](type_method_heatmap_fp.png)")
+} else {
+  L("_type_source column not available._")
+}
+BR()
+
 L("---")
 BR()
 
@@ -785,67 +1003,74 @@ if (nrow(bad_papers) == 0) {
 }
 BR()
 
-L("### 7b. Per-paper breakdown")
+L("### 7b. Top 20 papers by error count")
 BR()
+top_err_papers <- per_paper_full[order(-(per_paper_full$n_files * (1 - per_paper_full$type_acc / 100))), ]
+top_err_papers <- head(top_err_papers, 20)
 L(md_table(data.frame(
-  Paper       = per_paper_full$paper_id,
-  `N files`   = per_paper_full$n_files,
-  `κ`         = sapply(per_paper_full$kappa,    fmt3),
-  `Macro F1`  = sapply(per_paper_full$macro_f1, fmt1),
-  `MCC`       = sapply(per_paper_full$mcc,      fmt3),
-  `Type acc`  = sapply(per_paper_full$type_acc, fmt1),
-  `Group acc` = sapply(per_paper_full$group_acc, fmt1),
-  `DG acc`    = sapply(per_paper_full$dg_acc,    fmt1),
+  Paper       = top_err_papers$paper_id,
+  `N files`   = top_err_papers$n_files,
+  `κ`         = sapply(top_err_papers$kappa,    fmt3),
+  `Type acc`  = sapply(top_err_papers$type_acc, fmt1),
+  `Group acc` = sapply(top_err_papers$group_acc, fmt1),
+  `Top error` = top_err_papers$top_err,
   check.names = FALSE, stringsAsFactors = FALSE
 )))
+BR()
+L("_Full per-paper breakdown in appendix.md._")
 BR()
 L("---")
 BR()
 
-# ── 8. Misclassified Files ────────────────────────────────────────────────────
+# ── 8. Misclassified Files (top offenders only — full list in appendix) ───────
 
-L("## 8. Misclassified Files")
-BR()
-L("### 8a. Type wrong")
+L("## 8. Misclassified Files — Top Offenders")
 BR()
 wrong_type <- acc[!is.na(acc$type_gt) & !is.na(acc$type) & acc$type_gt != acc$type, ]
+wrong_group <- acc[
+  !is.na(acc$group_gt) & !is.na(acc$group) & acc$group_gt != acc$group &
+  !is.na(acc$type_gt)  & acc$type_gt == acc$type, ]
+
+L("### 8a. Type wrong — top 30 by error pair frequency")
+BR()
 if (nrow(wrong_type) == 0) {
   L("_No type misclassifications._")
 } else {
+  wrong_type$pair  <- paste0(wrong_type$type_gt, "→", wrong_type$type)
+  sec8_pair_counts <- sort(table(wrong_type$pair), decreasing = TRUE)
+  top_pair_names   <- names(head(sec8_pair_counts, 10))
+  top_wrong        <- wrong_type[wrong_type$pair %in% top_pair_names, ]
+  top_wrong       <- head(top_wrong[order(top_wrong$pair, top_wrong$paper_id), ], 30)
   wrong_tbl <- data.frame(
-    Paper         = wrong_type$paper_id,
-    File          = wrong_type$rel_path,
-    `GT type`     = wrong_type$type_gt,
-    `Pred type`   = wrong_type$type,
-    `GT group`    = if ("group_gt"     %in% names(wrong_type)) wrong_type$group_gt    else NA_character_,
-    `Pred group`  = if ("group"        %in% names(wrong_type)) wrong_type$group       else NA_character_,
-    `type_source` = if ("type_source"  %in% names(wrong_type)) wrong_type$type_source else NA_character_,
+    Paper         = top_wrong$paper_id,
+    File          = top_wrong$rel_path,
+    `GT type`     = top_wrong$type_gt,
+    `Pred type`   = top_wrong$type,
+    `type_source` = if ("type_source" %in% names(top_wrong)) top_wrong$type_source else NA_character_,
     check.names   = FALSE, stringsAsFactors = FALSE
   )
-  L(md_table(wrong_tbl[order(wrong_tbl$Paper, wrong_tbl$`GT type`), ]))
+  L(md_table(wrong_tbl))
 }
 BR()
 
-L("### 8b. Group wrong (type correct)")
+L("### 8b. Group wrong (type correct) — top 30")
 BR()
-wrong_group <- acc[
-  !is.na(acc$type_gt) & acc$type_gt == "data" &
-  !is.na(acc$type)    & acc$type    == "data" &
-  !is.na(acc$group_gt) & !is.na(acc$group) &
-  acc$group_gt != acc$group, ]
 if (nrow(wrong_group) == 0) {
   L("_No group misclassifications._")
 } else {
+  top_wg <- head(wrong_group[order(wrong_group$paper_id, wrong_group$group_gt), ], 30)
   wg_tbl <- data.frame(
-    Paper         = wrong_group$paper_id,
-    File          = wrong_group$rel_path,
-    `GT group`    = wrong_group$group_gt,
-    `Pred group`  = wrong_group$group,
-    `type_source` = if ("type_source" %in% names(wrong_group)) wrong_group$type_source else NA_character_,
-    check.names   = FALSE, stringsAsFactors = FALSE
+    Paper        = top_wg$paper_id,
+    File         = top_wg$rel_path,
+    `GT type`    = top_wg$type_gt,
+    `GT group`   = top_wg$group_gt,
+    `Pred group` = top_wg$group,
+    check.names  = FALSE, stringsAsFactors = FALSE
   )
-  L(md_table(wg_tbl[order(wg_tbl$Paper, wg_tbl$`GT group`), ]))
+  L(md_table(wg_tbl))
 }
+BR()
+L("_Full misclassified file lists in appendix.md._")
 BR()
 
 # ── Write MD ──────────────────────────────────────────────────────────────────
@@ -854,6 +1079,80 @@ run_dir  <- file.path(REPORT_DIR, paste0("normal_report_", date_str))
 dir.create(run_dir, recursive = TRUE, showWarnings = FALSE)
 out_path <- file.path(run_dir, "report.md")
 writeLines(lines, out_path)
+
+# ── Write appendix.md ─────────────────────────────────────────────────────────
+
+app <- character(0)
+A  <- function(...) { app <<- c(app, paste0(...)) }
+AB <- function()    { app <<- c(app, "") }
+
+A("# Appendix — ", format(Sys.time(), "%Y-%m-%d %H:%M:%S"))
+AB()
+A("_Full tables omitted from main report to reduce file size._")
+AB()
+A("---")
+AB()
+
+A("## A1. Full Per-Paper Breakdown")
+AB()
+A(md_table(data.frame(
+  Paper       = per_paper_full$paper_id,
+  `N files`   = per_paper_full$n_files,
+  `κ`         = sapply(per_paper_full$kappa,    fmt3),
+  `Macro F1`  = sapply(per_paper_full$macro_f1, fmt1),
+  `MCC`       = sapply(per_paper_full$mcc,      fmt3),
+  `Type acc`  = sapply(per_paper_full$type_acc, fmt1),
+  `Group acc` = sapply(per_paper_full$group_acc, fmt1),
+  `DG acc`    = sapply(per_paper_full$dg_acc,    fmt1),
+  `Top error` = per_paper_full$top_err,
+  `Top ext`   = per_paper_full$top_ext,
+  check.names = FALSE, stringsAsFactors = FALSE
+)))
+AB()
+A("---")
+AB()
+
+A("## A2. All Type Misclassifications")
+AB()
+if (nrow(wrong_type) == 0) {
+  A("_None._")
+} else {
+  wrong_tbl_full <- data.frame(
+    Paper         = wrong_type$paper_id,
+    File          = wrong_type$rel_path,
+    `GT type`     = wrong_type$type_gt,
+    `Pred type`   = wrong_type$type,
+    `GT group`    = if ("group_gt"    %in% names(wrong_type)) wrong_type$group_gt    else NA_character_,
+    `Pred group`  = if ("group"       %in% names(wrong_type)) wrong_type$group       else NA_character_,
+    `type_source` = if ("type_source" %in% names(wrong_type)) wrong_type$type_source else NA_character_,
+    check.names   = FALSE, stringsAsFactors = FALSE
+  )
+  A(md_table(wrong_tbl_full[order(wrong_tbl_full$Paper, wrong_tbl_full$`GT type`), ]))
+}
+AB()
+A("---")
+AB()
+
+A("## A3. All Group Misclassifications (type correct)")
+AB()
+if (nrow(wrong_group) == 0) {
+  A("_None._")
+} else {
+  wg_tbl_full <- data.frame(
+    Paper        = wrong_group$paper_id,
+    File         = wrong_group$rel_path,
+    `GT type`    = wrong_group$type_gt,
+    `GT group`   = wrong_group$group_gt,
+    `Pred group` = wrong_group$group,
+    check.names  = FALSE, stringsAsFactors = FALSE
+  )
+  A(md_table(wg_tbl_full[order(wg_tbl_full$Paper, wg_tbl_full$`GT group`), ]))
+}
+AB()
+
+app_path <- file.path(run_dir, "appendix.md")
+writeLines(app, app_path)
+cat(sprintf("  [appendix] written to: %s\n", app_path))
 cat(sprintf("  [report] written to: %s\n", out_path))
 
 # ── Visualisations ────────────────────────────────────────────────────────────
@@ -1099,4 +1398,120 @@ if (!is.null(cm_df) && nrow(cm_df) > 1) {
   heatmap_plot(cm_df, "data_format Confusion Matrix (row-normalised, data files only)")
   invisible(dev.off())
   cat(sprintf("  [plot]   written to: %s\n", png_df))
+}
+
+# ── Plot 14: type_source accuracy heatmap ─────────────────────────────────────
+
+if (length(src_data_4d) >= 2) {
+  metrics_4d <- c("Type (paper avg)", "Type (file pool)",
+                  "Group (paper avg)", "Group (file pool)",
+                  "Granularity (paper avg)", "Granularity (file pool)")
+  mat_4d <- do.call(rbind, lapply(src_data_4d, function(v)
+    c(v["pa_type"], v["fp_type"], v["pa_grp"], v["fp_grp"], v["pa_dg"], v["fp_dg"])
+  ))
+  rownames(mat_4d) <- names(src_data_4d)
+  colnames(mat_4d) <- metrics_4d
+  mat_4d[is.na(mat_4d)] <- 0
+
+  png_src <- file.path(run_dir, "src_heatmap.png")
+  png(png_src, width = 800, height = 120 + nrow(mat_4d) * 80, res = 100)
+  col_ramp <- colorRampPalette(c("#f7fbff", "#2171b5"))(100)
+  old_par  <- par(mar = c(10, 12, 3, 2))
+  image(t(mat_4d / 100)[, nrow(mat_4d):1], col = col_ramp, axes = FALSE,
+        zlim = c(0, 1), main = "Accuracy by type_source — paper avg & file pool")
+  axis(1, at = seq(0, 1, length.out = ncol(mat_4d)), labels = metrics_4d, las = 2, cex.axis = 0.85)
+  axis(2, at = seq(1, 0, length.out = nrow(mat_4d)), labels = rownames(mat_4d), las = 1, cex.axis = 0.9)
+  for (i in seq_len(nrow(mat_4d)))
+    for (j in seq_len(ncol(mat_4d))) {
+      xi <- (j - 1) / (ncol(mat_4d) - 1)
+      yi <- 1 - (i - 1) / max(nrow(mat_4d) - 1, 1)
+      text(xi, yi, sprintf("%.1f%%", mat_4d[i, j]), cex = 0.85,
+           col = if (mat_4d[i, j] > 60) "white" else "black")
+    }
+  par(old_par); invisible(dev.off())
+  cat(sprintf("  [plot]   written to: %s\n", png_src))
+}
+
+# ── Plot 15: granularity_source accuracy heatmap ──────────────────────────────
+
+if ("granularity_source" %in% names(acc)) {
+  dg_plot <- acc[!is.na(acc$data_granularity_gt) & !is.na(acc$data_granularity) &
+                 !is.na(acc$granularity_source), ]
+  if (nrow(dg_plot) > 0) {
+    gsrcs <- sort(unique(dg_plot$granularity_source))
+    gran_mat <- do.call(rbind, lapply(gsrcs, function(gs) {
+      rows   <- dg_plot[dg_plot$granularity_source == gs, ]
+      fp_acc <- 100 * sum(rows$data_granularity_gt == rows$data_granularity) / nrow(rows)
+      pa_acc <- mean(sapply(unique(rows$paper_id), function(p) {
+        r <- rows[rows$paper_id == p, ]
+        if (nrow(r) == 0) return(NA_real_)
+        100 * sum(r$data_granularity_gt == r$data_granularity) / nrow(r)
+      }), na.rm = TRUE)
+      c(pa = pa_acc, fp = fp_acc)
+    }))
+    rownames(gran_mat) <- gsrcs
+    colnames(gran_mat) <- c("Paper avg", "File pool")
+
+    png_gsrc <- file.path(run_dir, "gran_src_heatmap.png")
+    png(png_gsrc, width = 500, height = 120 + nrow(gran_mat) * 80, res = 100)
+    col_ramp <- colorRampPalette(c("#f7fbff", "#2171b5"))(100)
+    old_par  <- par(mar = c(6, 16, 3, 2))
+    image(t(gran_mat / 100)[, nrow(gran_mat):1], col = col_ramp, axes = FALSE,
+          zlim = c(0, 1), main = "Granularity accuracy by source")
+    axis(1, at = c(0, 1), labels = colnames(gran_mat), las = 1, cex.axis = 0.9)
+    axis(2, at = seq(1, 0, length.out = nrow(gran_mat)), labels = rownames(gran_mat), las = 1, cex.axis = 0.85)
+    for (i in seq_len(nrow(gran_mat)))
+      for (j in seq_len(ncol(gran_mat))) {
+        xi <- (j - 1) / max(ncol(gran_mat) - 1, 1)
+        yi <- 1 - (i - 1) / max(nrow(gran_mat) - 1, 1)
+        text(xi, yi, sprintf("%.1f%%", gran_mat[i, j]), cex = 0.9,
+             col = if (gran_mat[i, j] > 60) "white" else "black")
+      }
+    par(old_par); invisible(dev.off())
+    cat(sprintf("  [plot]   written to: %s\n", png_gsrc))
+  }
+}
+
+# ── Plot 16: file type × method accuracy heatmap (paper-avg) ─────────────────
+
+plot_type_method_heatmap <- function(mat, n_mat, title, filename) {
+  keep_rows <- apply(mat, 1, function(r) any(!is.na(r)))
+  pm <- mat[keep_rows, , drop = FALSE]
+  nm <- n_mat[keep_rows, , drop = FALSE]
+  pm[is.na(pm)] <- 0
+  n_rows <- nrow(pm); n_cols <- ncol(pm)
+  png(filename, width = 200 + n_cols * 200, height = 150 + n_rows * 60, res = 100)
+  col_ramp <- colorRampPalette(c("#f7fbff", "#2171b5"))(100)
+  old_par  <- par(mar = c(6, 12, 3, 2))
+  image(t(pm / 100)[, n_rows:1], col = col_ramp, axes = FALSE,
+        zlim = c(0, 1), main = title)
+  axis(1, at = seq(0, 1, length.out = n_cols), labels = colnames(pm), las = 2, cex.axis = 0.85)
+  axis(2, at = seq(1, 0, length.out = n_rows), labels = rownames(pm), las = 1, cex.axis = 0.85)
+  for (i in seq_len(n_rows))
+    for (j in seq_len(n_cols)) {
+      xi  <- if (n_cols > 1) (j - 1) / (n_cols - 1) else 0.5
+      yi  <- 1 - (i - 1) / max(n_rows - 1, 1)
+      val <- pm[i, j]; n_v <- nm[i, j]
+      lbl <- if (n_v > 0) sprintf("%.0f%%\nn=%d", val, n_v) else "—"
+      text(xi, yi, lbl, cex = 0.75, col = if (val > 60) "white" else "black")
+    }
+  par(old_par); invisible(dev.off())
+}
+
+# ── Plot 16: file type × method — paper-avg ───────────────────────────────────
+
+if (exists("pa_mat") && any(!is.na(pa_mat)) && ncol(pa_mat) >= 1) {
+  png_tm <- file.path(run_dir, "type_method_heatmap.png")
+  plot_type_method_heatmap(pa_mat, n_mat,
+    "Type accuracy by file type × method (paper-avg)", png_tm)
+  cat(sprintf("  [plot]   written to: %s\n", png_tm))
+}
+
+# ── Plot 17: file type × method — file-pooled ────────────────────────────────
+
+if (exists("fp_mat") && any(!is.na(fp_mat)) && ncol(fp_mat) >= 1) {
+  png_tm_fp <- file.path(run_dir, "type_method_heatmap_fp.png")
+  plot_type_method_heatmap(fp_mat, n_mat,
+    "Type accuracy by file type × method (file-pooled)", png_tm_fp)
+  cat(sprintf("  [plot]   written to: %s\n", png_tm_fp))
 }

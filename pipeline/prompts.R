@@ -637,8 +637,13 @@ Classification rules:
 - \"individual\": Pattern contains participant identifier (sub_\\d+, s\\d+, P\\d+, pp\\d+, ID\\d+, participant_\\d+, etc.)
 - \"individual\": Pure numeric filename stem (^\\d+, e.g., 1.mat, 2.mat, 123.dat) → strong indicator of participant ID
 - \"individual\": Multiple numeric-indexed files (_1, _2, _3, etc.) indicating separate data per participant
+- \"individual\": ANY consistent prefix+number pattern where only the number varies across many files —
+  even non-standard prefixes (e.g., IFFControl2C.xls, IFFControl11C.xls, Subject3.csv, Cond7.dat)
+  are per-participant when the number is the only varying part across a large set of files
+- \"individual\": pattern=(multiple patterns) with examples showing participant-like structure → infer from examples
+- \"combined\": Single file or name contains no varying numeric component (data.csv, all_data.xlsx, results_final.sav)
 - \"combined\": Pattern lacks participant identifier (data, results, raw, etc.) indicating all participants in one file
-- Default to \"combined\" if unsure.
+- When many files (10+) share the same extension and only a number varies → default to \"individual\"
 
 EXAMPLES:
 Input: exp/data/Exp2: pattern=Exp\\\\d+_\\\\d+\\\\.dat examples=Exp2_1.dat, Exp2_10.dat, Exp2_11.dat
@@ -648,5 +653,9 @@ Output: [{\"folder_path\": \"exp/data/Exp2\", \"granularity\": \"individual\"}]
 Input: data/RawResponses: pattern=^\\\\d+\\\\.mat examples=1.mat, 50.mat, 149.mat
 Output: [{\"folder_path\": \"data/RawResponses\", \"granularity\": \"individual\"}]
 (Reason: pure numeric filename stems without parent labels are participant ID indicators)
+
+Input: Control/RA_IATData: pattern=(multiple patterns) examples=IFFControl2C.xls, IFFControl11C.xls, IFFControl17C.xls
+Output: [{\"folder_path\": \"Control/RA_IATData\", \"granularity\": \"individual\"}]
+(Reason: IFFControl2C, IFFControl11C — consistent prefix+varying number = one file per participant)
 
 Return ONLY the JSON array. No notes. Echo folder_path exactly as it appears in the input."

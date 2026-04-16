@@ -10,7 +10,7 @@ source("data_check/pipeline/0_index.R")
 # ── Config ────────────────────────────────────────────────────────────────────
 
 FULL_RUN       <- TRUE         # TRUE = no LLM call caps (file classification + col_type)
-SKIP_COLUMNS   <- FALSE         # TRUE = skip column extraction (file indexing only)
+SKIP_COLUMNS   <- TRUE         # TRUE = skip column extraction (file indexing only)
 RERUN_COLUMNS  <- FALSE        # TRUE = re-run column extraction for papers previously run
                                #   without it (no columns.csv exists).  Forces
                                #   SKIP_COLUMNS=FALSE, FROM_LOCAL=TRUE, DOWNLOAD=FALSE.

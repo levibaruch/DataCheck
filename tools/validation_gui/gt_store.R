@@ -135,29 +135,49 @@ write_gt <- function(paper_id, gt_df) {
 
 # ── Paper completion helpers ──────────────────────────────────────────────────
 
-# Returns a named logical vector (paper_id → complete?).
-# A paper is complete if its GT file has at least as many rows as its structure.
+# Returns a named character vector (paper_id → "complete" | "partial" | "none").
+#   "complete" — GT rows >= structure rows (fully annotated)
+#   "partial"  — GT file exists with at least one row but fewer than structure
+#   "none"     — no GT file or GT is empty
 paper_is_complete <- function(papers) {
   outputs_dir <- get_outputs_dir()
   gt_dir      <- get_gt_dir()
   osf_out <- if (basename(outputs_dir) == "osf") outputs_dir else file.path(outputs_dir, "osf")
   osf_gt  <- if (basename(gt_dir)      == "osf") gt_dir      else file.path(gt_dir,      "osf")
-  result <- vapply(papers, function(pid) {
+  vapply(papers, function(pid) {
     struct_path <- file.path(osf_out, pid, "structure.csv")
     gt_path     <- file.path(osf_gt, paste0(pid, ".csv"))
-    if (!file.exists(struct_path) || !file.exists(gt_path)) return(FALSE)
+    if (!file.exists(struct_path) || !file.exists(gt_path)) return("none")
     tryCatch({
       n_struct <- nrow(read.csv(struct_path, stringsAsFactors = FALSE))
-      n_gt     <- nrow(read.csv(gt_path, stringsAsFactors = FALSE))
-      n_struct > 0L && n_gt >= n_struct
-    }, error = function(e) FALSE)
-  }, logical(1L))
-  result
+      n_gt     <- nrow(read.csv(gt_path,     stringsAsFactors = FALSE))
+      if (n_struct == 0L)         return("none")
+      if (n_gt >= n_struct)       return("complete")
+      if (n_gt > 0L)              return("partial")
+      "none"
+    }, error = function(e) "none")
+  }, character(1L))
+}
+
+# Returns a named integer vector: paper_id → number of files in structure.csv.
+# Papers whose structure.csv is missing or unreadable get 0L.
+get_paper_sizes <- function(papers) {
+  outputs_dir <- get_outputs_dir()
+  osf_out <- if (basename(outputs_dir) == "osf") outputs_dir
+             else file.path(outputs_dir, "osf")
+  vapply(papers, function(pid) {
+    path <- file.path(osf_out, pid, "structure.csv")
+    if (!file.exists(path)) return(0L)
+    tryCatch(nrow(read.csv(path, stringsAsFactors = FALSE)), error = function(e) 0L)
+  }, integer(1L))
 }
 
 # Returns a named character vector suitable for selectInput choices.
-# Complete papers are prefixed with a checkmark in their display label.
+#   ✓  = complete, ~  = partial, (no prefix) = not started
 make_paper_choices <- function(papers, completion) {
-  labels <- ifelse(completion[papers], paste0("\u2713 ", papers), papers)
+  st     <- completion[papers]
+  labels <- ifelse(st == "complete", paste0("\u2713 ", papers),
+            ifelse(st == "partial",  paste0("~ ",     papers),
+                                     papers))
   setNames(papers, labels)
 }

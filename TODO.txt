@@ -10,22 +10,8 @@ Done items are marked  [x]
 
 
 collumns that are send to LLM should have date as a selector
-────────────────────────────────────────────────────────────────────────
-  0956797614535937
-  software: Python online task scripts — code vs software boundary
-────────────────────────────────────────────────────────────────────────
-  [v2] running...
-── Unpacking 1 archive(s)
-  skipping (already unpacked): online_materials.zip
-Querying LLM [==================================================] 1/1 00:00:05
 
-── File inventory ──────────────────────────────
-
-  code / shared  coden / shared   data / shared readme / shared 
-             25               1               2               1 
-
-sanatize outputs! (coden)
-
+When the LLM does a fallback in 0_index and everything comes out as shared/other; this is an indication of a big mistake. We should retry if that happens instead of allowing a simple failure and log it
 
 
 ================================================================================
@@ -116,12 +102,6 @@ Papers `315593071` and `615605818`. When a folder clearly contains files spannin
 
 ---
 
-### Config files → software
-
-Paper `6177372128`. Configuration files (`.cfg`, `.ini`, `.toml`, `.yaml`, `.json` used purely for settings) should be `"software"`, not `"other"` or `"code"`. Currently none of these extensions are in `AGGREGATE_EXT_OVERRIDE`. The LLM usually gets `.json` wrong (it often says `"data"` because JSON holds structured content). A targeted override or prompt example would help.
-
----
-
 ### Dummy / placeholder files → other
 
 Paper `620929302`. Some repositories include clearly synthetic or placeholder files (e.g., `example_data.csv`, `dummy.sav`, `test_output.csv`). The correct label is `"other"`. There is no current rule for this — the LLM typically labels them as `"data"`. A filename heuristic covering `"example"`, `"dummy"`, `"test"`, `"placeholder"` could catch these before the LLM.
@@ -208,5 +188,137 @@ TODO
 Supplemental should be split between Manuscript and Supplemental, since manuscripts are qualitatively different and usefull to seperate/
 
 
-
 TODO : there is no comphensive logging right now that would be useful for an user. Only a collection os CSV's. This should be implemented at some point
+── Aggregate [Correlates_of_hallucinatory_experiences_in/tasks/online_study_code/jsPsych-master-6.1/tests/plugins/.js]: 34 files → type=other, group=shared
+bad!
+
+── Aggregate [ntwek/Putnam_Sungkhasettee_amp_Roediger_Materials/Materials/PSR Psych Science E1 Materials/PSR_Psych_Science_E1_Materials/test/.csv]: 36 files → type=data, group=ex1
+── Aggregate [ntwek/Putnam_Sungkhasettee_amp_Roediger_Materials/Materials/PSR Psych Science E1 Materials/PSR_Psych_Science_E1_Materials/textSequences/.csv]: 36 files → type=data, group=ex1
+Querying LLM [==================================================] 1/1 00:00:03
+── US3: Inferred granularity 'individual' for 36 file(s) in test (pattern: (multiple patterns))
+── US3: Inferred granularity 'individual' for 36 file(s) in textSequences (pattern: (multiple patterns))
+
+── File inventory ──────────────────────────────
+bad! Should be sequence, therefore a software/materials!
+
+study 1a-beer reasons_demo.csv,csv,data,aggregate_llm,ex1a,Scarcity_Frames_Value/Methods_and_Data/framing,individual
+study 1a-beer reasons_Sheet1.csv,csv,data,aggregate_llm,ex1a,Scarcity_Frames_Value/Methods_and_Data/framing,individual
+study 1a-beer reasons_Sheet3.csv,csv,data,aggregate_llm,ex1a,Scarcity_Frames_Value/Methods_and_Data/framing,individual
+study 1b-beer wtp_data.csv,csv,data,aggregate_llm,ex1a,Scarcity_Frames_Value/Methods_and_Data/framing,individual
+study 1b-beer wtp_demographics.csv,csv,data,aggregate_llm,ex1a,Scarcity_Frames_Value/Methods_and_Data/framing,individual
+study 1c-beer replication_Sheet1.csv,csv,data,aggregate_llm,ex1a,Scarcity_Frames_Value/Methods_and_Data/framing,individual
+study 1c-beer replication_Sheet2.csv,csv,data,aggregate_llm,ex1a,Scarcity_Frames_Value/Methods_and_Data/framing,individual
+study 1d&2c-full-ssi-beer and weber_Sheet1.csv,csv,data,aggregate_llm,ex1a,Scarcity_Frames_Value/Methods_and_Data/framing,individual
+study 1d&2c-full-ssi-beer and weber_Sheet2.csv,csv,data,aggregate_llm,ex1a,Scarcity_Frames_Value/Methods_and_Data/framing,individual
+study 2a-appliance reasons-size of discount_Sheet1.csv,csv,data,aggregate_llm,ex1a,Scarcity_Frames_Value/Methods_and_Data/framing,individual
+study 2a-appliance reasons-size of discount_Sheet2.csv,csv,data,aggregate_llm,ex1a,Scarcity_Frames_Value/Methods_and_Data/framing,individual
+study 2b-tablet_Sheet1.csv,csv,data,aggregate_llm,ex1a,Scarcity_Frames_Value/Methods_and_Data/framing,individual
+study 2b-tablet_Sheet2.csv,csv,data,aggregate_llm,ex1a,Scarcity_Frames_Value/Methods_and_Data/framing,individual
+study 2d-appliance range_Sheet1.csv,csv,data,aggregate_llm,ex1a,Scarcity_Frames_Value/Methods_and_Data/framing,individual
+study 2d-appliance range_Sheet2.csv,csv,data,aggregate_llm,ex1a,Scarcity_Frames_Value/Methods_and_Data/framing,individual
+study 3-affect heuristic_Sheet1.csv,csv,data,aggregate_llm,ex1a,Scarcity_Frames_Value/Methods_and_Data/framing,individual
+study 3-affect heuristic_Sheet2.csv,csv,data,aggregate_llm,ex1a,Scarcity_Frames_Value/Methods_and_Data/framing,individual
+study 4-accessible acccounts_Sheet1.csv,csv,data,aggregate_llm,ex1a,Scarcity_Frames_Value/Methods_and_Data/framing,individual
+study 4-accessible acccounts_Sheet2.csv,csv,data,aggregate_llm,ex1a,Scarcity_Frames_Value/Methods_and_Data/framing,individual
+study 4-accessible acccounts_Sheet4.csv,csv,data,aggregate_llm,ex1a,Scarcity_Frames_Value/Methods_and_Data/framing,individual
+study 5-accessible-dieting_demo.csv,csv,data,aggregate_llm,ex1a,Scarcity_Frames_Value/Methods_and_Data/framing,individual
+study 5-accessible-dieting_Sheet1.csv,csv,data,aggregate_llm,ex1a,Scarcity_Frames_Value/Methods_and_Data/framing,individual
+study 6-accessible-feud_cric.csv,csv,data,aggregate_llm,ex1a,Scarcity_Frames_Value/Methods_and_Data/framing,individual
+study 6-accessible-feud_demo.csv,csv,data,aggregate_llm,ex1a,Scarcity_Frames_Value/Methods_and_Data/framing,individual
+
+Obviously not individual data; the regex allowance is way too lenient, just two hits is not a real pattern. Maybe min-5 pattern?
+
+
+
+── Aggregate [From_pictures_to_the_people/Study_2/Experiment_Program_JavaScript_using_jspysch/Experiment Files (Local)/Experiment_Files_Local/jspsych-6.1.0/plugins/.js]: 39 files → type=code, group=ex2
+Should obviously be software
+
+
+══════════════════════════════════════════════════════════════════════
+  Run 113 / 864  (overall 114 / 865)  —  0956797616672268
+══════════════════════════════════════════════════════════════════════
+[1] "0956797616672268"
+── Unpacking 2 archive(s)
+  skipping (already unpacked): PSR Psych Science E1 Materials.zip
+  skipping (already unpacked): PSR Psych Science E2 Materials.zip
+── Removed 2204 duplicate file(s) (same name, size, and content)
+── Aggregate folder: ntwek/Putnam_Sungkhasettee_amp_Roediger_Materials/Materials/PSR Psych Science E1 Materials/PSR_Psych_Science_E1_Materials/slideShow1-2 / .jpg → 50 files, 5 sample path(s)
+── Aggregate folder: ntwek/Putnam_Sungkhasettee_amp_Roediger_Materials/Materials/PSR Psych Science E1 Materials/PSR_Psych_Science_E1_Materials/slideShow2-2 / .jpg → 50 files, 5 sample path(s)
+── Aggregate folder: ntwek/Putnam_Sungkhasettee_amp_Roediger_Materials/Materials/PSR Psych Science E1 Materials/PSR_Psych_Science_E1_Materials/slideShow3-2 / .jpg → 50 files, 5 sample path(s)
+── Aggregate folder: ntwek/Putnam_Sungkhasettee_amp_Roediger_Materials/Materials/PSR Psych Science E1 Materials/PSR_Psych_Science_E1_Materials/slideShow4-2 / .jpg → 49 files, 5 sample path(s)
+── Aggregate folder: ntwek/Putnam_Sungkhasettee_amp_Roediger_Materials/Materials/PSR Psych Science E1 Materials/PSR_Psych_Science_E1_Materials/slideShow6-2 / .jpg → 50 files, 5 sample path(s)
+── Aggregate folder: ntwek/Putnam_Sungkhasettee_amp_Roediger_Materials/Materials/PSR Psych Science E1 Materials/PSR_Psych_Science_E1_Materials/slideShow7-2 / .jpg → 50 files, 5 sample path(s)
+── Aggregate folder: ntwek/Putnam_Sungkhasettee_amp_Roediger_Materials/Materials/PSR Psych Science E1 Materials/PSR_Psych_Science_E1_Materials/test / .csv → 36 files, 5 sample path(s)
+── Aggregate folder: ntwek/Putnam_Sungkhasettee_amp_Roediger_Materials/Materials/PSR Psych Science E1 Materials/PSR_Psych_Science_E1_Materials/textSequences / .csv → 36 files, 5 sample path(s)
+Querying LLM [==================================================] 1/1 00:00:06
+Querying LLM [==================================================] 1/1 00:00:06
+Querying LLM [==================================================] 1/1 00:00:05
+Querying LLM [==================================================] 1/1 00:00:05
+Querying LLM [==================================================] 1/1 00:00:08
+Querying LLM [==================================================] 1/1 00:00:08
+Querying LLM [==================================================] 1/1 00:00:09
+Querying LLM [==================================================] 1/1 00:00:09
+Querying LLM [==================================================] 1/1 00:00:06
+── LLM chunk 1 retry 1/4 ──
+Querying LLM [==================================================] 1/1 00:00:06
+Querying LLM [==================================================] 1/1 00:00:04
+── Aggregate [ntwek/Putnam_Sungkhasettee_amp_Roediger_Materials/Materials/PSR Psych Science E1 Materials/PSR_Psych_Science_E1_Materials/slideShow1-2/.jpg]: 50 files → type=asset, group=ex1
+── Aggregate [ntwek/Putnam_Sungkhasettee_amp_Roediger_Materials/Materials/PSR Psych Science E1 Materials/PSR_Psych_Science_E1_Materials/slideShow2-2/.jpg]: 50 files → type=asset, group=ex1
+── Aggregate [ntwek/Putnam_Sungkhasettee_amp_Roediger_Materials/Materials/PSR Psych Science E1 Materials/PSR_Psych_Science_E1_Materials/slideShow3-2/.jpg]: 50 files → type=asset, group=ex1
+── Aggregate [ntwek/Putnam_Sungkhasettee_amp_Roediger_Materials/Materials/PSR Psych Science E1 Materials/PSR_Psych_Science_E1_Materials/slideShow4-2/.jpg]: 49 files → type=asset, group=ex1
+── Aggregate [ntwek/Putnam_Sungkhasettee_amp_Roediger_Materials/Materials/PSR Psych Science E1 Materials/PSR_Psych_Science_E1_Materials/slideShow6-2/.jpg]: 50 files → type=asset, group=ex1
+── Aggregate [ntwek/Putnam_Sungkhasettee_amp_Roediger_Materials/Materials/PSR Psych Science E1 Materials/PSR_Psych_Science_E1_Materials/slideShow7-2/.jpg]: 50 files → type=asset, group=ex1
+── Aggregate [ntwek/Putnam_Sungkhasettee_amp_Roediger_Materials/Materials/PSR Psych Science E1 Materials/PSR_Psych_Science_E1_Materials/test/.csv]: 36 files → type=data, group=ex1
+── Aggregate [ntwek/Putnam_Sungkhasettee_amp_Roediger_Materials/Materials/PSR Psych Science E1 Materials/PSR_Psych_Science_E1_Materials/textSequences/.csv]: 36 files → type=data, group=ex1 SHOULD BE SOFTWARE OR SUPPLEMENTAL! SEQUENCES ARE NOT DATA!
+
+
+[USER] Sentinel grouping problem: multiple experiments within one aggregate folder
+  Issue: Single sentinel (aggregate folder) contains files from MULTIPLE experiment groups.
+  Example: Analysis_scripts/.r aggregate has {Bracketing_1a.R, Bracketing_1b.R,
+           Bracketing_2.R, ..., Bracketing_4.R} — files labeled 1a, 1b, 2, 3, 4.
+  Current behavior: LLM samples one file (e.g., Bracketing_1a.R), returns ex1a,
+                   propagates ex1a to ALL 34 files (wrong — others are 1b, 2, 3, 4).
+  Root cause: Sentinel grouping at aggregate level, but files within aggregate belong
+              to different groups. Design assumes homogeneous groups per aggregate.
+  Solutions to evaluate:
+    (1) Skip aggregation for code folders with heterogeneous group markers
+        (route_individually = TRUE for Analysis_scripts)
+    (2) Post-process: detect multiple experiment labels in filenames, split sentinel
+    (3) Apply filename-based group extraction even for aggregates (use patterns)
+  Paper: 09567976211061321 (Taking_a_disagreeing_perspective_improves)
+
+
+══════════════════════════════════════════════════════════════════════
+  Run 151 / 864  (overall 152 / 865)  —  0956797620985832
+══════════════════════════════════════════════════════════════════════
+[1] "0956797620985832"
+── Unpacking 3 archive(s)
+  skipping (already unpacked): local_study_code.zip
+  skipping (already unpacked): online_study_code.zip
+  skipping (already unpacked): threshold_study_code.zip
+── Removed 22 duplicate file(s) (same name, size, and content)
+── Aggregate folder: Correlates_of_hallucinatory_experiences_in/tasks/online_study_code/jsPsych-master-6.1/docs/plugins / .md → 37 files, 5 sample path(s)
+── Aggregate folder: Correlates_of_hallucinatory_experiences_in/tasks/online_study_code/jsPsych-master-6.1/examples / .html → 50 files, 5 sample path(s)
+── Aggregate folder: Correlates_of_hallucinatory_experiences_in/tasks/online_study_code/jsPsych-master-6.1/plugins / .js → 35 files, 5 sample path(s)
+── Aggregate folder: Correlates_of_hallucinatory_experiences_in/tasks/online_study_code/jsPsych-master-6.1/tests/plugins / .js → 34 files, 5 sample path(s)
+── Aggregate folder: Correlates_of_hallucinatory_experiences_in/tasks/online_study_code/sounds/DL / .wav → 37 files, 5 sample path(s)
+── Aggregate folder: Correlates_of_hallucinatory_experiences_in/tasks/online_study_code/sounds/SMT / .wav → 84 files, 5 sample path(s)
+Querying LLM [==================================================] 1/1 00:00:08
+Querying LLM [==================================================] 1/1 00:00:09
+Querying LLM [==================================================] 1/1 00:00:07
+Querying LLM [==================================================] 1/1 00:00:08
+Querying LLM [==================================================] 1/1 00:00:05
+Querying LLM [==================================================] 1/1 00:00:06
+Querying LLM [==================================================] 1/1 00:00:05
+Querying LLM [==================================================] 1/1 00:00:07
+Querying LLM [==================================================] 1/1 00:00:05
+Querying LLM [==================================================] 1/1 00:00:04
+Querying LLM [==================================================] 1/1 00:00:04
+Querying LLM [==================================================] 1/1 00:00:07
+Querying LLM [==================================================] 1/1 00:00:03
+── Aggregate [Correlates_of_hallucinatory_experiences_in/tasks/online_study_code/jsPsych-master-6.1/docs/plugins/.md]: 37 files → type=supplemental, group=shared
+── Aggregate [Correlates_of_hallucinatory_experiences_in/tasks/online_study_code/jsPsych-master-6.1/examples/.html]: 50 files → type=supplemental, group=shared
+── Aggregate [Correlates_of_hallucinatory_experiences_in/tasks/online_study_code/jsPsych-master-6.1/plugins/.js]: 35 files → type=code, group=shared
+── Aggregate [Correlates_of_hallucinatory_experiences_in/tasks/online_study_code/jsPsych-master-6.1/tests/plugins/.js]: 34 files → type=code, group=shared
+
+JS is not CODE, and the context should have obviously shown this was part of a software
