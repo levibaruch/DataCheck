@@ -32,6 +32,16 @@ TEST_LOG_PATH    <- file.path(TEST_DIR, "test_log.csv")
 REPORT_DIR       <- "./data_check/results"
 
 `%||%` <- function(x, y) if (is.null(x) || length(x) == 0) y else x
+# ── Pipeline sources (only needed for full run) ────────────────────────────────
+source("data_check/pipeline/prompts.R", local = TRUE)
+source("data_check/pipeline/0_index.R")
+source("data_check/pipeline/2_codebook_label.R")
+source("data_check/pipeline/3_psychds_convert.R")
+
+LLM_TEMPERATURE <- 0.7
+LLM_THINK_LEVEL <- "high"
+TEST_TITLE <- "NEW_PROMPT_120b_HIGH_0.7"
+llm_model("ollama/gpt-oss:120b-cloud")
 
 # ── Report helpers ─────────────────────────────────────────────────────────────
 
@@ -554,7 +564,6 @@ generate_report <- function() {
   L("Include for future comparison and prompt iteration.")
   BR()
   L("```")
-  source("data_check/pipeline/prompts.R", local = TRUE)
   # Extract just the STRUCTURE_PROMPT string (first element)
   prompt_lines <- strsplit(STRUCTURE_PROMPT, "\n")[[1]]
   L(prompt_lines)
@@ -563,7 +572,7 @@ generate_report <- function() {
 
   # Write
   dir.create(REPORT_DIR, recursive = TRUE, showWarnings = FALSE)
-  out_path <- file.path(REPORT_DIR, paste0("test_report_", date_str, ".md"))
+  out_path <- file.path(REPORT_DIR, paste0("test_report_", date_str, TEST_TITLE, ".md"))
   writeLines(lines, out_path)
   cat(sprintf("  [report] written to: %s\n", out_path))
   invisible(out_path)
@@ -576,11 +585,6 @@ if (REPORT_ONLY) {
   invisible(NULL)
 } else {
 
-# ── Pipeline sources (only needed for full run) ────────────────────────────────
-
-source("data_check/pipeline/0_index.R")
-source("data_check/pipeline/2_codebook_label.R")
-source("data_check/pipeline/3_psychds_convert.R")
 
 dir.create(TEST_OUTPUT_DIR,  recursive = TRUE, showWarnings = FALSE)
 dir.create(TEST_PSYCHDS_DIR, recursive = TRUE, showWarnings = FALSE)

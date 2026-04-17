@@ -1,5 +1,5 @@
 # ── Output directory helper ───────────────────────────────────────────────────
-
+source("data_check/pipeline/ollama.R")
 # Returns TRUE if paper_id is a Harvard Dataverse DOI slug.
 # OSF paper IDs are always numeric strings and never start with "doi_".
 is_dataverse_id <- function(paper_id) {
@@ -496,7 +496,7 @@ llm_batch <- function(paths, system_prompt, user_prefix, key_col, extra_cols,
 
     while (TRUE) {
       llm_params <- list(temperature = LLM_TEMPERATURE, think = LLM_THINK_LEVEL)
-      raw        <- llm(system_prompt = system_prompt, text = chunk_input, params = llm_params)
+      raw        <- llm_ollama(system_prompt = system_prompt, text = chunk_input, params = llm_params)
       last_raw   <- raw
 
       # Try to parse and validate the response.  tryCatch returns either the

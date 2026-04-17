@@ -20,6 +20,7 @@ llm_model("ollama/gpt-oss:20b-cloud")
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 
+
 if (!exists("DATA_DIR"))         DATA_DIR         <- "./data_check/data"
 if (!exists("OUTPUT_DIR"))       OUTPUT_DIR       <- "./data_check/outputs"
 if (!exists("PSYCHDS_OUT_DIR"))  PSYCHDS_OUT_DIR  <- "./data_check/psychds"
@@ -31,6 +32,8 @@ ARCHIVE_EXTS    <- c("zip", "gz", "tar", "tgz", "bz2", "xz", "rar")
 # Any LLM response containing a type not in this set triggers a retry.
 
 
+if (!exists("LLM_TEMPERATURE")) LLM_TEMPERATURE <- 0.7
+if (!exists("LLM_THINK_LEVEL")) LLM_THINK_LEVEL <- "low"
 if (!exists("LLM_BATCH_SIZE"))  LLM_BATCH_SIZE  <- 30
 if (!exists("LLM_RETRY_LIMIT")) LLM_RETRY_LIMIT <- 4L
 if (!exists("LLM_ERROR_LOG"))   LLM_ERROR_LOG   <- "./data_check/logs/llm_batch_errors.log"
