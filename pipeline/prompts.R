@@ -319,12 +319,16 @@ Hard cases — use filename and folder context to decide:
 Echo every path exactly. Output ONLY the JSON array.'
 # end AB TEST v1
 
-# AB TEST v2 (principle-based, 2026-04)
+
+
 # ── File classification headers and body (0_index.R → llm_batch()) ─────────────
 
 SINGLE_HEADER <- 'You are classifying files in a psychology research data repository.
 You will receive a file tree. Return a JSON array in the same order.
 Each element: {"path": "<exact path>", "type": "<type>", "group": "<group>"}
+
+Respond with a JSON array (one element per input object):
+{"path": "<exact path>", "type": "<type>", "group": "<group>"}
 
 CORE PRINCIPLE: classify by purpose, inferred from the filename and full folder path.
 Extension is a weak signal — a .csv can be data, a codebook, or supplemental.
@@ -346,18 +350,33 @@ You will receive one JSON object per folder:
 Respond with a JSON array (one element per input object):
 {"path": "<exact path>", "type": "<type>", "group": "<group>"}
 
+CORE PRINCIPLE: classify by purpose, inferred from the filename and full folder path.
+Extension is a weak signal — a .csv can be data, a codebook, or supplemental.
+A .txt can be participant data. Ask: what was this file made for?
+
+
 '
 
 # Shared taxonomy and rules for both single-file and aggregate classification.
 # Concatenate with SINGLE_HEADER (Phase 1) or AGGREGATE_HEADER (Phase 2).
+STRUCTURE_PROMPT <- '
 
-STRUCTURE_PROMPT <- '── TYPE ──────────────────────────────────────────────────────────────────────
+CORE PRINCIPLE: classify by purpose, inferred from the filename and full folder path.
+Extension is a weak signal — a .csv can be data, a codebook, or supplemental.
+A .txt can be participant data or a codebook. Ask: what was this file made for?
+
+── TYPE ──────────────────────────────────────────────────────────────────────
 data         : contains research measurements — tabular observations, signals,
                or matrices intended for analysis
-codebook     : primary purpose is describing what variables mean. Keywords in
-               name: codebook, data_dictionary, variable_list, coding key, key,
-               variable_key, var_desc, data_guide, labels, legend, metadata;
-               or "variables" at the start/end of the filename.
+codebook     : primary purpose is describing what variables mean. Any of these
+               keywords anywhere in the filename indicates codebook: codebook,
+               data_dictionary, variable_list, coding, variable_key, var_desc,
+               data_guide, labels, legend, metadata.
+               Positional patterns that also indicate codebook:
+                 - "variables" at the start or end of the filename
+                 - "_key" or "-key" as a suffix (e.g. "study1_key.csv",
+                   "sullivanEtAl2014_key.csv")
+                 - filename ending in "_dict", "_dd", or "_cb"
 code         : source file or notebook whose purpose is to generate analyses —
                scripts (.R, .py), syntax files, notebooks (.Rmd, .qmd, .ipynb).
 software     : program or config file whose purpose is to run the experiment —
@@ -380,8 +399,9 @@ asset        : stimulus media (image, audio, or video) actively presented to
                .avi, .mov and similar. Documents (.pdf, .docx, .doc), spreadsheets,
                and scripts are NEVER asset regardless of folder or context.
 other        : no research relevance — OS metadata (.DS_Store, Thumbs.db),
-               lock files, dotfiles. Not a catch-all: if any research use is
-               plausible, use another type.
+               lock files, dotfiles, split-archive parts (.z01, .z02, .z03,
+               .7z.001, .7z.002, .r01, .r02, etc.). Not a catch-all: if any
+               research use is plausible, use another type.
 
 ── GROUP ─────────────────────────────────────────────────────────────────────
 "ex<N>"   : tied to a numbered experiment. The label can be in the folder OR
@@ -400,16 +420,24 @@ other        : no research relevance — OS metadata (.DS_Store, Thumbs.db),
             Never ex<N>. Pretest folders → shared, never pilot.
 "shared"  : everything not tied to a specific numbered experiment or pilot.
 
+── PARTICIPANT-PATTERN FILENAMES ─────────────────────────────────────────────
+Participant ID (subject-NNNN, pNN, participant_NN, etc.) tells you WHOSE file
+it is, not WHAT kind. Check in order:
+  1. Filename contains "config", "params", or "settings", OR has structured
+     config extension (.yaml, .yml, .json, .cfg, .ini, .toml)
+     → apply normal code/software logic (usually software)
+     e.g. "p01_config.json", "subject03_params.yaml" → software
+  2. Otherwise → data
+     e.g. "subject-2294_run1.txt", "p01_session1.log", "subject01.wav" → data
+
 ── HARD CASES: examples show the reasoning ───────────────────────────────────
 Filename is the primary signal for ambiguous extensions:
   "reaction_times.csv"        → data        (measurement name)
   "variable_codebook.csv"     → codebook    (keyword in name)
+  "sullivanEtAl2014_key.csv"  → codebook    (_key suffix)
   "correlations_figure.csv"   → output      (tabular file named after a figure)
   "interview_transcript.docx" → data        (qualitative raw data)
   "consent_form.docx"         → supplemental
-
-Participant-pattern filenames → always data, regardless of extension:
-  "subject-2294_run1.txt", "p01_session1.log", "subject01.wav" → data
 
 .log/.out files — use the strongest available signal, in priority order:
   1. participant/subject ID in filename → data
@@ -429,27 +457,232 @@ Media (.jpg, .png, .wav, .mp4, etc.) — never other:
   otherwise → supplemental
 
 .json: measurement/response filename → data. Config pattern (package.json,
-  *rc.json, *config.json, dotfiles) → other.
+  *rc.json, *config.json, dotfiles) → software.
 .spv: always output (SPSS Viewer file; .sps is code).
+
+Split-archive parts (.z01, .z02, .7z.001, .r01, etc.) → other, regardless
+of the base filename.
 
 Tabular files (.csv, .xlsx, .sav, .dta, .tsv, .dat):
   name contains "graph", "figure", or "plot" → output, not data
+  name contains statistical tests or inferences (correlations, regression,
+    t-test, anova, p-values) → output, not data
   name contains "scores", "processed", or "cleaned" → data, not output
 
 code vs software — use purpose, not extension:
+  STRONG FOLDER SIGNALS (alone sufficient): scripts (.py, .js, .m, etc.) in
+    Task/, Tasks/, Stimuli/, Paradigm/ folders → software. These folder names
+    are rarely overloaded.
+  WEAK FOLDER SIGNALS (require filename corroboration): Materials/,
+    Experiment/, online_materials/, testing/ are common generic names. A
+    script in these folders is software ONLY if the filename also suggests
+    runtime (see filename signals below) OR the path includes a task-specific
+    subfolder (e.g. "Materials/testing/fas-sif/" where "fas-sif" is a task
+    identifier).
   analysis / modelling / cleaning scripts → code
   experiment runners, stimulus apps, compiled binaries → software
   config file serving experiment/task context → software ONLY if it is a
     structured config format (.yaml, .yml, .json, .cfg, .ini, .toml) or a
-    binary runtime file. Human-authored text documents are NOT config files.
+    binary runtime file. Plain .txt and .xml files are NOT automatically
+    config — treat by content, not extension. Human-authored text documents
+    (.rtf, .doc) are NEVER config.
   config file with "analysis", "model", or "params" in name → code
-  .js is almost always software (jsPsych), but if the filename clearly indicates an analysis script
-    (e.g. "regression_analysis.js") → code.
+  FILENAME SIGNALS FOR SOFTWARE: "task", "run", "experiment", "stimulus",
+    "present", "paradigm", numbered task-version sequences (task-1.py,
+    testing-fas-sif-1.py).
+  FILENAME SIGNALS FOR CODE (override folder context): "analysis",
+    "regression", "stats", "model_fit", "clean", "preprocess", "plot_*".
+  .R files are always analysis → code, never software.
+  .js is almost always software (jsPsych); analysis-named .js (e.g.
+    "regression_analysis.js") → code.
 
 "Supplemental Experiment N" / "Supplemental Study N" folders → group "shared"
 Archive and previous-version folders → type of contents, group "shared"
 
 Echo every path exactly. Output ONLY the JSON array.'
+
+
+STRUCTURE_PROMPT_MD <- '
+# File Classification
+
+## Core Principle
+Classify by purpose, inferred from the filename and full folder path.
+Extension is a weak signal — a `.csv` can be data, a codebook, or supplemental.
+A `.txt` can be participant data or a codebook. Ask: what was this file made for?
+
+---
+
+## TYPE
+
+### data
+Contains research measurements — tabular observations, signals, or matrices intended for analysis.
+
+### codebook
+Primary purpose is describing what variables mean.
+
+Any of these keywords anywhere in the filename indicates codebook: codebook, data_dictionary, variable_list, coding, variable_key, var_desc, data_guide, labels, legend, metadata.
+
+Positional patterns that also indicate codebook:
+- `variables` at the start or end of the filename
+- `_key` or `-key` as a suffix (e.g. `study1_key.csv`, `sullivanEtAl2014_key.csv`)
+- Filename ending in `_dict`, `_dd`, or `_cb`
+
+### code
+Source file or notebook whose purpose is to generate analyses.
+- **Examples:** scripts (`.R`, `.py`), syntax files, notebooks (`.Rmd`, `.qmd`, `.ipynb`)
+
+### software
+Program or config file whose purpose is to run the experiment.
+- **Examples:** task runners, stimulus apps, compiled binaries (`.exe`, `.app`, `.jar`, `.msi`, `.dmg`), experiment parameter/config files
+- **Task/experiment runtime files → always software:**
+  - E-Prime: `.ebs2`, `.es2`, `.wndpos`, `.edat`, `.edat2`, `.emrg`
+  - PsychoPy: `.psyexp`
+  - OpenSesame: `.opensesame`, `.osexp`
+- **Never software:** documents (`.pdf`, `.docx`, `.doc`, `.rtf`), even when inside experiment or task folders
+
+### output
+Artefact produced by executing a script.
+- **Examples:** rendered notebooks, figures, graphs, log files, SPSS output (`.spv`), computational byproducts
+- **Fallback:** when provenance is ambiguous → supplemental (not output)
+
+### supplemental
+Human-authored research material not captured above.
+- **Examples:** manuscripts, preregistrations, instruments, consent forms
+- **Role:** fallback when provenance is ambiguous
+
+### readme
+File named README (any capitalisation or extension).
+
+### asset
+Stimulus media actively presented to participants.
+- **Extensions:** `.jpg`, `.png`, `.gif`, `.bmp`, `.tif`, `.wav`, `.mp3`, `.mp4`, `.avi`, `.mov` and similar
+- **Never asset:** documents (`.pdf`, `.docx`, `.doc`), spreadsheets, scripts — regardless of folder or context
+
+### other
+No research relevance.
+- **Examples:** OS metadata (`.DS_Store`, `Thumbs.db`), lock files, dotfiles
+- **Split-archive parts:** `.z01`, `.z02`, `.z03`, `.7z.001`, `.7z.002`, `.r01`, `.r02`, etc. → always `other`, regardless of the base filename
+- **Not a catch-all:** if any research use is plausible, use another type
+
+---
+
+## GROUP
+
+### `ex<N>` — numbered experiment
+Tied to a numbered experiment. The label can be in the folder **or** the filename — either alone is sufficient.
+
+**Folder label examples:**
+- `Study 1/file.csv` → `ex1`
+- `Exp2/p1.dat` → `ex2`
+
+**Filename label examples (folder does NOT also need to carry it):**
+- `s1_data.txt` → `ex1`
+- `s2a_results.csv` → `ex2a`
+- `S3_raw.csv` → `ex3`
+- `Experiment4_data.sav` → `ex4`
+
+**Valid indicators:** `Study`, `Experiment`, `S`, `Exp`, and similar.
+
+**Preserve letter suffixes exactly:** `s3a` → `ex3a`, `Exp2b` → `ex2b`.
+
+**NOT experiment indicators:**
+- Run numbers (`run1`)
+- Subject IDs (`subject-2294`)
+- Version numbers
+- Ordinal levels (`1st_Level`)
+- Sequential file counts (`(1)`, `(2)`, `design2`, `3_Column_Format`)
+- Analysis levels
+
+### `pilot<N>` — pilot study
+Context explicitly indicates a pilot study.
+- No number → `pilot1`
+- Never use `ex<N>` for pilots
+- Pretest folders → `shared`, never `pilot`
+
+### `shared` — everything else
+Everything not tied to a specific numbered experiment or pilot.
+
+---
+
+## PRIORITY RULES (unconditional overrides)
+
+These override any default extension-based classification.
+
+- **`.spv` → always `output`** (SPSS Viewer file; `.sps` is code)
+- **Split-archive parts** (`.z01`, `.z02`, `.7z.001`, `.r01`, etc.) → always `other`
+- **"Supplemental Experiment N" / "Supplemental Study N" folders → group `shared`**
+- **Archive and previous-version folders → type of contents, group `shared`**
+
+---
+
+## DECISION PROCEDURES (ordered — try in sequence)
+
+### Participant-pattern filenames (subject ID, pXX, participant_XX, etc.)
+The participant ID tells you whose file it is, not what kind. Check in order:
+1. Filename contains `config`, `params`, or `settings`, **or** has a structured config extension (`.yaml`, `.yml`, `.json`, `.cfg`, `.ini`, `.toml`) → apply normal `code`/`software` logic (usually `software`)
+2. Otherwise → `data`
+   - Examples routing to `data`: `subject-2294_run1.txt`, `p01_session1.log`, `subject01.wav`
+   - Example routing to `software`: `p01_config.json`, `subject03_params.yaml`
+
+### `.log` / `.out` files
+Use the strongest available signal, in priority order:
+1. Participant/subject ID in filename → `data`
+2. Inside a data-collection folder (not a system `logs/` folder at repo root) → `data`
+3. Otherwise → `output`
+
+### Media files (`.jpg`, `.png`, `.wav`, `.mp4`, etc.)
+Never `other`. Check in order:
+1. Participant/subject ID in filename → `data`
+2. `figure`, `fig`, `plot`, or `graph` in filename → `output`
+3. Context indicates stimulus material → `asset`
+4. Otherwise → `supplemental`
+
+---
+
+## DISAMBIGUATION (pattern-based)
+
+### Filename is the primary signal for ambiguous extensions
+- `reaction_times.csv` → `data` (measurement name)
+- `variable_codebook.csv` → `codebook` (keyword in name)
+- `sullivanEtAl2014_key.csv` → `codebook` (`_key` suffix)
+- `correlations_figure.csv` → `output` (tabular file named after a figure)
+- `interview_transcript.docx` → `data` (qualitative raw data)
+- `consent_form.docx` → `supplemental`
+
+### Tabular files (`.csv`, `.xlsx`, `.sav`, `.dta`, `.tsv`, `.dat`)
+- Name contains `graph`, `figure`, or `plot` → `output`, not `data`
+- Name contains statistical tests or inferences (correlations, regression, t-test, anova, p-values) → `output`, not `data`
+- Name contains `scores`, `processed`, or `cleaned` → `data`, not `output`
+
+### `.mat` files
+- **Default:** `data`
+- **Exception:** filename contains `result`, `output`, `model`, `fit`, `figure`, or `plot` → `output`
+
+### `.html` files
+- Shares a basename with a script in the same folder → `output`
+- Otherwise → `supplemental`
+
+### `.json` files
+- Measurement/response filename → `data`
+- Config pattern (`package.json`, `*rc.json`, `*config.json`, dotfiles) → `software`
+
+### `code` vs `software` — use purpose, not extension
+- **Strong folder signals (alone sufficient):** scripts (`.py`, `.js`, `.m`, etc.) living in `Task/`, `Tasks/`, `Stimuli/`, `Paradigm/` → `software`. These folder names are rarely overloaded.
+- **Weak folder signals (require filename corroboration):** folders like `Materials/`, `Experiment/`, `online_materials/`, `testing/` are common generic names. A script in these folders is `software` **only if** the filename also suggests runtime (see filename signals below) or the path includes a task-specific subfolder (e.g. `Materials/testing/fas-sif/` where `fas-sif` is a task identifier).
+- Analysis, modelling, or cleaning scripts → `code`
+- Experiment runners, stimulus apps, compiled binaries → `software`
+- Config file serving experiment/task context → `software` **only if** it is a structured config format (`.yaml`, `.yml`, `.json`, `.cfg`, `.ini`, `.toml`) or a binary runtime file. Plain `.txt` and `.xml` files are NOT automatically config — treat by content, not extension. Human-authored text documents (`.rtf`, `.doc`) are NEVER config.
+- Config file with `analysis`, `model`, or `params` in name → `code`
+- **Filename signals for `software`:** `task`, `run`, `experiment`, `stimulus`, `present`, `paradigm`, numbered sequences suggesting task versions (`task-1.py`, `testing-fas-sif-1.py`)
+- **Filename signals for `code` (override folder context):** `analysis`, `regression`, `stats`, `model_fit`, `clean`, `preprocess`, `plot_*`
+- `.R` files are always analysis → `code`, never `software`
+- `.js` is almost always `software` (jsPsych); analysis-named `.js` (e.g. `regression_analysis.js`) → `code`
+
+---
+
+## Output
+Echo every path exactly. Output ONLY the JSON array.
+'
 
 
 SCHEMA_STRUCTURE_PROMPT <- r"[You are classifying files in a psychology research data repository.
@@ -632,3 +865,6 @@ Output: [{\"folder_path\": \"Control/RA_IATData\", \"granularity\": \"individual
 (Reason: IFFControl2C, IFFControl11C — consistent prefix+varying number = one file per participant)
 
 Return ONLY the JSON array. No notes. Echo folder_path exactly as it appears in the input."
+
+
+
