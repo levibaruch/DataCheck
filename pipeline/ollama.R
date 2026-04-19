@@ -15,13 +15,16 @@
 
 library(httr2)
 
+`%||%` <- function(x, y) if (is.null(x)) y else x
+
 llm_ollama <- function(text, system_prompt,
                        text_col = "text",
                        model = llm_model(),
                        params = list(),
                        think = NULL,
                        base_url = "http://localhost:11434",
-                       deduplicate = TRUE) {
+                       deduplicate = TRUE,
+                       capture_thinking = FALSE) {
 
   ## extract think from params if passed there (callers may bundle it in) ----
   if ("think" %in% names(params)) {
@@ -90,9 +93,12 @@ llm_ollama <- function(text, system_prompt,
     }
 
     parsed <- resp_body_json(resp)
-    # message$content holds the final answer; message$thinking holds the
-    # reasoning trace (discarded here — capture it if you want to log it).
-    parsed$message$content
+    # message$content = final answer; message$thinking = reasoning trace.
+    # Return a list so the caller can access both when capture_thinking=TRUE.
+    list(
+      content  = parsed$message$content,
+      thinking = parsed$message$thinking   # NULL when model didn't think
+    )
   }
 
   ## make the calls ----
@@ -100,7 +106,10 @@ llm_ollama <- function(text, system_prompt,
   for (i in seq_along(unique_text)) {
     responses[[i]] <- tryCatch(
       {
-        list(answer = trimws(call_ollama(unique_text[i])))
+        raw    <- call_ollama(unique_text[i])
+        result <- list(answer = trimws(raw$content))
+        if (capture_thinking) result$thinking <- raw$thinking %||% ""
+        result
       },
       error = \(e) {
         warning("LLM call ", i, " failed: ", e$message, call. = FALSE)
@@ -118,12 +127,12 @@ llm_ollama <- function(text, system_prompt,
   ## match llm() class + attribute ----
   class(answer_df) <- c("metacheck_llm", "data.frame")
   attr(answer_df, "llm") <- c(
-    list(system_prompt = system_prompt, model = model),
+    list(system_prompt = system_prompt, model = model, think = think),
     params
   )
 
   ## warn about errors (mirrors llm()) ----
-  error_indices <- isTRUE(answer_df$error)
+  error_indices <- answer_df$error %in% TRUE
   if (any(error_indices)) {
     warn <- paste(which(error_indices), collapse = ", ") |>
       paste("There were errors in the following rows:", x = _)

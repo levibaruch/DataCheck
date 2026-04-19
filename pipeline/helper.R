@@ -403,6 +403,48 @@ clean_llm_values <- function(df) {
   df
 }
 
+# Extract the portion of a thinking trace that pertains to one specific file.
+# The LLM receives a numbered list ("1. path\n2. path\n...") so thinking traces
+# typically contain numbered segments ("1. ...", "File 1:", etc.).
+# Falls back to a character-window around the first mention of the file's basename.
+#
+# Args:
+#   thinking   — full thinking trace string (may be NULL / empty)
+#   item_idx   — 1-based position of this path in the chunk (the number in the list)
+#   item_path  — the file path (used for basename fallback search)
+#   window     — max characters to capture for the basename fallback (default 600)
+extract_thinking_snippet <- function(thinking, item_idx, item_path, window = 600L) {
+  if (is.null(thinking) || !nzchar(trimws(as.character(thinking)))) return("")
+
+  txt <- as.character(thinking)
+
+  # Strategy 1: numbered-marker split.
+  # Match "N." or "N)" or "N:" at the start of a line (possibly with whitespace).
+  pat_this <- sprintf("(?m)^\\s*%d[.):]", item_idx)
+  m_this   <- regexpr(pat_this, txt, perl = TRUE)
+
+  if (m_this > 0L) {
+    start    <- as.integer(m_this)
+    pat_next <- sprintf("(?m)^\\s*%d[.):]", item_idx + 1L)
+    m_next   <- regexpr(pat_next, txt, perl = TRUE)
+    end      <- if (m_next > 0L) as.integer(m_next) - 1L else nchar(txt)
+    return(trimws(substr(txt, start, end)))
+  }
+
+  # Strategy 2: find the basename anywhere in the trace and grab a window.
+  bn <- basename(item_path)
+  if (nzchar(bn)) {
+    m_bn <- regexpr(bn, txt, fixed = TRUE)
+    if (m_bn > 0L) {
+      start <- max(1L, as.integer(m_bn) - 100L)
+      end   <- min(nchar(txt), as.integer(m_bn) + window)
+      return(trimws(substr(txt, start, end)))
+    }
+  }
+
+  ""
+}
+
 # Run an LLM prompt over a character vector in batches, joining results by a
 # key column.  Returns a data.frame with columns c(key_col, extra_cols).
 #
@@ -495,9 +537,12 @@ llm_batch <- function(paths, system_prompt, user_prefix, key_col, extra_cols,
     success       <- FALSE
 
     while (TRUE) {
-      llm_params <- list(temperature = LLM_TEMPERATURE, think = LLM_THINK_LEVEL)
-      raw        <- llm_ollama(system_prompt = system_prompt, text = chunk_input, params = llm_params)
-      last_raw   <- raw
+      llm_params      <- list(temperature = LLM_TEMPERATURE, think = LLM_THINK_LEVEL)
+      do_capture      <- exists("CAPTURE_THINKING") && isTRUE(CAPTURE_THINKING) &&
+                         exists("THINKING_LOG_PATH") && !is.null(THINKING_LOG_PATH)
+      raw             <- llm_ollama(system_prompt = system_prompt, text = chunk_input,
+                                    params = llm_params, capture_thinking = do_capture)
+      last_raw        <- raw
 
       # Try to parse and validate the response.  tryCatch returns either the
       # merged data.frame (success) or the error object (failure) — checked below.
@@ -604,6 +649,67 @@ llm_batch <- function(paths, system_prompt, user_prefix, key_col, extra_cols,
             file = LLM_ERROR_LOG, append = TRUE)
       }
       all_parsed[[i]] <- parsed
+
+      # Thinking trace capture: write per-path snippet rows when CAPTURE_THINKING is TRUE.
+      # Each row records the model's reasoning for one file in this chunk so the
+      # operator can review which paths confused the model and refine prompts.
+      if (do_capture) {
+        thinking_txt <- last_raw$thinking[[1L]] %||% ""
+        if (nzchar(trimws(thinking_txt))) {
+          pid_lbl   <- if (!is.null(paper_id))   paper_id   else "<unknown>"
+          stage_lbl <- if (!is.null(stage_name)) stage_name else "<unknown>"
+          n_words   <- length(strsplit(trimws(thinking_txt), "\\s+")[[1L]])
+
+          log_rows <- lapply(seq_along(chunk_paths), function(j) {
+            data.frame(
+              paper_id         = pid_lbl,
+              stage_name       = stage_lbl,
+              chunk            = i,
+              path             = chunk_paths[[j]],
+              pred_type        = if ("type" %in% names(parsed)) parsed$type[[j]] else NA_character_,
+              thinking_snippet = extract_thinking_snippet(thinking_txt, j, chunk_paths[[j]]),
+              n_thinking_words = n_words,
+              model            = llm_model(),
+              think_level      = LLM_THINK_LEVEL,
+              temperature      = LLM_TEMPERATURE,
+              stringsAsFactors = FALSE
+            )
+          })
+          log_df <- do.call(rbind, log_rows)
+
+          # ── CSV (programmatic access) ──────────────────────────────────────
+          write.table(log_df,
+                      file      = THINKING_LOG_PATH,
+                      sep       = ",",
+                      col.names = !file.exists(THINKING_LOG_PATH),
+                      row.names = FALSE,
+                      append    = TRUE,
+                      qmethod   = "double")
+
+          # ── Markdown (human-readable review) ──────────────────────────────
+          md_path <- sub("\\.csv$", ".md", THINKING_LOG_PATH)
+          md_lines <- c(
+            sprintf("## %s — stage: %s — chunk %d  (%d words, model: %s, think: %s, temp: %.1f)",
+                    pid_lbl, stage_lbl, i, n_words, llm_model(), LLM_THINK_LEVEL, LLM_TEMPERATURE),
+            ""
+          )
+          for (j in seq_len(nrow(log_df))) {
+            pred <- if (is.na(log_df$pred_type[[j]])) "?" else log_df$pred_type[[j]]
+            snip <- trimws(log_df$thinking_snippet[[j]])
+            md_lines <- c(md_lines,
+              sprintf("### %d. `%s` → **%s**", j, log_df$path[[j]], pred),
+              "",
+              if (nzchar(snip)) snip else "_no snippet extracted_",
+              "",
+              "---",
+              ""
+            )
+          }
+          cat(paste(md_lines, collapse = "\n"),
+              file = md_path, append = TRUE, sep = "")
+          cat("\n", file = md_path, append = TRUE)
+        }
+      }
     } else {
       # All retries exhausted — log the failure and substitute sentinel values
       # so downstream stages can detect which rows were never answered by the LLM.
@@ -960,7 +1066,7 @@ parse_codebook <- function(path) {
     chunk_text <- paste(chunks[[i]], collapse = "\n")
     llm_params <- list(temperature = LLM_TEMPERATURE, think = LLM_THINK_LEVEL)
     raw <- tryCatch(
-      llm(system_prompt = CODEBOOK_PARSE_PROMPT,
+      llm_ollama(system_prompt = CODEBOOK_PARSE_PROMPT,
           text = paste0("Extract all variable definitions from this codebook text:\n\n",
                         chunk_text),
           params = llm_params),
@@ -1140,7 +1246,7 @@ match_column_labels <- function(columns_df, codebook_vars_df,
                             jsonlite::toJSON(batch_input, auto_unbox = TRUE))
       llm_params <- list(temperature = LLM_TEMPERATURE, think = LLM_THINK_LEVEL)
       merge_resp <- tryCatch(
-        llm(system_prompt = label_merge_prompt, text = prompt_body, params = llm_params),
+        llm_ollama(system_prompt = label_merge_prompt, text = prompt_body, params = llm_params),
         error = function(e) {
           warning("LLM label-merge call failed: ", conditionMessage(e))
           list(answer = "[]")
@@ -1203,7 +1309,7 @@ match_column_labels <- function(columns_df, codebook_vars_df,
 
       llm_params <- list(temperature = LLM_TEMPERATURE, think = LLM_THINK_LEVEL)
       llm_resp <- tryCatch(
-        llm(system_prompt = column_match_prompt, text = prompt_body, params = llm_params),
+        llm_ollama(system_prompt = column_match_prompt, text = prompt_body, params = llm_params),
         error = function(e) {
           warning("LLM column-matching call failed: ", conditionMessage(e))
           list(answer = "[]")

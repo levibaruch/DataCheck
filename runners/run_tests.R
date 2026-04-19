@@ -38,10 +38,12 @@ source("data_check/pipeline/0_index.R")
 source("data_check/pipeline/2_codebook_label.R")
 source("data_check/pipeline/3_psychds_convert.R")
 
-LLM_TEMPERATURE <- 0.7
-LLM_THINK_LEVEL <- "high"
-TEST_TITLE <- "NEW_PROMPT_120b_HIGH_0.7"
+LLM_TEMPERATURE  <- 0.3
+LLM_THINK_LEVEL  <- "low"
+TEST_TITLE       <- "120B_MD_THINKLOW_TEMP0.3"
+CAPTURE_THINKING <- TRUE   # write per-path thinking snippets to thinking_traces.csv
 llm_model("ollama/gpt-oss:120b-cloud")
+STRUCTURE_PROMPT <- STRUCTURE_PROMPT_MD
 
 # ── Report helpers ─────────────────────────────────────────────────────────────
 
@@ -727,6 +729,9 @@ for (tp in TEST_PAPERS) {
   cat(sprintf("\n%s\n  %s\n  %s\n%s\n", divider, pid, label, divider))
 
   row <- list(run_id = RUN_ID, paper_id = pid, label = label)
+
+  # Per-paper thinking log path — llm_batch writes snippets here when CAPTURE_THINKING=TRUE
+  THINKING_LOG_PATH <<- file.path(pid_out_dir, "thinking_traces.csv")
 
   # Stage 1: index
   cat("Stage 1: index\n")

@@ -32,12 +32,14 @@ ARCHIVE_EXTS    <- c("zip", "gz", "tar", "tgz", "bz2", "xz", "rar")
 # Any LLM response containing a type not in this set triggers a retry.
 
 
-if (!exists("LLM_TEMPERATURE")) LLM_TEMPERATURE <- 0.7
-if (!exists("LLM_THINK_LEVEL")) LLM_THINK_LEVEL <- "low"
-if (!exists("LLM_BATCH_SIZE"))  LLM_BATCH_SIZE  <- 30
-if (!exists("LLM_RETRY_LIMIT")) LLM_RETRY_LIMIT <- 4L
-if (!exists("LLM_ERROR_LOG"))   LLM_ERROR_LOG   <- "./data_check/logs/llm_batch_errors.log"
-if (!exists("LLM_SENTINEL_VAL")) LLM_SENTINEL_VAL <- "llm_error"
+if (!exists("LLM_TEMPERATURE"))   LLM_TEMPERATURE   <- 0.7
+if (!exists("LLM_THINK_LEVEL"))   LLM_THINK_LEVEL   <- "low"
+if (!exists("LLM_BATCH_SIZE"))    LLM_BATCH_SIZE    <- 30
+if (!exists("LLM_RETRY_LIMIT"))   LLM_RETRY_LIMIT   <- 4L
+if (!exists("LLM_ERROR_LOG"))     LLM_ERROR_LOG     <- "./data_check/logs/llm_batch_errors.log"
+if (!exists("LLM_SENTINEL_VAL"))  LLM_SENTINEL_VAL  <- "llm_error"
+if (!exists("CAPTURE_THINKING"))  CAPTURE_THINKING  <- FALSE
+if (!exists("THINKING_LOG_PATH")) THINKING_LOG_PATH <- NULL
 
 N_DATA_READ     <- 5
 MAX_TOTAL_DATA_MB <- 10 * 1024  # 10 GB total data read cap per paper across all data files
