@@ -215,8 +215,16 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
   archive_paths <- files[tolower(tools::file_ext(files)) %in% ARCHIVE_EXTS]
 
   if (length(archive_paths) > 0) {
-    message("── Unpacking ", length(archive_paths), " archive(s)")
-    lapply(archive_paths, unpack_archive)
+    n_already <- sum(vapply(archive_paths, function(p) {
+      dir.exists(file.path(dirname(p), tools::file_path_sans_ext(basename(p))))
+    }, logical(1)))
+    n_new <- length(archive_paths) - n_already
+    parts <- c(
+      if (n_new     > 0) sprintf("%d unpacked", n_new),
+      if (n_already > 0) sprintf("%d already done", n_already)
+    )
+    cat(col_dim(sprintf("── %d archive(s): %s\n", length(archive_paths), paste(parts, collapse = ", "))))
+    suppressMessages(lapply(archive_paths, unpack_archive))
     files <- drop_git(list.files(target_dir, full.names = TRUE, recursive = TRUE))
     files <- files[!(tolower(tools::file_ext(files)) %in% ARCHIVE_EXTS)]
   }
@@ -234,10 +242,14 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
       })
       if (length(sheets) == 0) next
       stem    <- tools::file_path_sans_ext(xl)
-      n_written <- 0L
+      n_written       <- 0L
+      n_renamed       <- 0L
+      rename_examples <- character(0)
       for (sh in sheets) {
         df <- tryCatch(
-          as.data.frame(readxl::read_excel(xl, sheet = sh), stringsAsFactors = FALSE),
+          suppressMessages(
+            as.data.frame(readxl::read_excel(xl, sheet = sh), stringsAsFactors = FALSE)
+          ),
           error = function(e) {
             warning("  skipping sheet '", sh, "' in ", basename(xl),
                     ": ", conditionMessage(e))
@@ -245,14 +257,28 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
           }
         )
         if (is.null(df) || nrow(df) == 0) next
-        # Sanitize sheet name for use in a filename (replace path-unsafe chars)
+        unnamed_mask <- grepl("^\\.\\.\\.\\d+$", names(df))
+        n_renamed <- n_renamed + sum(unnamed_mask)
+        if (sum(unnamed_mask) > 0) {
+          named_examples <- head(names(df)[!unnamed_mask], 4L)
+          if (length(named_examples) > 0)
+            rename_examples <- c(rename_examples, named_examples)
+        }
         safe_sh  <- gsub("[/\\\\:*?\"<>|]", "_", sh)
         out_path <- paste0(stem, "_", safe_sh, ".csv")
         write.csv(df, out_path, row.names = FALSE)
         n_written <- n_written + 1L
       }
       if (n_written > 0) {
-        message("  exploded ", basename(xl), " → ", n_written, " CSV(s)")
+        rename_note <- if (n_renamed > 0) {
+          ex <- unique(rename_examples)
+          ex_str <- if (length(ex) > 0)
+            paste0("; named: ", paste(head(ex, 4L), collapse = ", "),
+                   if (length(ex) > 4L) " ..." else "")
+          else ""
+          sprintf("  [%d unnamed%s]", n_renamed, ex_str)
+        } else ""
+        message("  exploded ", basename(xl), " \u2192 ", n_written, " CSV(s)", rename_note)
         file.remove(xl)
       }
     }
@@ -271,11 +297,20 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
     rdata_exploded <- FALSE
     for (rp in rdata_paths) {
       env <- new.env()
-      ok  <- tryCatch({ load(rp, envir = env); TRUE },
-                      error = function(e) {
-                        warning("Could not load ", basename(rp), ": ", conditionMessage(e))
-                        FALSE
-                      })
+      ok  <- tryCatch({
+        withCallingHandlers(
+          load(rp, envir = env),
+          warning = function(w) {
+            if (grepl("namespace.*is not available", conditionMessage(w),
+                      ignore.case = TRUE))
+              invokeRestart("muffleWarning")
+          }
+        )
+        TRUE
+      }, error = function(e) {
+        warning("Could not load ", basename(rp), ": ", conditionMessage(e))
+        FALSE
+      })
       if (!ok) next
       dfs <- Filter(is.data.frame, as.list(env))
       if (length(dfs) < 2) next    # 0 or 1 data frame — no explosion needed
@@ -405,6 +440,7 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
   agg_groups_list  <- list()  # all extension groups that produce sentinels
 
   if (any(is_aggregate)) {
+    cat(col_cyan(sprintf("\n── Aggregate folders (%d detected) \u2014 classifying:\n", length(agg_dirs))))
     for (d in agg_dirs) {
       if (d %in% participant_agg_dirs) {
         members <- rel_paths[startsWith(rel_paths, paste0(d, "/"))]
@@ -430,9 +466,8 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
           extra_singletons <- c(extra_singletons, g$members)
         } else {
           agg_groups_list <- c(agg_groups_list, list(g))
-          message(sprintf("── Aggregate folder: %s / .%s → %d files, %d sample path(s)%s",
-                          d, g$ext, length(g$members), length(g$sample_paths),
-                          if (is_series) " [series]" else ""))
+          cat(sprintf("  \u00d7%-4d  %s/.%s\n",
+                      length(g$members), d, g$ext))
         }
       }
     }
@@ -574,20 +609,24 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
 
   if (length(llm_paths) > 0) {
     chunks <- split(llm_paths, ceiling(seq_along(llm_paths) / LLM_BATCH_SIZE))
+    cat(col_dim(sprintf("── Classifying %d file path(s) via LLM (%d batch(es))\n",
+                length(llm_paths), length(chunks))))
 
     for (i in seq_along(chunks)) {
       prefix       <- if (i == 1) "Classify this repository tree:" else
                         build_structure_summary(experiment_map, type_map, last_entry)
       batch_result <- llm_batch(
-        paths         = chunks[[i]],
-        system_prompt = paste0(SINGLE_HEADER, structure_body),
-        user_prefix   = prefix,
-        key_col       = "path",
-        extra_cols    = c("type", "group"),
-        fallback_vals = list(type = "other", group = "shared"),
-        sentinel_cols = "type",
-        paper_id      = paper_id,
-        stage_name    = "file-type Phase 1"
+        paths           = chunks[[i]],
+        system_prompt   = paste0(SINGLE_HEADER, structure_body),
+        user_prefix     = prefix,
+        key_col         = "path",
+        extra_cols      = c("type", "group"),
+        fallback_vals   = list(type = "other", group = "shared"),
+        sentinel_cols   = "type",
+        paper_id        = paper_id,
+        stage_name      = "file-type Phase 1",
+        batch_nr        = i,
+        n_batches_total = length(chunks)
       )
       batch_result$prompt_nr <- i
       structure_parsed <- rbind(structure_parsed, batch_result)
@@ -601,21 +640,24 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
   if (length(agg_groups_list) > 0) {
     agg_descriptors <- build_agg_descriptors(agg_groups_list)
     agg_chunks      <- split(agg_descriptors, ceiling(seq_along(agg_descriptors) / LLM_BATCH_SIZE))
+    cat(col_dim(sprintf("── Classifying %d aggregate folder(s) via LLM\n", length(agg_groups_list))))
 
     for (i in seq_along(agg_chunks)) {
       prefix <- if (i == 1) "Classify these aggregate folders:" else
                   build_sentinel_summary(experiment_map, type_map)
       batch_result <- llm_batch(
-        paths         = agg_chunks[[i]],
-        system_prompt = paste0(AGGREGATE_HEADER, structure_body),
-        user_prefix   = prefix,
-        key_col       = "path",
-        extra_cols    = c("type", "group"),
-        fallback_vals = list(type = "other", group = "shared"),
-        sentinel_cols = "type",
-        paper_id      = paper_id,
-        stage_name    = "file-type Phase 2",
-        input_type    = "json_descriptor"
+        paths           = agg_chunks[[i]],
+        system_prompt   = paste0(AGGREGATE_HEADER, structure_body),
+        user_prefix     = prefix,
+        key_col         = "path",
+        extra_cols      = c("type", "group"),
+        fallback_vals   = list(type = "other", group = "shared"),
+        sentinel_cols   = "type",
+        paper_id        = paper_id,
+        stage_name      = "file-type Phase 2",
+        input_type      = "json_descriptor",
+        batch_nr        = i,
+        n_batches_total = length(agg_chunks)
       )
       batch_result$prompt_nr <- i
       agg_parsed      <- rbind(agg_parsed, batch_result)
@@ -639,6 +681,7 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
   agg_expanded <- list()
 
   if (length(agg_groups_list) > 0) {
+    cat(col_cyan("\n── Aggregate classification results:\n"))
     for (grp in agg_groups_list) {
       # Look up the aggregate in Phase 2 results by composite key (folder/.ext)
       key     <- paste0(grp$folder, "/.", grp$ext)
@@ -679,9 +722,12 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
 
       agg_expanded <- c(agg_expanded, list(member_df))
 
-      message(sprintf("── Aggregate [%s/.%s]: %d files → type=%s, group=%s%s",
-                      grp$folder, grp$ext, length(grp$members), agg_type, agg_group,
-                      if (is_series && is_data) " [individual]" else ""))
+      gran_label <- if (is_data) { if (is_series) "individual" else "combined" } else ""
+      cat(sprintf("  \u00d7%-4d  %-58s \u2192  %-18s %s\n",
+                  length(grp$members),
+                  paste0(grp$folder, "/.", grp$ext),
+                  paste0(agg_type, " / ", agg_group),
+                  gran_label))
     }
   }
 
@@ -864,6 +910,8 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
 
 
       # Call LLM with GRANULARITY_PROMPT
+      cat(col_dim(sprintf("── Inferring granularity for %d aggregate folder(s) via LLM\n",
+                  length(gran_queries))))
       gran_result <- tryCatch({
         llm_batch(paths = llm_input, system_prompt = GRANULARITY_PROMPT,
                   user_prefix = user_prefix_full,
@@ -891,9 +939,9 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
             }
             q <- gran_queries[[agg_folder_result]]
             pattern_display <- if (!is.null(q$pattern_display)) q$pattern_display else q$filename_pattern
-            message(sprintf("── US3: Inferred granularity '%s' for %d file(s) in %s (pattern: %s)",
-                            gran_val, length(file_idx), basename(agg_folder_result),
-                            pattern_display))
+            gran_col <- if (gran_val == "individual") col_green else col_dim
+            cat(gran_col(sprintf("  \u2514 granularity  %-10s  %s  [%d file(s)]\n",
+                        gran_val, pattern_display, length(file_idx))))
           }
         }
       }
@@ -1027,8 +1075,43 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
   # ── 8. Save structure ────────────────────────────────────────────────────────
 
   structure_out <- file.path(eff_dir, "structure.csv")
-  cat("\n── File inventory ──────────────────────────────\n")
-  print(table(paste0(file_df$type, " / ", file_df$group)))
+  cat(col_cyan("\n── File inventory ──────────────────────────────\n"))
+  local({
+    type_order <- c("data","code","codebook","asset","output",
+                    "supplemental","software","readme","other")
+    groups     <- sort(unique(file_df$group[!is.na(file_df$group)]))
+    types_present <- intersect(type_order,
+                               unique(file_df$type[!is.na(file_df$type)]))
+    # Abbreviate long type names for column headers
+    abbrev <- c(data="data", code="code", codebook="codebk",
+                asset="asset", output="output", supplemental="suppl",
+                software="softw", readme="readme", other="other")
+    hdrs   <- vapply(types_present, function(t) abbrev[[t]], character(1))
+    col_w  <- pmax(nchar(hdrs), 5L)
+    grp_w  <- max(nchar(groups)) + 2L
+
+    # Header row
+    cat(sprintf("  %-*s", grp_w, ""))
+    for (j in seq_along(hdrs))
+      cat(sprintf("  %*s", col_w[j], hdrs[j]))
+    cat("\n")
+
+    # Separator
+    cat("  ", strrep("\u2500", grp_w), sep = "")
+    for (j in seq_along(col_w)) cat("  ", strrep("\u2500", col_w[j]), sep = "")
+    cat("\n")
+
+    # Data rows
+    for (grp in groups) {
+      sub <- file_df[!is.na(file_df$group) & file_df$group == grp, ]
+      cat(sprintf("  %-*s", grp_w, grp))
+      for (j in seq_along(types_present)) {
+        n <- sum(!is.na(sub$type) & sub$type == types_present[j])
+        cat(sprintf("  %*s", col_w[j], if (n > 0) n else "."))
+      }
+      cat("\n")
+    }
+  })
 
   t_llm <- proc.time()[["elapsed"]] - t_llm_start
 
@@ -1048,12 +1131,10 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
   # "codebook", "code", "asset", "readme", or "other" are excluded by this filter.
   data_files <- file_df[file_df$type == "data" & !file_df$is_sentinel &
                           !is.na(file_df$data_format) & file_df$data_format == "tabular", ]
-  if (is.finite(MAX_DATA_FILES) && nrow(data_files) > MAX_DATA_FILES) {
-    message("── Capping data files: ", nrow(data_files), "sskipping")
-    columns_df   <- NULL
-    columns_out  <- NULL
-    data_files   <- file_df[FALSE, ]  
-    }
+  if (!FULL_RUN && is.finite(MAX_DATA_FILES) && nrow(data_files) > MAX_DATA_FILES) {
+    message("── Capping data files: ", nrow(data_files), " → keeping first ", MAX_DATA_FILES)
+    data_files <- data_files[seq_len(MAX_DATA_FILES), ]
+  }
   message("── Extracting columns + statistics from ", nrow(data_files), " data file(s)")
 
   MAX_FILE_MB <- 500  # skip data files larger than this
@@ -1065,20 +1146,19 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
   .read_state$limit_hit <- FALSE
 
   extract_column_info <- function(path, rel_path, group) {
-    message(sprintf("Processing: %s (group: %s)", basename(path), group))
     file_mb <- file.info(path)$size / 1048576
-    message(sprintf("  file size: %.1f MB", file_mb))
+    cat(sprintf("  [%s] %s  (%.1f MB)", group, basename(path), file_mb))
     if (!is.na(file_mb) && file_mb > MAX_FILE_MB) {
-      message("  skipping (too large: ", round(file_mb), " MB): ", basename(path))
+      cat(sprintf("  [skipped: too large]\n"))
       return(NULL)
     }
     # Aggregate data cap: skip this file if adding it would exceed the per-paper limit.
     if (!is.na(file_mb) && (.read_state$mb_read + file_mb) > MAX_TOTAL_DATA_MB) {
       if (!.read_state$limit_hit) {
-        message("  stopping column extraction: total data read would exceed ",
-                round(MAX_TOTAL_DATA_MB / 1024, 0), " GB limit (",
-                round(.read_state$mb_read / 1024, 1), " GB already read)")
+        cat(sprintf("  [skipped: GB limit reached]\n"))
         .read_state$limit_hit <- TRUE
+      } else {
+        cat("\n")
       }
       return(NULL)
     }
@@ -1091,13 +1171,12 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
     }, error = function(e) {
       setTimeLimit(elapsed = Inf, transient = FALSE)
       timed_out <<- TRUE
-      message("  skipping (timed out after ", round(MAX_FILE_READ_SEC / 60), " min): ",
-              basename(path))
+      cat(sprintf("  [skipped: timed out]\n"))
       NULL
     })
     if (timed_out) return(NULL)
     if (is.null(df) || ncol(df) == 0) {
-      message("  skipping (unreadable or empty): ", basename(path))
+      cat("  [skipped: unreadable or empty]\n")
       return(NULL)
     }
     if (!is.na(file_mb)) .read_state$mb_read <- .read_state$mb_read + file_mb
@@ -1115,13 +1194,12 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
       if (!is.na(import_row)) {
         keep_after <- seq(import_row + 1L, nrow(df))
         if (length(keep_after) == 0) {
-          message("  skipping (Qualtrics file with only header rows): ", basename(path))
+          cat("  [skipped: Qualtrics headers only]\n")
           return(NULL)
         }
         df <- df[keep_after, , drop = FALSE]
         rownames(df) <- NULL
-        message("  Qualtrics header rows stripped (ImportId at row ",
-                import_row, "): ", basename(path))
+        cat(sprintf("  [Qualtrics: row %d stripped]", import_row))
       }
     }
 
@@ -1171,20 +1249,16 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
         df                  <- df[(sub_header_row + 1):nrow(df), , drop = FALSE]
         names(df)           <- new_names
         # col_header_group is aligned column-wise; row slicing above does not affect it.
-        message("  multi-level header resolved (used row ", sub_header_row + 1,
-                " as header): ", basename(path))
+        cat(sprintf("  [multi-level: row %d as header]", sub_header_row + 1))
       } else {
         # Branch 2: no sub-header found — group context not meaningful without a sub-header.
         col_header_group <- rep(NA_character_, ncol(df))
         has_any_real     <- any(!auto_named)
         if (has_any_real) {
-          message("  multi-level header detected (partial labels retained): ",
-                  basename(path))
+          cat("  [multi-level: partial labels retained]")
           # proceed with df as-is
         } else {
-          # skip: entirely placeholder header with no recoverable sub-header
-          message("  skipping (multi-level header, no usable sub-header found): ",
-                  basename(path))
+          cat("  [skipped: multi-level, no usable sub-header]\n")
           return(NULL)
         }
       }
@@ -1213,8 +1287,7 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
         df                  <- df[(v_sub_header_row + 1):nrow(df), , drop = FALSE]
         names(df)           <- new_names
         col_header_group    <- rep(NA_character_, ncol(df))
-        message("  V\\d+ header resolved (used row ", v_sub_header_row + 1,
-                " as header): ", basename(path))
+        cat(sprintf("  [V\\d+ header: row %d as header]", v_sub_header_row + 1))
       }
     }
 
@@ -1305,6 +1378,7 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
 
     stats_mat <- do.call(rbind, lapply(col_stats, as.data.frame, stringsAsFactors = FALSE))
 
+    cat("\n")
     list(
       columns = data.frame(
         paper_id             = paper_id,
@@ -1338,8 +1412,8 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
     num_ambig_rows <- which(is.na(columns_df$col_type) & columns_df$is_numeric)
     if (length(num_ambig_rows) > 0) {
       columns_df$col_type[num_ambig_rows] <- "continuous"
-      message("── col_type Batch 1 (numeric): ", length(num_ambig_rows),
-              " column(s) assigned continuous (LLM skipped)")
+      cat(col_dim(sprintf("── col_type Batch 1 (numeric): %d column(s) assigned continuous (LLM skipped)\n",
+              length(num_ambig_rows))))
     }
   }
 
@@ -1352,8 +1426,8 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
         char_ambig_rows <- char_ambig_rows[seq_len(max_char_cols)]
       descriptors <- paste0('"', columns_df$column_name[char_ambig_rows], '"',
                             " (samples: ", columns_df$sample_values_unique[char_ambig_rows], ")")
-      message("── LLM col_type Batch 2 (character): classifying ",
-              length(char_ambig_rows), " column(s)")
+      cat(col_dim(sprintf("── LLM col_type Batch 2 (character): classifying %d column(s)\n",
+              length(char_ambig_rows))))
       llm_result <- tryCatch(
         llm_batch(
           paths         = descriptors,
@@ -1377,9 +1451,8 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
       invalid_mask   <- !returned_types %in% VALID_COL_TYPES
       if (any(invalid_mask)) {
         bad_types <- unique(returned_types[invalid_mask])
-        message("── col_type Batch 2: ", sum(invalid_mask),
-                " invalid type(s) remapped to text: ",
-                paste(bad_types, collapse = ", "))
+        cat(col_dim(sprintf("── col_type Batch 2: %d invalid type(s) remapped to text: %s\n",
+                sum(invalid_mask), paste(bad_types, collapse = ", "))))
         returned_types[invalid_mask] <- "text"
       }
       columns_df$col_type[char_ambig_rows] <- returned_types
@@ -1388,8 +1461,8 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
       char_unknown <- char_ambig_rows[columns_df$col_type[char_ambig_rows] == "unknown"]
       if (length(char_unknown) > 0) {
         columns_df$col_type[char_unknown] <- "text"
-        message("── col_type fallback: ", length(char_unknown),
-                " character column(s) reclassified from unknown \u2192 text")
+        cat(col_dim(sprintf("── col_type fallback: %d character column(s) reclassified from unknown → text\n",
+                length(char_unknown))))
       }
     }
   }
@@ -1411,8 +1484,8 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
 
   n_individual <- sum(file_df$data_granularity == "individual", na.rm = TRUE)
   n_combined   <- sum(file_df$data_granularity == "combined",   na.rm = TRUE)
-  message("── data_granularity: ", n_individual, " individual, ",
-          n_combined, " combined data file(s)")
+  cat(col_dim(sprintf("── data_granularity: %d individual, %d combined data file(s)\n",
+          n_individual, n_combined)))
 
   write.csv(
     file_df[, c("paper_id", "path", "rel_path", "filename", "ext",
@@ -1420,7 +1493,6 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
                 "data_granularity", "granularity_source", "prompt_nr", "data_format")],
     structure_out, row.names = FALSE
   )
-  message("── Saved structure → ", structure_out)
 
   if (!is.null(columns_df) && nrow(columns_df) > 0) {
     columns_out   <- file.path(eff_dir, "columns.csv")
@@ -1428,9 +1500,6 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
     if (length(invalid_types) > 0)
       warning("Unknown col_type values: ", paste(invalid_types, collapse = ", "))
     write.csv(columns_df, columns_out, row.names = FALSE)
-    message("── Saved columns  → ", columns_out,
-            "  (", nrow(columns_df), " rows across ",
-            length(unique(columns_df$source_file)), " file(s))")
   } else {
     message("── No columns extracted")
     columns_df  <- NULL

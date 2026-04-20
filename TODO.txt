@@ -322,3 +322,27 @@ Querying LLM [==================================================] 1/1 00:00:03
 ── Aggregate [Correlates_of_hallucinatory_experiences_in/tasks/online_study_code/jsPsych-master-6.1/tests/plugins/.js]: 34 files → type=code, group=shared
 
 JS is not CODE, and the context should have obviously shown this was part of a software
+
+
+Echo every path exactly. Output ONLY the JSON array.
+--- user prompt ---
+Last classified file (continue consistently from here):
+- "New_Zealand_Attitudes_and_Values/Published_Papers/2019/Huang, Y., Osborne, D., & Sibley, C. G. (2019). The gradual move towards gender equality A seven-year latent growth model of ambivalent sexism. Social Psychology and Personality Science, 10, 335-344/NZAVS-Longitudinal-Syntax-Huang-Sexism-Growth-PARTB/NZAVS-Longitudinal-Syntax-Huang-Sexism-Growth-PARTB/01_Re-analyses_with_T-Score_GE/03_Multigroup/03 NZAVS-Longitudinal-Syntax-CFA Strong Invariance (HS and BS).inp" → type: other, group: shared
+
+Known type classifications from prior batches:
+- supplemental: "Ethics Approval until 03-06-2018.pdf", "Ethics Approval until 03-06-2021.pdf"
+- asset: "NZAVS Banner.jpg", "NZAVS Logo.jpg"
+- codebook: "NZAVS-Technical-Documents-e02-Data-Dictionary_Data Dictionary.csv"
+- code: "NZAVS-T1-(2009)-Syntax-Barlow-et-al-(2012)-Rejection-as-a-Call-to-Arms.inp", "NZAVS-T1-(2009)-Syntax-Hammond-and-Sibley-(2011)-Why-are-Benevolent-Sexists-Happier.inp"
+- data: "MMM-ICE sample SPSS datafile.sav", "Mini-IPIP6 Template.sav"
+- other: "NZAVS-Longitudinal-Syntax-Barlow-Contact-Affect-Matching.7z", "01 NZAVS-Longitudinal-Syntax-CFA Configural Invariance (HS and BS).inp"
+- output: "example lca syntax.out"
+- llm_error: "NZAVS-Longitudinal-Syntax-Barlow-Contact-Affect-Matching-MAORI-ALT-SR.inp", "NZAVS-Longitudinal-Syntax-Barlow-Contact-Affect-Matching-Maori-CLPM-Stat-InOut.inp"
+
+Known experiment structure from prior batches:
+- shared: "Ethics_Approval_Details", "Logo_and_Banner_Images", "Documentation"
+Apply these classifications consistently to the following paths.
+
+Classify this repository tree:
+
+LLM error shouldnt be an option!

@@ -406,3 +406,41 @@ Now every data file knows: am I individual or combined?
 And if the answer came from the model, the source is logged and signed.
 Three layers of detection, from simple to sublime,
 the granularity question answered, at last, in time.
+
+---
+
+## 038 — LLM Fallback Retry
+
+The model returned garbage — not JSON, just noise.
+The pipeline, once rigid, now holds its poise.
+It tries once more, then again, then a third careful pass,
+before admitting the batch has failed at last.
+
+And if the retries are spent and the parse still won't land,
+a fallback model stretches out its hand —
+a different voice, a second opinion sought,
+recovering what the first attempt could not.
+
+The error log grows richer with each failed call:
+the prompt, the response, the raw output and all.
+Nothing is silent now when the model goes wrong —
+the trace remains, and the pipeline stays strong.
+
+---
+
+## 039 — Two-Phase Aggregate Prompt + LLM Config Consolidation
+
+Two callers diverged in the pipeline's wood —
+`llm()` and `llm_batch()`, each understood
+a different dialect, a different call,
+inconsistent configs across them all.
+
+The consolidation came: one source of truth,
+one config object threaded through the proof.
+Temperature, model, timeout — all aligned,
+no more divergence left behind.
+
+And the aggregate prompt split into two clean phases:
+first classify the sample, then propagate the blazes.
+What the batch decides for ten, applies to a hundred whole —
+the two-phase pattern cleanest when the aggregate takes its toll.

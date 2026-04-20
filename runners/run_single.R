@@ -33,8 +33,8 @@ local({
 
   # IDs must stay as character strings — no numeric coercion
   args <- commandArgs(trailingOnly = TRUE)
-  pid <- if (length(args) > 0) args[1] else sample(all_ids, 1L)
-
+  # pid <- if (length(args) > 0) args[1] else sample(all_ids, 1L)
+  pid <- "0956797614547916"
   cat("\n══════════════════════════════════════════════════════════════════════\n")
   cat(sprintf("  Paper: %s\n", pid))
   cat("══════════════════════════════════════════════════════════════════════\n\n")

@@ -1019,7 +1019,12 @@ convert_psychds <- function(paper_id) {
   data_mask <- !is.na(structure_df$type) & structure_df$type == "data"
   studies   <- unique(structure_df$group[data_mask])
   studies   <- studies[!is.na(studies)]
-  if (length(studies) == 0) return(.fail_row("all", ERR_NO_DATA_FILES))
+  if (length(studies) == 0) {
+    cat(col_magenta("  [psychds]  "), "no data files found — skipping\n")
+    return(.fail_row("all", ERR_NO_DATA_FILES))
+  }
+  cat(col_magenta("  [psychds]  "), sprintf("%d study group(s): %s\n",
+                  length(studies), paste(studies, collapse = ", ")))
 
   # 6. Parse GROBID XML
   xml_path <- file.path("/Volumes/Models/expanded_xml",
@@ -1034,6 +1039,9 @@ convert_psychds <- function(paper_id) {
     # ── Single-study: flat layout ──────────────────────────────────────────
     out_dir <- file.path(PSYCHDS_OUT_DIR, paper_id)
     dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+
+    n_data_in <- sum(!is.na(structure_df$type) & structure_df$type == "data")
+    cat(col_dim(sprintf("    %-10s  %d data file(s)\n", studies[1], n_data_in)))
 
     result <- tryCatch(
       convert_study(paper_id, studies[1], structure_df,
@@ -1050,6 +1058,12 @@ convert_psychds <- function(paper_id) {
         output_path = out_dir
       )
     )
+    if (isTRUE(result$success)) {
+      cat(col_green(sprintf("    %-10s  \u2713  %d vars (%d labelled)\n",
+                      studies[1], result$n_variables, result$n_labelled)))
+    } else {
+      cat(col_red(sprintf("    %-10s  \u2717  FAILED: %s\n", studies[1], result$error)))
+    }
     results <- list(result)
 
   } else {
@@ -1087,6 +1101,9 @@ convert_psychds <- function(paper_id) {
       out_dir     <- file.path(paper_root, paste0("study-", sg))
       dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
+      n_data_in <- sum(!is.na(study_files$type) & study_files$type == "data")
+      cat(col_dim(sprintf("    %-10s  %d data file(s)\n", sg, n_data_in)))
+
       study_cols <- if (!is.null(cols_df))
         cols_df[!is.na(cols_df$group) & cols_df$group == sg, ] else NULL
       study_lbls <- if (!is.null(labels_df))
@@ -1110,6 +1127,12 @@ convert_psychds <- function(paper_id) {
           output_path = out_dir
         )
       )
+      if (isTRUE(result$success)) {
+        cat(col_green(sprintf("    %-10s  \u2713  %d vars (%d labelled)\n",
+                        sg, result$n_variables, result$n_labelled)))
+      } else {
+        cat(col_red(sprintf("    %-10s  \u2717  FAILED: %s\n", sg, result$error)))
+      }
       results <- c(results, list(result))
     }
   }

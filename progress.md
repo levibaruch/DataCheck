@@ -1,5 +1,49 @@
 # Progress Log
 
+## 2026-04-17 – 2026-04-20
+
+### In Progress / Unmerged 🔧
+
+**Ollama thinking-trace infrastructure** (branch: `dev`, commits `4a405292`, `6581e0dc`, `eea77415`)
+- Add `pipeline/ollama.R`: dedicated Ollama HTTP caller that captures the LLM thinking trace alongside the final response; enables per-call inspection of chain-of-thought for prompt debugging
+- New `runners/test_llm_params.R`: sweeps temperature/think_level combinations on a single paper; outputs classification accuracy per config to aid prompt tuning
+- New `runners/test_thinking_trace.R`: runs a paper with thinking enabled and prints the full trace for each batch; replaces ad-hoc debug sessions
+- Updated `0_index.R` and `helper.R`: plumbing to accept ollama-mode caller in place of regular `llm()`; **WIP — not yet gated behind a clean config flag**
+- Re-added extended prompt versions to `pipeline/prompts.R` (266 → 517 lines): multiple `STRUCTURE_PROMPT_V*` variants for AB testing
+
+---
+
+## 2026-04-15 – 2026-04-16
+
+### Completed ✅
+
+**039** — two-phase-aggregate-prompt-llm-config-consolidation (branch: `039-*`, PR #43)
+- Consolidate `STRUCTURE_PROMPT_V0` / `V1`: each version now self-contained (header + body together); `run_index()` accepts `structure_body` string directly instead of a version integer
+- Add `LLM_TEMPERATURE` and `LLM_THINK_LEVEL` constants to `0_index.R`; replace scattered `getOption("llm_temperature")` calls in `helper.R` and `2_codebook_label.R` with the new constants
+- Enhanced `llm_batch()` logging: records temperature and think_level alongside paper_id/stage per call; `run_sweep.R` saves/restores `LLM_TEMPERATURE` global instead of R option
+- Fix PDF paired-source detection: both the PDF and its companion source file (`.Rmd`/`.qmd`/`.tex`) now receive correct types via `rmd_pair_rule`
+- `MAX_FILE_READ_SEC`: 5 min → 1 min (timeout efficiency for column extraction)
+- Add detailed progress logging in `extract_column_info()`: file size and folder context emitted via `message()`
+- Remove `is_sentinel` column from `structure.csv` output (sentinel concept eliminated in 035)
+- `llm_batch()`: add `input_type` param supporting JSON descriptor mode (alternative to plain path list)
+- Comprehensive `run_ab_test.R` refactor: supports multiple named prompt variants; structured per-variant accuracy comparison
+- Remove `AGGREGATE_EXT_OVERRIDE` from `3_psychds_convert.R` (now handled upstream in indexing)
+- Add `pipeline/ollama.R` (not yet wired into main pipeline path)
+
+**038** — llm-fallback-retry-granularity-hardening (branch: `038-*`, PR #42)
+- `llm_batch()` in `helper.R`: validate response count matches number of paths sent; incomplete responses (fewer objects than input) now trigger retry instead of silent fill; logs paper_id, stage, chunk, attempt to `LLM_ERROR_LOG`
+- `detect_filename_pattern()`: raise minimum match threshold 2 → 8 files before inferring a participant pattern (reduces false positives on study-label sequences like `study1a`, `study2b`)
+- `detect_filename_pattern()`: multiple-pattern case now returns all patterns with ≥8 matches instead of failing; enables per-aggregate multi-pattern granularity queries
+- Granularity US3 fixes in `0_index.R`: folder-name heuristic bug fixed (was inverted — now correctly marks `individual` when >50% subdirs are participant-named); remove `MAX_GRANULARITY_LLM_CALLS` cap (chunking handled by `llm_batch()`); multiple-pattern aggregates build combined `user_prefix` and store one DB row per pattern; raw-sample fallback sends aggregates with no detected pattern to LLM with `(no clear pattern)` + examples
+- `GRANULARITY_PROMPT` clarifications: rule for ANY consistent prefix+number pattern → individual; rule for `(multiple patterns)` case; strengthen default (10+ files, same ext, varying number → individual); add `IFFControl2C/11C/17C` example
+- `report_normal.R` major overhaul: paper-avg vs file-pooled divergence column (Δ pa−fp) in per-class metrics; group classification computed across all file types (not data-only); per-group-accuracy-by-file-type table (§4a-ii); sections 7b (full per-paper table) and 8 (all misclassified files) moved to `appendix.md`; fix variable shadowing bug that broke fp_fn plot
+- New report sections 4d–4g: accuracy by type_source (`aggregate_llm` vs `llm`), granularity accuracy by granularity_source, type accuracy by file type × method (paper-avg and file-pooled); heatmap plots 14–17 via shared `plot_type_method_heatmap()` helper
+- New `docs/regression_analysis_2026-04-15.md`: full taxonomy of Apr 10→15 regressions, root causes, proposed aggregate prompt architecture, priority fix order
+- Validation GUI (`tools/validation_gui/app.R`, `gt_store.R`): size and completeness filtering; semi-annotated file indicator
+- `runners/run_0_index_bulk.R`: set `SKIP_COLUMNS=TRUE` (indexing-only mode); `runners/run_tests.R`: set `REPORT_ONLY=FALSE`
+
+---
+
 ## 2026-04-15
 
 ### Completed ✅

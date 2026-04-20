@@ -40,9 +40,9 @@ source("data_check/pipeline/3_psychds_convert.R")
 
 LLM_TEMPERATURE  <- 0.3
 LLM_THINK_LEVEL  <- "low"
-TEST_TITLE       <- "120B_MD_THINKLOW_TEMP0.3"
+TEST_TITLE       <- "20B_MD_THINKLOW_TEMP0.3"
 CAPTURE_THINKING <- TRUE   # write per-path thinking snippets to thinking_traces.csv
-llm_model("ollama/gpt-oss:120b-cloud")
+llm_model("ollama/gpt-oss:20b-cloud")
 STRUCTURE_PROMPT <- STRUCTURE_PROMPT_MD
 
 # ── Report helpers ─────────────────────────────────────────────────────────────

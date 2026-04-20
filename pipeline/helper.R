@@ -1,3 +1,13 @@
+# ── Terminal color helpers ─────────────────────────────────────────────────────
+.ansi <- function(code, x) paste0("\033[", code, "m", x, "\033[0m")
+col_cyan    <- function(x) .ansi("36",   x)
+col_yellow  <- function(x) .ansi("33",   x)
+col_magenta <- function(x) .ansi("35",   x)
+col_green   <- function(x) .ansi("32",   x)
+col_red     <- function(x) .ansi("31",   x)
+col_dim     <- function(x) .ansi("2",    x)
+col_bold    <- function(x) .ansi("1",    x)
+
 # ── Output directory helper ───────────────────────────────────────────────────
 source("data_check/pipeline/ollama.R")
 # Returns TRUE if paper_id is a Harvard Dataverse DOI slug.
@@ -461,10 +471,12 @@ extract_thinking_snippet <- function(thinking, item_idx, item_path, window = 600
 #   stage_name    — passed through to the error log only (e.g. "file_type", "col_type")
 llm_batch <- function(paths, system_prompt, user_prefix, key_col, extra_cols,
                       fallback_vals,
-                      sentinel_cols = NULL,
-                      paper_id      = NULL,
-                      stage_name    = NULL,
-                      input_type    = "filepath") {
+                      sentinel_cols  = NULL,
+                      paper_id       = NULL,
+                      stage_name     = NULL,
+                      input_type     = "filepath",
+                      batch_nr       = NULL,
+                      n_batches_total = NULL) {
   # input_type: "filepath" (default) = file paths as numbered list; "json_descriptor" = JSON array
 
   # Divide paths into fixed-size chunks (LLM_BATCH_SIZE = 20).
@@ -625,7 +637,11 @@ llm_batch <- function(paths, system_prompt, user_prefix, key_col, extra_cols,
       last_err      <- parsed
       last_fail_raw <- raw
       if (attempt <= LLM_RETRY_LIMIT) {
-        message(sprintf("\u2500\u2500 LLM chunk %d retry %d/%d \u2500\u2500", i, attempt, LLM_RETRY_LIMIT))
+        batch_label <- if (!is.null(batch_nr) && !is.null(n_batches_total))
+          sprintf("batch %d/%d", batch_nr, n_batches_total)
+        else
+          sprintf("chunk %d", i)
+        cat(col_dim(sprintf("\u2500\u2500 LLM %s retry %d/%d \u2500\u2500\n", batch_label, attempt, LLM_RETRY_LIMIT)))
         attempt <- attempt + 1L
       } else {
         break  # retry budget exhausted — fall through to failure handler
@@ -1061,6 +1077,7 @@ parse_codebook <- function(path) {
   chunks    <- split(lines, ceiling(seq_along(lines) / 100))
   max_calls <- min(length(chunks), MAX_CODEBOOK_LLM_CALLS)
   all_vars  <- vector("list", max_calls)
+  cat(col_dim(sprintf("       parse %s via LLM (%d chunk(s))\n", src, max_calls)))
 
   for (i in seq_len(max_calls)) {
     chunk_text <- paste(chunks[[i]], collapse = "\n")

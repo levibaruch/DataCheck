@@ -7,6 +7,14 @@
 
 source("data_check/pipeline/0_index.R")
 
+# Run level configs
+
+DATA_DIR <- "/Volumes/NINJAV/data"
+OUTPUT_DIR <- "/Volumes/NINJAV/DataCheckOut/outputs"
+PSYCHDS_OUT_DIR <- "/Volumes/NINJAV/DataCheckOut/psychds"
+
+
+
 # ── Config ────────────────────────────────────────────────────────────────────
 
 FULL_RUN       <- TRUE         # TRUE = no LLM call caps (file classification + col_type)
@@ -119,6 +127,11 @@ if (RERUN_COLUMNS) {
     remaining_ids     <- remaining_ids[ord]
     remaining_sources <- remaining_sources[ord]
   }
+  # Always prioritise OSF over dataverse (within each GT/non-GT group)
+  is_osf            <- remaining_sources == "osf"
+  remaining_ids     <- c(remaining_ids[is_osf],     remaining_ids[!is_osf])
+  remaining_sources <- c(remaining_sources[is_osf], remaining_sources[!is_osf])
+
   if (PRIORITISE_GT) {
     gt_ids <- sub("\\.csv$", "", list.files(file.path(GT_DIR, "osf"), pattern = "\\.csv$"))
     is_gt  <- remaining_ids %in% gt_ids

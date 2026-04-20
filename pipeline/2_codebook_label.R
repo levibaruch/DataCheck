@@ -33,6 +33,7 @@ if (!exists("OUTPUT_DIR")) OUTPUT_DIR             <- "./data_check/outputs"
 if (!exists("GROUND_TRUTH_DIR")) GROUND_TRUTH_DIR       <- "./data_check/ground_truth"
 if (!exists("LLM_BATCH_SIZE")) LLM_BATCH_SIZE         <- 20L   # shared constant — needed by llm_batch() in helper.R
 if (!exists("MAX_CODEBOOK_LLM_CALLS")) MAX_CODEBOOK_LLM_CALLS    <- 10L   # max LLM calls per codebook file for text parsing (ignored when FULL_RUN = TRUE)
+if (!exists("MAX_CODEBOOK_FILES"))    MAX_CODEBOOK_FILES        <- 10L   # max codebook/readme files parsed per paper
 if (!exists("FULL_RUN")) FULL_RUN <- FALSE
 if (!exists("MAX_CODEBOOK_FILE_MB")) MAX_CODEBOOK_FILE_MB      <- 100   # codebook files larger than this (MB) are skipped
 CODEBOOK_HEADER_LOOKAHEAD <- 5L    # max rows to scan for header in multi-level CSV codebooks
@@ -70,17 +71,19 @@ run_codebook_label <- function(paper_id, output_dir = NULL) {
                if ("experiment_group" %in% names(columns_df)) columns_df$experiment_group else
                rep(NA_character_, nrow(columns_df))
 
-  message("── Codebook labelling for paper ", paper_id)
-  message("   ", nrow(columns_df), " data column(s) to label")
-
   # ── 2. Locate codebook/readme files ─────────────────────────────────────────
 
   codebook_rows <- structure_df[structure_df$type %in% CODEBOOK_TYPES, , drop = FALSE]
+  if (is.finite(MAX_CODEBOOK_FILES) && nrow(codebook_rows) > MAX_CODEBOOK_FILES) {
+    cat(col_dim(sprintf("    capping codebook files: %d → %d (MAX_CODEBOOK_FILES)\n",
+                nrow(codebook_rows), MAX_CODEBOOK_FILES)))
+    codebook_rows <- codebook_rows[seq_len(MAX_CODEBOOK_FILES), , drop = FALSE]
+  }
 
   # ── 3. Parse codebooks or handle no_codebook case ────────────────────────────
 
   if (nrow(codebook_rows) == 0) {
-    message("── No codebook files found — all columns marked 'no_codebook'")
+    cat(col_yellow("  codebook  "), "no codebook files — all columns unlabelled\n")
     labels_df <- data.frame(
       paper_id          = columns_df$paper_id,
       source_file       = columns_df$source_file,
@@ -100,15 +103,15 @@ run_codebook_label <- function(paper_id, output_dir = NULL) {
     )
 
   } else {
-    message("── Parsing ", nrow(codebook_rows), " codebook/readme file(s)")
+    cat(col_yellow("  codebook  "), sprintf("parsing %d file(s)\n", nrow(codebook_rows)))
     parsed_list <- lapply(codebook_rows$path, function(p) {
-      message("  → ", basename(p))
+      cat(col_dim(sprintf("    → %s\n", basename(p))))
       parse_codebook(p)
     })
     parsed_list <- Filter(Negate(is.null), parsed_list)
 
     if (length(parsed_list) == 0) {
-      message("── No variables extracted from any codebook — all columns unlabelled")
+      cat(col_yellow("  codebook  "), "no variables extracted — all columns unlabelled\n")
       codebook_vars_df <- data.frame(
         codebook_variable = character(0), label = character(0),
         codebook_source   = character(0), group = character(0),
@@ -122,8 +125,7 @@ run_codebook_label <- function(paper_id, output_dir = NULL) {
                        ifelse(is.na(codebook_vars_df$group), "", codebook_vars_df$group),
                        sep = "\x01")
       codebook_vars_df <- codebook_vars_df[!duplicated(dup_key), , drop = FALSE]
-      message("── Extracted ", nrow(codebook_vars_df),
-              " unique codebook variable definition(s)")
+      cat(col_dim(sprintf("    extracted %d unique variable definition(s)\n", nrow(codebook_vars_df))))
     }
 
     # ── 4. Match columns against codebook ──────────────────────────────────────
@@ -137,8 +139,6 @@ run_codebook_label <- function(paper_id, output_dir = NULL) {
   labels_out <- file.path(eff_dir, "labels.csv")
   write.csv(labels_df, labels_out, row.names = FALSE)
   n_labelled <- sum(labels_df$label_status %in% c("labelled", "llm"))
-  message("── Saved labels → ", labels_out,
-          "  (", n_labelled, "/", nrow(labels_df), " columns labelled)")
 
   # ── 6. Build codebook coverage table ─────────────────────────────────────────
 
@@ -178,8 +178,6 @@ run_codebook_label <- function(paper_id, output_dir = NULL) {
   coverage_out <- file.path(eff_dir, "codebook_coverage.csv")
   write.csv(coverage_df, coverage_out, row.names = FALSE)
   n_matched <- sum(coverage_df$match_status == "matched")
-  message("── Saved coverage → ", coverage_out,
-          "  (", n_matched, "/", nrow(coverage_df), " codebook vars matched)")
 
   # ── 8. Return LabellingResult ─────────────────────────────────────────────────
 
