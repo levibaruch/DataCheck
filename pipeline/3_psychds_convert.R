@@ -85,6 +85,13 @@ AGGREGATE_EXT_OVERRIDE <- c(
 #                  NULL for all other formats
 # Files > DATA_SIZE_LIMIT_MB are NOT read here; the caller handles size check.
 read_full_data <- function(path) {
+  # Single quotes in paths break R's locale connection layer — copy to temp first
+  if (grepl("'", path, fixed = TRUE)) {
+    tmp <- tempfile(fileext = paste0(".", tolower(tools::file_ext(path))))
+    file.copy(path, tmp)
+    on.exit(unlink(tmp), add = TRUE)
+    path <- tmp
+  }
   ext <- tolower(tools::file_ext(path))
 
   # ── Text formats ────────────────────────────────────────────────────────────
