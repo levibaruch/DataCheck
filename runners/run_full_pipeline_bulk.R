@@ -345,6 +345,7 @@ for (i in seq_along(remaining_ids)) {
     skip_since_last <- 0L
   }
 
+  cat("═════════════════════════════════════════════════════════════\n")
   cat(col_bold(sprintf("\n\u2550\u2550 #%d / %d  \u2022  %s / %s\n", i, n_total, src, pid)))
 
   # ── Stage 1: Index ──────────────────────────────────────────────────────────
