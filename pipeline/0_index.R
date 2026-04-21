@@ -1413,16 +1413,19 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
   # ── Batch 1: numeric-ambiguous columns → continuous (LLM disabled) ────────
   # LLM classification for numeric columns fails 100% of the time and always
   # falls back to continuous anyway. Skip the call; assign directly.
+  n_rules_assigned <- 0L
   if (!is.null(columns_df) && nrow(columns_df) > 0) {
     num_ambig_rows <- which(is.na(columns_df$col_type) & columns_df$is_numeric)
     if (length(num_ambig_rows) > 0) {
       columns_df$col_type[num_ambig_rows] <- "continuous"
-      cat(col_dim(sprintf("── col_type Batch 1 (numeric): %d column(s) assigned continuous (LLM skipped)\n",
-              length(num_ambig_rows))))
+      n_rules_assigned <- length(num_ambig_rows)
+      cat(col_dim(sprintf("── col_type Batch 1 (rules): %d column(s) classified\n",
+              n_rules_assigned)))
     }
   }
 
   # ── Batch 2: character-ambiguous columns (CHAR_COLUMN_TYPE_PROMPT) ────────
+  n_llm_assigned <- 0L
   if (!is.null(columns_df) && nrow(columns_df) > 0) {
     char_ambig_rows <- which(is.na(columns_df$col_type) & !columns_df$is_numeric)
     if (length(char_ambig_rows) > 0) {
@@ -1460,6 +1463,7 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
                 sum(invalid_mask), paste(bad_types, collapse = ", "))))
         returned_types[invalid_mask] <- "text"
       }
+      n_llm_assigned <- length(char_ambig_rows)
       columns_df$col_type[char_ambig_rows] <- returned_types
 
       # Fallback: LLM "unknown" for a character column → "text".
@@ -1483,6 +1487,35 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
     columns_df[suppress_rows, stat_cols] <- NA
     columns_df$sample_values_unique <- NULL
     columns_df$is_numeric           <- NULL
+
+    # ── Summary: col_type breakdown by method ──────────────────────────────────
+    # Get all unique types and count by method
+    all_types <- unique(columns_df$col_type)
+    all_types <- all_types[!is.na(all_types)]
+    all_types <- sort(all_types)
+
+    # Sort: short names first, long names last
+    name_lengths <- nchar(all_types)
+    sort_idx <- order(name_lengths)
+    all_types <- all_types[sort_idx]
+
+    # Truncate long names (>20 chars) for display
+    display_names <- ifelse(nchar(all_types) > 20,
+        paste0(substr(all_types, 1, 17), "..."),
+        all_types)
+
+    # Count by method: rules only assigned continuous, rest are LLM
+    rules_counts <- sapply(all_types, function(t) if (t == "continuous") n_rules_assigned else 0L)
+    llm_counts <- sapply(all_types, function(t)
+      sum(columns_df$col_type == t, na.rm = TRUE) - rules_counts[t])
+
+    cat(col_cyan(sprintf("── col_type summary (%d total)\n", nrow(columns_df))))
+    cat(sprintf("  %-10s  %s\n", "method", paste(sprintf("%8s", display_names), collapse = "  ")))
+    cat(sprintf("  %s  %s\n", strrep("─", 10), paste(strrep("─", 8), collapse = "  ")))
+    cat(col_dim(sprintf("  %-10s  %s\n", "rules",
+        paste(sprintf("%8d", rules_counts), collapse = "  "))))
+    cat(col_yellow(sprintf("  %-10s  %s\n", "LLM",
+        paste(sprintf("%8d", llm_counts), collapse = "  "))))
   }
 
   } # end if (!SKIP_COLUMNS)

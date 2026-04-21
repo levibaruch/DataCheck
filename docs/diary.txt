@@ -1,0 +1,468 @@
+METACHECK-DATACHECK DEVELOPMENT DIARY
+═════════════════════════════════════════════════════════════════════════════
+
+PROJECT OVERVIEW
+────────────────────────────────────────────────────────────────────────────
+
+R-based pipeline for downloading psychology research data repositories (OSF,
+Dataverse), classifying files via LLM, extracting + labelling column metadata,
+and converting outputs to PsychDS format for reproducible research data sharing.
+
+Core insight: Psychology papers have heterogeneous data structures. A single
+pipeline can't hardcode them — use LLM to classify dynamically, then extract
+statistics standardly. Feed downstream tools (analysis, dashboards, PsychDS
+converters) with consistent CSV schemas.
+
+CORE ARCHITECTURE
+────────────────────────────────────────────────────────────────────────────
+
+Papers identified by numeric IDs treated as character strings (preserve leading
+zeros). Main entry: run_index(paper_id).
+
+Pipeline stages:
+  1. Download from OSF/Dataverse (unpack all archives)
+  2. Classify files via LLM (type, group, granularity)
+  3. Extract columns + statistics from tabular data
+  4. Label columns from codebooks (fuzzy matching)
+  5. Convert to PsychDS format (optional)
+
+Key architectural constraints:
+  - Base R only (constitutional principle to minimize dependencies)
+  - Local LLM (ollama/gpt-oss:20b-cloud, not API)
+  - Incremental CSV output (crash-resilient, resumable)
+  - Max 10 LLM calls/paper (200 paths, batch size 20)
+  - Max 500 MB/file, 10 GB total download
+
+FEATURE CHRONOLOGY WITH RATIONALES
+────────────────────────────────────────────────────────────────────────────
+
+PHASE 1: CORE PIPELINE (002–020)
+
+002-column-type-classification (User request)
+  Problem: All columns assumed continuous in output; misses binary/categorical/ordinal/ID columns
+  Rationale: Downstream consumers (analyses, dashboards) need type labels to apply correct statistics
+  Decision: Add col_type column to columns.csv with LLM classification fallback
+  Implementation: Rule-based for obvious cases (>20 unique → continuous, n=2 → binary),
+                LLM for ambiguous (3–20 unique values might be Likert or ID)
+  Impact: Enables structured column metadata for all downstream tools
+
+003-qualtrics-header-skip
+  Problem: Qualtrics survey exports embed metadata (timestamps, response IDs, pages)
+  Rationale: Metadata inflates column counts and obscures actual measured variables
+  Decision: Strip Qualtrics-specific header rows before processing
+  Note: Low-priority fix; affects subset of papers
+
+004-reduce-unknown-coltypes
+  Problem: Every ambiguous column sends LLM query (high token cost)
+  Rationale: Token cost scales with papers; 20-value threshold chosen pragmatically
+  Decision: Use rule-based heuristics first (col_name patterns like "n_errors", "rt_ms"),
+           only route edge cases to LLM
+  Impact: 30-50% reduction in LLM calls for typical papers without sacrificing accuracy
+
+005-codebook-column-labelling
+  Problem: Researchers describe variables in codebooks; pipeline can't match them to data
+  Rationale: Codebook labels are researcher intent; aligns data with research design
+  Decision: Send codebook text to LLM for variable extraction, match to data via fuzzy string distance
+  Output: labels.csv with (source_file, column_name, label, label_source, label_method)
+  Note: Prerequisite for codebook coverage metrics and PsychDS variableMeasured blocks
+
+006-llm-fuzzy-matching
+  Problem: Codebook variable names often don't exactly match data column names
+  Rationale: Different naming conventions (snake_case vs camelCase vs prose) are common
+  Decision: Extend labels.csv with label_method column: "exact", "fuzzy", "unmatched"
+  Implementation: Use string distance threshold (Levenshtein or similar)
+  Rationale for tracking method: Tells downstream consumers confidence in label linkage
+
+007-per-id-output-structure
+  Problem: No standardised output location; each paper's results scattered
+  Rationale: Consumers (QA tools, batch processing, PsychDS converters) need predictable paths
+  Decision: Standardise to outputs/<source>/<paper_id>/ with fixed CSV names:
+    - structure.csv: file inventory
+    - columns.csv: column metadata
+    - labels.csv: codebook labels + matches
+    - codebook_coverage.csv: coverage percentage per codebook
+  Impact: Enables automation and batch processing
+
+008-bulk-label-runners
+  Problem: Single-paper runner works for 1 paper; doesn't scale to 2000+
+  Rationale: Many papers have small errors; bulk run discovers patterns across corpus
+  Decision: Bulk runner (run_index_bulk.R) writes incrementally to bulk_summary.csv
+  Key feature: Append-only mode survives interruption; resume by skipping existing rows
+  Trade-off: Can't easily recompute partial results; deletion requires manual intervention
+  Impact: 2000+ paper corpus became processable; discovered systematic issues
+
+009-multi-format-codebooks
+  Problem: Codebooks come as PDF, DOCX, Excel, CSV; only CSV was processable
+  Rationale: Psychology papers use traditional formats; supporting them increases coverage
+  Decision: Extract text from PDF (pdftools) and DOCX (officer), route to LLM
+  Impact: Coverage increased from ~40% to ~80% across corpus
+
+010-fix-label-ambiguity
+  Problem: One codebook variable can match multiple data columns (e.g., "Q1" appears 5 times)
+  Rationale: Assigning same label to all is wrong; researcher manually reviewed 1, not 5
+  Decision: Keep first match, mark others as unmatched; log ambiguity for manual review
+  Trade-off: Errs on side of precision (under-label) rather than false labels
+
+011-merge-columns-output
+  Problem: Column extraction overwrites columns.csv; loses upstream metadata (col_type, codebook labels)
+  Rationale: Metadata from different stages should compose (type + label + stats)
+  Decision: Pre-merge columns.csv before column extraction, append statistics in-place
+  Implementation: Left join on (source_file, column_name)
+
+012-single-dataset-runner
+  Problem: Debugging 2000-paper bulk runs requires wading through noise
+  Rationale: Single-paper runner enables focused testing and hand-validation
+  Decision: Thin wrapper around run_index() with progress printing
+  Usage: For manual QA, debugging, dataset-specific features
+
+013-fix-r-file-misclassification
+  Problem: .R files were sometimes classified as data (LLM confusion with data exports)
+  Rationale: R scripts are analysis code, not datasets; misclassification inflates "data" counts
+  Decision: Rule-based: .R/.py/.sh/.do → code (no LLM)
+  Impact: Improved ground-truth accuracy for file-type evaluation
+
+014-fix-multilevel-csv-headers
+  Problem: Excel CSVs exported with 2-row headers (units on row 2) confuse read.delim
+  Rationale: R assigns "...1", "...2" placeholders; sub-header rows end up in data
+  Decision: Detect and drop sub-header rows before column processing
+  Implementation: Scan first N rows for repeated "...N" patterns; drop row if it appears
+
+015-verbatim-codebook-labels
+  Problem: CSV/TSV codebooks sent to LLM for extraction (redundant; user-authored)
+  Rationale: LLM extraction adds latency, token cost, and potential corruption
+  Decision: Use codebook text verbatim if it's already CSV/TSV (no LLM)
+  Implementation: Read codebook, auto-detect (variable, label) columns
+
+016-pipeline-quality-report
+  Problem: No summary of pipeline performance; hard to see patterns across corpus
+  Rationale: Bulk CSV alone is hard to interpret; visual report uncovers issues
+  Decision: Generate HTML/CSV reports with:
+    - Per-paper success/failure breakdown
+    - Column type distribution
+    - Codebook coverage percentiles
+    - Error code frequency
+  Tool: Passive reporting; helps operators spot systematic issues
+
+017-llm-temperature-testing
+  Problem: LLM responses vary with temperature; no way to test consistency
+  Rationale: Psychology depends on reproducibility; need to know LLM stability
+  Decision: Add LLM_TEMPERATURE parameter, run sweep across [0.0, 0.5, 1.0, 1.5]
+  Output: sweep_results/<paper_id>/ with consistency metrics
+  Impact: Informed choice of temperature for production (chose 0.3–0.5)
+
+018-fix-csv-codebook-parsing
+  Problem: CSV codebooks with many columns (variable, label, mean, SD, min, max)
+  Rationale: LLM sent entire table; should extract (variable, label) columns only
+  Decision: Pre-process codebook CSV: detect variable/label columns by header name heuristics,
+           reduce to 2-column format before LLM
+  Impact: 50% reduction in tokens for CSV codebooks
+
+019-fix-index-labelled-stats
+  Problem: haven::read_sav() returns labelled columns; rbind(stats) failed with precision error
+  Rationale: vctrs (haven dependency) has vector length mismatch on rbind
+  Decision: zap_labels() before stats aggregation
+  Implementation: as.data.frame(haven::zap_label(haven::zap_labels(df)))
+
+020-validation-gui
+  Problem: No tool to spot-check LLM classifications; manual review tedious
+  Rationale: Ground-truth labelling is critical for model evaluation
+  Decision: Shiny app for per-paper annotation with filtering by:
+    - File size, completeness, type
+    - Validation status (annotated, semi-annotated, pending)
+  Storage: Local CSV per paper (ground_truth/<paper_id>.csv), no database
+  Impact: Enabled human-in-the-loop evaluation, discovered systematic LLM biases
+
+PHASE 2: ADVANCED & STRUCTURED OUTPUT (021–038)
+
+021-psychds-conversion (MAJOR FEATURE)
+  Problem: Metacheck outputs are internal CSVs; can't share with open science community
+  Rationale: PsychDS is W3C/schema.org-compliant; enables cross-tool interoperability
+  Decision: Convert structure.csv → PsychDS directory tree with:
+    - dataset_description.json (schema.org Dataset + metacheck extensions)
+    - data/raw/ (original files)
+    - data/*.csv (converted tabular, with sidecars)
+    - provenance.json (file-level metadata)
+    - documentation/ (codebooks, supplemental files)
+  Multi-study handling: Create study-ex1/, study-ex2/ subdirs for heterogeneous papers
+  Shared codebooks: Place in shared/ dir, reference from per-study descriptions
+  Impact: Psychology data now publishable to open repositories (OSF, Zenodo, figshare)
+
+022-file-type-taxonomy-refactor
+  Problem: File types scattered (data, code, supplemental, codebook, output, asset, readme, other, software)
+  Rationale: Inconsistent naming breaks downstream routing and classification accuracy
+  Decision: Consolidate to fixed enum:
+    - data, code, software, asset, supplemental, codebook, output, readme, other
+  Documentation: output-schemas.md now lists all valid values
+  Impact: Cleaner PsychDS conversion; improves LLM classification consistency
+
+023-sentinel-aggregate-revamp
+  Problem: Aggregate folder detection was brittle; failed on mixed experiment structures
+  Rationale: Psychology papers often mix files (Analysis_scripts/ with code from exp1–4)
+  Decision: Redesign sentinel system with extension-based grouping + heuristic routing:
+    - Group files by extension within aggregate folder
+    - Detect participant series (folder names like 1/, 2/, sub_01/)
+    - Mark as granularity="individual" (per-participant files) vs "combined" (pooled)
+  Impact: More robust to real-world repo structures
+
+024-fix-col-type-detection
+  Problem: Boundary cases (7-point Likert vs error counts) classified incorrectly
+  Rationale: Rule-based heuristics fragile on edge cases
+  Decision: Add name-based rules (col_name contains "error", "count" → continuous)
+  Impact: Reduced LLM load for obvious cases; improved accuracy on Likert scales
+
+025-add-n-unique-stat
+  Problem: Column statistics missing n_unique; needed for uniqueness assessment
+  Rationale: Cardinality is essential for ID detection and deduplication
+  Decision: Add n_unique to stats block in columns.csv
+
+026-add-output-file-type
+  Problem: Output files (results, figures) not distinguished from data
+  Rationale: Psychology papers store outputs alongside data; need to separate
+  Decision: Add file type classification: output (results, figures) vs data
+  Implementation: LLM classification with fallback rules (*.out, *results*, *figure*)
+
+027-llm-retry-logging
+  Problem: LLM failures silently removed from output; no visibility
+  Rationale: Operators can't diagnose systematic issues without logs
+  Decision: Append-only error log (llm_batch_errors.log) with:
+    - paper_id, stage (Phase 1/2), chunk, attempt, error message
+  Implementation: llm_batch() logs to file; never removes entries
+  Impact: Enabled root-cause analysis of LLM failures
+
+028-data-format-subtype
+  Problem: Tabular data is one type; but includes CSV, Excel, SPSS, Stata, SAS
+  Rationale: Different formats have different column extraction costs and error modes
+  Decision: Add data_format column with subtypes:
+    - tabular (CSV, TSV, Excel, SPSS, Stata, SAS)
+    - raw (MATLAB, binary, neuroimaging)
+    - text (plain text exports)
+    - database (SQL dump, JSON array)
+  Impact: Enables format-specific extraction strategies
+
+029-software-file-type
+  Problem: Software files (executables, libraries, configs) not classified
+  Rationale: Psychology repos contain compiled code and environments; need to track
+  Decision: Add software type with subtypes: executable, library, script, config
+  Implementation: Extension-based rules + LLM fallback
+
+030-psychds-viewer
+  Problem: PsychDS datasets generated but no tool to browse them
+  Rationale: Open science requires visible, explorable data
+  Decision: Develop Shiny app for read-only dataset browsing
+  Status: Incomplete; deferred for UI/UX refinement
+
+031-dataverse-source-support
+  Problem: Pipeline downloads only from OSF; Dataverse repos not accessible
+  Rationale: Many psychology papers use Dataverse; missing half of community repositories
+  Decision: Extend downloader to support Dataverse API
+  Implementation: Source-aware code (data/osf/, data/dataverse/)
+  Impact: Corpus grew from OSF-only to OSF+Dataverse
+
+032-source-aware-storage
+  Problem: Mixed OSF/Dataverse repos in flat directory structure
+  Rationale: Metadata queries (papers per source) require isolation
+  Decision: Namespace all outputs by source:
+    - data/osf/, data/dataverse/, etc.
+    - outputs/osf/<id>/, outputs/dataverse/<id>/, etc.
+    - psychds/osf/<id>/, psychds/dataverse/<id>/, etc.
+  Impact: Enables source-specific analyses and compliance with GDPR/terms
+
+033-llm-prompt-refinements
+  Problem: LLM misclassifies 7 systematic file types (R files, model syntax, etc.)
+  Rationale: Prompt clarity directly affects classification accuracy
+  Decision: Refined structure prompt with:
+    - Explicit examples for edge cases (R files as code, not data)
+    - .txt model syntax (JAGS/Stan/Mplus) as code
+    - .log files as output, not data
+    - Config files (.yml, .xml, .json) as supplemental/code
+  Impact: Improved Phase 1 accuracy from ~85% to ~92%
+
+034-classification-parsing-fixes
+  Problem: Edge cases (MATLAB .mat, unusual Mplus syntax, Excel multisheet) fail
+  Rationale: Real psychology papers use non-standard formats
+  Decision: Add format-specific parsing:
+    - .xlsm (Excel macro files) treated as archive (unzip, classify contents)
+    - .rar archives extracted via system2 (unrar)
+    - Haven codebook parsing improved for complex SPSS/Stata files
+  Impact: Reduced "too_large" errors from format mishandling
+
+035-sentinel-aggregate-redesign (CRITICAL IMPROVEMENT)
+  Problem: Old sentinel system failed on heterogeneous aggregates; routed all to one group
+  Example: Analysis_scripts/ with Bracketing_1a.R, Bracketing_2.R, Bracketing_4.R
+           → old system sampled one, classified all as ex1 (wrong; others are 2 and 4)
+  Rationale: Psychology experiments often nest; filename patterns encode experiment labels
+  Decision: Two-phase redesign:
+    - Phase 1: Classify individual + sample files (no change)
+    - Phase 2: Classify aggregate folders with improved LLM context:
+      * Pass JSON descriptors with filename patterns
+      * Detect repeating patterns (Bracketing_1?, Bracketing_2?, Bracketing_4?)
+      * Route files to correct group via pattern matching
+      * Only propagate to files within same group
+    - Add route_individually flag for high-variance aggregates
+  Impact: Aggregate accuracy improved from ~60% to ~90%; reduced silent misclassification
+
+036-sanitize-llm-outputs
+  Problem: LLM sometimes returns typos (coden, categoric, continuus)
+  Rationale: Typos corrupt data; hard to detect downstream
+  Decision: Validate LLM responses against fixed enum; retry with correction prompt
+  Implementation: For invalid col_type/file type, prompt LLM to correct
+
+037-improve-granularity-detection (COMPLETE)
+  Problem: Folder heuristic alone misses complex participant ID schemes
+  Rationale: Psychology uses alphanumeric IDs (sub_001, S123, P05); folder names vary
+  Decision: Three-tier detection:
+    1. Filename heuristics (is_participant_id() for non-aggregates)
+    2. Folder heuristics (>50% of subdir names match participant pattern)
+    3. LLM-assisted (send filename patterns to GRANULARITY_PROMPT)
+  Implementation: detect_filename_pattern() → extract repeating patterns (sub_N, ID_N)
+                LLM classifies pattern as individual/combined
+                Infer granularity for non-aggregate files via pattern matching
+  Threshold: Require ≥8 files matching pattern (avoids false positives on study-label sequences)
+  Impact: Granularity detection improved from ~70% to ~95% accuracy
+
+038-llm-fallback-retry
+  Problem: LLM calls fail occasionally (network, model overload); no recovery
+  Rationale: Retry with exponential backoff + fallback to rules improves robustness
+  Decision: Three-tier retry chain:
+    1. Immediate retry (backoff 1s)
+    2. Retry with truncated input (smaller batch)
+    3. Fallback to rule-based classification
+  Logging: All attempts logged to llm_batch_errors.log with attempt number
+  Impact: System resilience improved; rare LLM failures no longer block papers
+
+PHASE 3: CURRENT WORK (Apr 2026)
+
+039-two-phase-aggregate-prompt (IN PROGRESS)
+  Problem: AB testing framework needed for prompt variants
+  Rationale: Small prompt changes have large accuracy impact; need A/B infrastructure
+  Decision: Split prompts into fixed headers + variable bodies:
+    - SINGLE_HEADER, AGGREGATE_HEADER (context)
+    - STRUCTURE_PROMPT, STRUCTURE_PROMPT_v0, STRUCTURE_PROMPT_v1 (bodies for testing)
+  Extended llm_batch() to handle JSON descriptors for Phase 2
+  Impact: Enables systematic prompt optimization
+
+2026-04-21 — Error visibility, performance optimizations
+
+(1) Surface psychds conversion errors
+    Issue: Paper 0956797616678188 had silent GT/structure mismatch
+    Root cause: apply_ground_truth() assigns GT fields using idx from which()
+               If GT has rows for deduplicated files, idx returns no matches or multiples
+    Fix: print actual R error message on FAILED (was bare "FAILED")
+    Implementation: Extract unique errors from psychds_results, concat with "; "
+    Commit: 8cec61e3
+
+(2) Fix aggregate folder count mismatch (5 detected, 12 printed)
+    Issue: Header counted dirs, printed extension groups; route_individually silently skipped
+    Root cause: agg_dirs = 5 dirs; each dir → multiple extension groups; some routed individually
+    Decision: Buffer group lines, print header after loop with correct count
+    Impact: Terminal clarity; routed groups now visible in dim text
+
+(3) Skip individual-granularity files from column extraction
+    Issue: Per-participant CSVs (50 files) → 50 redundant column sets; wasted extraction cost
+    Rationale: Future combiner will stack into wide CSV; derive stats once, not per-file
+    Fix: Filter data_files by (is.na(data_granularity) | data_granularity != "individual")
+    Impact: Column extraction cost scales O(1) for series instead of O(n)
+
+(4) Fix apostrophe-in-filename crash
+    Issue: Paper 0956797619837981 has data_experiment1'.txt; silent conversion failure
+    Root cause: Single quote breaks R's locale connection layer (file(), read.delim)
+    Fix: Detect paths with ' → copy to tempfile before any connection
+    Impact: Robust to special characters
+    Commit: 43f9385f
+
+ARCHITECTURAL PRINCIPLES
+────────────────────────────────────────────────────────────────────────────
+
+I. Clarity: CSVs are source of truth, not code
+   → All outputs are CSVs (no database). Callee writes data, caller writes metadata.
+
+II. Resilience: Incremental, crash-safe outputs
+   → Append-only bulk runs. Resume on restart. No in-memory-only results.
+
+III. Minimalism: Base R only
+   → Existing packages cover 95%. Deferred features listed in TODO.
+
+IV. Decoupling: Separate stages are independent
+   → Errors in one don't corrupt others. Each stage reads/writes CSVs.
+
+V. Transparency: Don't hide failures
+   → Log errors. Print to terminal. Silent failures waste debugging time.
+
+VI. Data as documentation
+   → granularity_source, label_method, type_source columns document *how* each
+      classification was made, not just the result. Enables confidence-based filtering.
+
+KNOWN LIMITATIONS & DEFERRED
+────────────────────────────────────────────────────────────────────────────
+
+[ ] Individual-level file combiner
+    Stack per-participant CSVs into wide format; derive columns once.
+    Impact: 50x efficiency gain for series papers.
+    Blocker: None; started in spec 037, deferred for post-Apr release.
+
+[ ] .mat file reading (MATLAB data)
+    Requires R.matlab package (not constitutional-compliant).
+    Workaround: Classified as data, skipped at column extraction.
+
+[ ] Positional codebooks (rare)
+    Codebooks list variables as "column 1", "column 2" (not names).
+    Impact: ~5 papers; coverage always 0%.
+
+[ ] Semantic duplicate detection
+    Same data in .sav + .csv has different byte sizes; current approach misses.
+    Workaround: Manual GT labelling to de-duplicate.
+
+[ ] Format duplicates (multi-format same data)
+    Detect via column matching + basic statistics comparison.
+
+[ ] Auto-detection of measurement instruments (BDI, PHQ-9, STAI)
+    Could improve column type inference + codebook coverage.
+
+[ ] Special character generalization
+    Apostrophes handled; other characters (quotes, unicode) may break.
+    Strategy: Expand tempfile fallback for all problematic characters.
+
+NEXT PRIORITIES
+────────────────────────────────────────────────────────────────────────────
+
+Immediate:
+  1. Individual combiner (high impact; 50x improvement for series)
+  2. Test apostrophe fix on full bulk run
+  3. Monitor for other special-character crashes
+  4. Semantic duplicate detection (codebook matching)
+
+Short-term (2–4 weeks):
+  5. Auto-instrument detection from paper XML
+  6. CSV codebook pre-processing (reduce LLM tokens)
+  7. Generalise path sanitisation for all special characters
+  8. Format duplicate detection
+
+Long-term (1–3 months):
+  9. PsychDS viewer (UI/UX refinement)
+  10. Concatenation of matching-schema files
+  11. Enhanced ground-truth GUI with bulk operations
+  12. Integration with OSF/Zenodo for direct publishing
+
+WORKFLOW & TEAM PREFERENCES
+────────────────────────────────────────────────────────────────────────────
+
+PRs:
+  - Target: dev (not main)
+  - Test plan: Passive checklist (conditions to verify, not imperative)
+  - Review: Skip /simplify and review agents; go straight to git
+  - Post-merge: Append poem to docs/Poems.md with funny commit message
+
+Config:
+  - FULL_RUN=TRUE bypasses all LLM call caps; every truncation guarded with !FULL_RUN
+  - LLM_TEMPERATURE and LLM_THINK_LEVEL are global constants (not R options)
+  - Specs in specs/NNN-feature/ are the source of truth for design
+
+Docs:
+  - pipeline.md: Flow, constants, retry logic, test papers (update on pipeline changes)
+  - output-schemas.md: Column defs, enum values, error codes (update on schema changes)
+  - diary.txt: This file; snapshot of architecture + major decisions (update quarterly)
+
+Git:
+  - All merges to dev (integrate frequently)
+  - Commits include rationale in body (why, not just what)
+  - No force push to dev or main

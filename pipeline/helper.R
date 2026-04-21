@@ -1055,6 +1055,13 @@ parse_codebook <- function(path) {
   }
 
   # ── LLM fallback for unstructured / unparseable files ────────────────────────
+  if (is.null(result) || (is.data.frame(result) && nrow(result) == 0)) {
+    message("  parse_codebook: structured extraction failed for ", src, " — falling back to LLM")
+    codebook_fail_log <- "data_check/logs/codebook_parse_failures.log"
+    dir.create(dirname(codebook_fail_log), recursive = TRUE, showWarnings = FALSE)
+    cat(format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "|", src, "\n",
+        file = codebook_fail_log, append = TRUE)
+  }
   lines <- if (!is.null(rich_lines)) {
     rich_lines
   } else {
@@ -1420,9 +1427,17 @@ apply_ground_truth <- function(structure_df, source, paper_id) {
   if ("is_raw_gt" %in% names(gt) && !"data_granularity_gt" %in% names(gt)) {
     gt$data_granularity_gt <- ifelse(isTRUE(gt$is_raw_gt), "individual", NA_character_)
   }
+  gt_mismatches <- character(0)
   for (i in seq_len(nrow(gt))) {
     idx <- which(structure_df$rel_path == gt$rel_path[i])
-    if (length(idx) == 0) next
+    if (length(idx) == 0) {
+      gt_mismatches <- c(gt_mismatches, gt$rel_path[i])
+      next
+    }
+    if (length(idx) > 1) {
+      gt_mismatches <- c(gt_mismatches, paste0(gt$rel_path[i], " (", length(idx), " matches)"))
+      next
+    }
     if (!is.na(gt$type_gt[i])  && nzchar(gt$type_gt[i]))
       structure_df$type[idx]  <- gt$type_gt[i]
     if (!is.na(gt$group_gt[i]) && nzchar(gt$group_gt[i]))
@@ -1439,6 +1454,15 @@ apply_ground_truth <- function(structure_df, source, paper_id) {
       structure_df$gt_validated_at[idx] <- gt$validated_at[i]
     if ("annotator" %in% names(gt))
       structure_df$gt_annotator[idx]   <- gt$annotator[i]
+  }
+  if (length(gt_mismatches) > 0) {
+    warning("apply_ground_truth: ", length(gt_mismatches), " GT rows did not match structure.csv")
+    if (length(gt_mismatches) <= 5) {
+      for (m in gt_mismatches) warning("  - ", m)
+    } else {
+      for (m in head(gt_mismatches, 3)) warning("  - ", m)
+      warning("  ... and ", length(gt_mismatches) - 3, " more")
+    }
   }
   structure_df
 }

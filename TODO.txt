@@ -375,3 +375,929 @@ Apply these classifications consistently to the following paths.
 Classify this repository tree:
 
 LLM error shouldnt be an option!
+
+
+══ #202 / 2103  •  osf / 0956797617713053
+  [index]    running ...
+[1] "0956797617713053"
+
+── Aggregate folders (46 detected) — classifying:
+  ×35    Eye-tracking_causality/code/flash/Box2D/Collision/.as
+   ×22    Eye-tracking_causality/code/flash/Box2D/Dynamics/Joints/.as
+   ×40    Eye-tracking_causality/data/raw/mat/.mat
+   ×80    Eye-tracking_causality/data/raw/RData/.csv
+   ×54    Eye-tracking_causality/figures/plots/counterfactual_looks/.pdf
+   ×54    Eye-tracking_causality/figures/plots/heatmaps/.pdf
+   ×54    Eye-tracking_causality/figures/plots/HMM_time/.pdf
+   ×34    Eye-tracking_causality/videos/classification/.mp4
+   ×40    Eye-tracking_causality/videos/tracking/causal/participant_1/.mp4
+   ×40    Eye-tracking_causality/videos/tracking/causal/participant_11/.mp4
+   ×40    Eye-tracking_causality/videos/tracking/causal/participant_4/.mp4
+   ×40    Eye-tracking_causality/videos/tracking/causal/participant_40/.mp4
+   ×40    Eye-tracking_causality/videos/tracking/causal/participant_41/.mp4
+   ×40    Eye-tracking_causality/videos/tracking/causal/participant_49/.mp4
+   ×40    Eye-tracking_causality/videos/tracking/causal/participant_5/.mp4
+   ×40    Eye-tracking_causality/videos/tracking/causal/participant_7/.mp4
+   ×40    Eye-tracking_causality/videos/tracking/causal/participant_8/.mp4
+   ×40    Eye-tracking_causality/videos/tracking/counterfactual/participant_23/.mp4
+   ×40    Eye-tracking_causality/videos/tracking/counterfactual/participant_25/.mp4
+   ×40    Eye-tracking_causality/videos/tracking/counterfactual/participant_26/.mp4
+   ×40    Eye-tracking_causality/videos/tracking/counterfactual/participant_28/.mp4
+   ×40    Eye-tracking_causality/videos/tracking/counterfactual/participant_30/.mp4
+   ×40    Eye-tracking_causality/videos/tracking/counterfactual/participant_31/.mp4
+   ×40    Eye-tracking_causality/videos/tracking/counterfactual/participant_33/.mp4
+   ×40    Eye-tracking_causality/videos/tracking/counterfactual/participant_35/.mp4
+   ×40    Eye-tracking_causality/videos/tracking/counterfactual/participant_47/.mp4
+   ×40    Eye-tracking_causality/videos/tracking/excluded/participant_10/.mp4
+   ×40    Eye-tracking_causality/videos/tracking/excluded/participant_12/.mp4
+   ×40    Eye-tracking_causality/videos/tracking/excluded/participant_15/.mp4
+   ×40    Eye-tracking_causality/videos/tracking/excluded/participant_18/.mp4
+   ×40    Eye-tracking_causality/videos/tracking/excluded/participant_21/.mp4
+   ×40    Eye-tracking_causality/videos/tracking/excluded/participant_3/.mp4
+   ×40    Eye-tracking_causality/videos/tracking/excluded/participant_32/.mp4
+   ×40    Eye-tracking_causality/videos/tracking/excluded/participant_43/.mp4
+   ×40    Eye-tracking_causality/videos/tracking/excluded/participant_46/.mp4
+   ×40    Eye-tracking_causality/videos/tracking/excluded/participant_6/.mp4
+   ×40    Eye-tracking_causality/videos/tracking/outcome/participant_13/.mp4
+   ×40    Eye-tracking_causality/videos/tracking/outcome/participant_14/.mp4
+   ×40    Eye-tracking_causality/videos/tracking/outcome/participant_16/.mp4
+   ×40    Eye-tracking_causality/videos/tracking/outcome/participant_17/.mp4
+   ×40    Eye-tracking_causality/videos/tracking/outcome/participant_19/.mp4
+   ×40    Eye-tracking_causality/videos/tracking/outcome/participant_20/.mp4
+   ×40    Eye-tracking_causality/videos/tracking/outcome/participant_27/.mp4
+   ×40    Eye-tracking_causality/videos/tracking/outcome/participant_44/.mp4
+   ×40    Eye-tracking_causality/videos/tracking/outcome/participant_45/.mp4
+   ×40    Eye-tracking_causality/videos/tracking/outcome/participant_48/.mp4
+── Classifying 220 file path(s) via LLM (11 batch(es))
+Querying LLM [==================================================] 1/1 00:00:06
+Querying LLM [==================================================] 1/1 00:00:05
+Querying LLM [==================================================] 1/1 00:00:09
+Querying LLM [==================================================] 1/1 00:00:08
+Querying LLM [==================================================] 1/1 00:00:07
+Querying LLM [==================================================] 1/1 00:00:05
+Querying LLM [==================================================] 1/1 00:00:10
+Querying LLM [==================================================] 1/1 00:00:05
+Querying LLM [==================================================] 1/1 00:00:07
+Querying LLM [==================================================] 1/1 00:00:01
+── LLM batch 10/11 retry 1/4 ──
+Querying LLM [==================================================] 1/1 00:00:07
+Querying LLM [==================================================] 1/1 00:00:13
+── Classifying 46 aggregate folder(s) via LLM
+Querying LLM [==================================================] 1/1 00:00:07
+Querying LLM [==================================================] 1/1 00:00:05
+Querying LLM [==================================================] 1/1 00:00:02
+
+── Aggregate classification results:
+  ×35    Eye-tracking_causality/code/flash/Box2D/Collision/.as      →  code / shared      
+  ×22    Eye-tracking_causality/code/flash/Box2D/Dynamics/Joints/.as →  code / shared      
+  ×40    Eye-tracking_causality/data/raw/mat/.mat                   →  data / shared      combined
+  ×80    Eye-tracking_causality/data/raw/RData/.csv                 →  data / shared      combined
+  ×54    Eye-tracking_causality/figures/plots/counterfactual_looks/.pdf →  output / shared    
+  ×54    Eye-tracking_causality/figures/plots/heatmaps/.pdf         →  output / shared    
+  ×54    Eye-tracking_causality/figures/plots/HMM_time/.pdf         →  output / shared    
+  ×34    Eye-tracking_causality/videos/classification/.mp4          →  output / shared    
+  ×40    Eye-tracking_causality/videos/tracking/causal/participant_1/.mp4 →  data / shared      combined
+  ×40    Eye-tracking_causality/videos/tracking/causal/participant_11/.mp4 →  data / shared      combined
+  ×40    Eye-tracking_causality/videos/tracking/causal/participant_4/.mp4 →  data / shared      combined
+  ×40    Eye-tracking_causality/videos/tracking/causal/participant_40/.mp4 →  data / shared      combined
+  ×40    Eye-tracking_causality/videos/tracking/causal/participant_41/.mp4 →  data / shared      combined
+  ×40    Eye-tracking_causality/videos/tracking/causal/participant_49/.mp4 →  data / shared      combined
+  ×40    Eye-tracking_causality/videos/tracking/causal/participant_5/.mp4 →  data / shared      combined
+  ×40    Eye-tracking_causality/videos/tracking/causal/participant_7/.mp4 →  data / shared      combined
+  ×40    Eye-tracking_causality/videos/tracking/causal/participant_8/.mp4 →  data / shared      combined
+  ×40    Eye-tracking_causality/videos/tracking/counterfactual/participant_23/.mp4 →  data / shared      combined
+  ×40    Eye-tracking_causality/videos/tracking/counterfactual/participant_25/.mp4 →  data / shared      combined
+  ×40    Eye-tracking_causality/videos/tracking/counterfactual/participant_26/.mp4 →  data / shared      combined
+  ×40    Eye-tracking_causality/videos/tracking/counterfactual/participant_28/.mp4 →  asset / shared     
+  ×40    Eye-tracking_causality/videos/tracking/counterfactual/participant_30/.mp4 →  asset / shared     
+  ×40    Eye-tracking_causality/videos/tracking/counterfactual/participant_31/.mp4 →  asset / shared     
+  ×40    Eye-tracking_causality/videos/tracking/counterfactual/participant_33/.mp4 →  asset / shared     
+  ×40    Eye-tracking_causality/videos/tracking/counterfactual/participant_35/.mp4 →  asset / shared     
+
+  raw data, not asset
+
+══ #354 / 2122  •  osf / 0956797618754486
+  [index]    running ...
+[1] "0956797618754486"
+── 18 archive(s): 13 unpacked, 5 already done
+  exploded test.xlsm → 2 CSV(s)  [2 unnamed; named: A, B, C, D]               
+── Removed 2321 duplicate file(s) (same name, size, and content)
+
+── Aggregate folders (337 detected) — classifying:
+  ×3     74kqe/Stimuli_and_Psychopy_Experiment/admin/USA/green_card/boundless/foundindownloadsunsureifuploaded/.docx  → routed individually
+   ×10    74kqe/Stimuli_and_Psychopy_Experiment/admin/USA/green_card/boundless/foundindownloadsunsureifuploaded/.pdf  → routed individually
+   ×8     74kqe/Stimuli_and_Psychopy_Experiment/admin/USA/green_card/boundless/foundindownloadsunsureifuploaded/.jpg  → routed individually
+   ×98    74kqe/Stimuli_and_Psychopy_Experiment/admin/USA/green_card/boundless/interview_toprint/done/.pdf
+   ×3     74kqe/Stimuli_and_Psychopy_Experiment/admin/USA/green_card/boundless/interview_toprint/done/.docx  → routed individually
+   ×3     74kqe/Stimuli_and_Psychopy_Experiment/admin/USA/green_card/boundless/interview_toprint/done/.png  → routed individually
+   ×20    74kqe/Stimuli_and_Psychopy_Experiment/admin/USA/green_card/boundless/uploaded/.pdf
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/admin/USA/green_card/boundless/uploaded/.png  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/admin/USA/green_card/boundless/uploaded/.docx  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/admin/USA/green_card/boundless/uploaded/.jpg  → routed individually
+   ×34    74kqe/Stimuli_and_Psychopy_Experiment/admin/USA/green_card/sent_to_Monica/original_photos/.jpg
+   ×252   74kqe/Stimuli_and_Psychopy_Experiment/pictures/PNG/.png
+   ×4     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/.dll  → routed individually
+   ×22    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/.log
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/.txt  → routed individually
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/.  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/.url  → routed individually
+   ×28    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/.exe
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/.dat  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/.pyc  → routed individually
+   ×17    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/DLLs/.pyd  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/DLLs/.exe  → routed individually
+   ×5     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/DLLs/.dll  → routed individually
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/DLLs/.ico  → routed individually
+   ×20    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/DLLs/gst/.exe
+   ×8     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/DLLs/gst/.  → routed individually
+   ×111   74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/DLLs/gst/.dll
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/DLLs/gst/.pyd  → routed individually
+   ×92    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/include/.h
+   ×204   74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/.py
+   ×131   74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/.pyc
+   ×25    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/bsddb/test/.py
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/compiler/.py  → routed individually
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/compiler/.pyc  → routed individually
+   ×53    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/ctypes/test/.py
+   ×26    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/distutils/.py
+   ×24    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/distutils/.pyc
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/distutils/.cfg  → routed individually
+   ×23    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/distutils/command/.py
+   ×18    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/distutils/command/.pyc  → routed individually
+   ×5     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/distutils/command/.exe  → routed individually
+   ×43    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/distutils/tests/.py
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/distutils/tests/.sample  → routed individually
+   ×14    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/email/.py  → routed individually
+   ×12    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/email/.pyc  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/email/test/data/.au  → routed individually
+   ×47    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/email/test/data/.txt
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/email/test/data/.gif  → routed individually
+   ×120   74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/encodings/.py
+   ×22    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/encodings/.pyc
+   ×59    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/idlelib/.py
+   ×4     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/idlelib/.def  → routed individually
+   ×7     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/idlelib/.txt  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/idlelib/.bat  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/idlelib/.pyw  → routed individually
+   ×18    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/lib-tk/.py  → routed individually
+   ×8     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/lib-tk/.pyc  → routed individually
+   ×52    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/lib2to3/fixes/.py
+   ×12    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/.pyd  → routed individually
+   ×7     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/.egg  → routed individually
+   ×30    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/.py
+   ×30    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/.pyc
+   ×9     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/.pth  → routed individually
+   ×25    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/.
+   ×29    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/.dll
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/.txt  → routed individually
+   ×25    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/_pytest/.py
+   ×25    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/_pytest/.pyc
+   ×25    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/asn1crypto/.py
+   ×25    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/asn1crypto/.pyc
+   ×15    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/cffi/.py  → routed individually
+   ×15    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/cffi/.pyc  → routed individually
+   ×4     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/cffi/.h  → routed individually
+   ×39    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/chardet/.py
+   ×39    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/chardet/.pyc
+   ×16    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/cryptography/hazmat/backends/openssl/.py  → routed individually
+   ×16    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/cryptography/hazmat/backends/openssl/.pyc  → routed individually
+   ×40    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/Cython/Compiler/.pyc
+   ×39    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/Cython/Compiler/.py
+   ×6     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/Cython/Compiler/.pxd  → routed individually
+   ×6     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/Cython/Compiler/.pyd  → routed individually
+   ×36    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/Cython/Includes/cpython/.pxd
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/Cython/Plex/.py  → routed individually
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/Cython/Plex/.pyc  → routed individually
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/Cython/Plex/.pxd  → routed individually
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/Cython/Plex/.pyd  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/Cython/Utility/.h  → routed individually
+   ×17    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/Cython/Utility/.c  → routed individually
+   ×4     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/Cython/Utility/.pyx  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/Cython/Utility/.cpp  → routed individually
+   ×52    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/dateutil/zoneinfo/zoneinfo--latest.tar/Africa/.
+   ×119   74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/dateutil/zoneinfo/zoneinfo--latest.tar/America/.
+   ×81    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/dateutil/zoneinfo/zoneinfo--latest.tar/Asia/.
+   ×29    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/dateutil/zoneinfo/zoneinfo--latest.tar/Etc/.
+   ×40    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/dateutil/zoneinfo/zoneinfo--latest.tar/Europe/.
+   ×34    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/dateutil/zoneinfo/zoneinfo--latest.tar/Pacific/.
+   ×17    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/dbus/.py  → routed individually
+   ×17    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/dbus/.pyc  → routed individually
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/docutils/.py  → routed individually
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/docutils/.pyc  → routed individually
+   ×23    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/docutils/languages/.py
+   ×23    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/docutils/languages/.pyc
+   ×34    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/docutils/parsers/rst/include/.txt
+   ×23    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/docutils/parsers/rst/languages/.py
+   ×23    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/docutils/parsers/rst/languages/.pyc
+   ×26    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gevent/.py
+   ×12    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gevent/.pyc  → routed individually
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gevent/.pyd  → routed individually
+   ×52    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/.exe
+   ×3     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/.  → routed individually
+   ×87    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/.dll
+   ×117   74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/lib/frei0r-1/.dll
+   ×69    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/lib/girepository-1.0/.typelib
+   ×215   74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/lib/gstreamer-1.0/.dll
+   ×105   74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/lib/ladspa/.dll
+   ×120   74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/license/.copying
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/license/.license  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/license/.isc  → routed individually
+   ×5     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/license/.lgpl  → routed individually
+   ×3     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/license/.1  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/license/.xiph  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/license/.ftl  → routed individually
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/license/.gpl  → routed individually
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/license/.copyright  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/license/.lgpl3  → routed individually
+   ×4     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/license/.readme  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/license/.lgplv3  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/license/.mit  → routed individually
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/license/.mpl  → routed individually
+   ×140   74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/glade/pixmaps/hicolor/16x16/actions/.png
+   ×143   74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/glade/pixmaps/hicolor/22x22/actions/.png
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/glib-2.0/schemas/.dtd  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/glib-2.0/schemas/.compiled  → routed individually
+   ×33    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/glib-2.0/schemas/.xml
+   ×24    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/gstreamer-1.0/validate-scenario/.scenario
+   ×119   74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/icons/Adwaita/16x16/actions/.png
+   ×30    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/icons/Adwaita/16x16/apps/.png
+   ×38    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/icons/Adwaita/16x16/devices/.png
+   ×22    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/icons/Adwaita/16x16/emotes/.png
+   ×24    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/icons/Adwaita/16x16/mimetypes/.png
+   ×86    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/icons/Adwaita/16x16/status/.png
+   ×114   74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/icons/Adwaita/24x24/actions/.png
+   ×27    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/icons/Adwaita/24x24/apps/.png
+   ×38    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/icons/Adwaita/24x24/devices/.png
+   ×22    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/icons/Adwaita/24x24/emotes/.png
+   ×24    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/icons/Adwaita/24x24/mimetypes/.png
+   ×86    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/icons/Adwaita/24x24/status/.png
+   ×118   74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/icons/Adwaita/32x32/actions/.png
+   ×30    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/icons/Adwaita/32x32/apps/.png
+   ×38    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/icons/Adwaita/32x32/devices/.png
+   ×22    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/icons/Adwaita/32x32/emotes/.png
+   ×24    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/icons/Adwaita/32x32/mimetypes/.png
+   ×83    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/icons/Adwaita/32x32/status/.png
+   ×122   74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/icons/Adwaita/scalable/actions/.svg
+   ×38    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/icons/Adwaita/scalable/apps/.svg
+   ×44    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/icons/Adwaita/scalable/devices/.svg
+   ×25    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/icons/Adwaita/scalable/emotes/.svg
+   ×135   74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/icons/Adwaita/scalable/status/.svg
+   ×95    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/icons/HighContrast/scalable/actions/.svg
+   ×35    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/icons/HighContrast/scalable/status/.svg
+   ×23    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/locale/bg/LC_MESSAGES/.mo
+   ×23    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/locale/ca/LC_MESSAGES/.mo
+   ×25    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/locale/cs/LC_MESSAGES/.mo
+   ×25    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/locale/da/LC_MESSAGES/.mo
+   ×24    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/locale/de/LC_MESSAGES/.mo
+   ×25    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/locale/el/LC_MESSAGES/.mo
+   ×23    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/locale/eo/LC_MESSAGES/.mo
+   ×25    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/locale/es/LC_MESSAGES/.mo
+   ×23    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/locale/eu/LC_MESSAGES/.mo
+   ×25    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/locale/fr/LC_MESSAGES/.mo
+   ×23    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/locale/gl/LC_MESSAGES/.mo
+   ×25    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/locale/hu/LC_MESSAGES/.mo
+   ×25    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/locale/id/LC_MESSAGES/.mo
+   ×22    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/locale/it/LC_MESSAGES/.mo
+   ×25    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/locale/ja/LC_MESSAGES/.mo
+   ×24    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/locale/lt/LC_MESSAGES/.mo
+   ×23    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/locale/lv/LC_MESSAGES/.mo
+   ×23    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/locale/nb/LC_MESSAGES/.mo
+   ×22    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/locale/nl/LC_MESSAGES/.mo
+   ×26    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/locale/pl/LC_MESSAGES/.mo
+   ×24    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/locale/pt_BR/LC_MESSAGES/.mo
+   ×21    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/locale/ro/LC_MESSAGES/.mo
+   ×24    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/locale/ru/LC_MESSAGES/.mo
+   ×23    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/locale/sk/LC_MESSAGES/.mo
+   ×24    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/locale/sl/LC_MESSAGES/.mo
+   ×25    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/locale/sr/LC_MESSAGES/.mo
+   ×24    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/locale/sv/LC_MESSAGES/.mo
+   ×25    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/locale/tr/LC_MESSAGES/.mo
+   ×24    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/locale/uk/LC_MESSAGES/.mo
+   ×23    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/locale/vi/LC_MESSAGES/.mo
+   ×26    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/locale/zh_CN/LC_MESSAGES/.mo
+   ×18    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/themes/Ceti/gtk-3.0/.css  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/themes/Ceti/gtk-3.0/.svg  → routed individually
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/themes/Ceti/gtk-3.0/.txt  → routed individually
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/themes/Ceti/gtk-3.0/.sh  → routed individually
+   ×211   74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/themes/Ceti/gtk-3.0/assets/.png
+   ×8     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/themes/Ceti/gtk-3.0/assets/.svg  → routed individually
+   ×102   74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/themes/Ceti/gtk-3.0/borders/.png
+   ×68    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/themes/E17gtk/gtk-3.0/assets/.svg
+   ×14    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/themes/E17gtk/gtk-3.0/assets/.png  → routed individually
+   ×219   74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/themes/Vertex-Dark/gtk-3.0/assets/.png
+   ×169   74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/gnome/share/themes/Vertex-Dark/gtk-3.0/borders/.png
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/imageio-1.3-py2.7.egg/imageio/plugins/.py  → routed individually
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/imageio-1.3-py2.7.egg/imageio/plugins/.pyc  → routed individually
+   ×17    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/insanity/.py  → routed individually
+   ×17    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/insanity/.pyc  → routed individually
+   ×49    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/core/.pyc
+   ×48    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/core/.py
+   ×15    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/core/magics/.py  → routed individually
+   ×15    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/core/magics/.pyc  → routed individually
+   ×43    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/core/tests/.pyc
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/core/tests/.jpg  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/core/tests/.png  → routed individually
+   ×42    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/core/tests/.py
+   ×21    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/frontend/html/notebook/static/jquery/css/themes/aristo/images/.png
+   ×21    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/frontend/html/notebook/static/jquery/css/themes/rocket/images/.png
+   ×16    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/frontend/qt/console/.pyc  → routed individually
+   ×15    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/frontend/qt/console/.py  → routed individually
+   ×32    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/html/static/components/codemirror/theme/.css
+   ×26    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/html/static/notebook/js/.js
+   ×24    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/html/tests/notebook/.js
+   ×15    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/html/widgets/.py  → routed individually
+   ×15    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/html/widgets/.pyc  → routed individually
+   ×16    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/kernel/.py  → routed individually
+   ×16    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/kernel/.pyc  → routed individually
+   ×15    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/kernel/zmq/.py  → routed individually
+   ×15    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/kernel/zmq/.pyc  → routed individually
+   ×21    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/lib/.py
+   ×20    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/lib/.pyc
+   ×12    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/lib/tests/.py  → routed individually
+   ×12    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/lib/tests/.pyc  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/lib/tests/.wav  → routed individually
+   ×13    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/nbconvert/exporters/.py  → routed individually
+   ×13    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/nbconvert/exporters/.pyc  → routed individually
+   ×14    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/nbconvert/exporters/tests/.py  → routed individually
+   ×14    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/nbconvert/exporters/tests/.pyc  → routed individually
+   ×12    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/nbconvert/preprocessors/.py  → routed individually
+   ×12    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/nbconvert/preprocessors/.pyc  → routed individually
+   ×12    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/parallel/tests/.py  → routed individually
+   ×12    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/parallel/tests/.pyc  → routed individually
+   ×17    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/qt/console/.py  → routed individually
+   ×18    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/qt/console/.pyc  → routed individually
+   ×27    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/quarantine/.py
+   ×27    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/quarantine/.pyc
+   ×13    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/testing/.py  → routed individually
+   ×13    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/testing/.pyc  → routed individually
+   ×9     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/testing/plugin/.py  → routed individually
+   ×9     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/testing/plugin/.pyc  → routed individually
+   ×4     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/testing/plugin/.txt  → routed individually
+   ×63    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/utils/.py
+   ×63    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/utils/.pyc
+   ×23    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/utils/tests/.pyc
+   ×22    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/utils/tests/.py
+   ×17    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/zmq/.py  → routed individually
+   ×17    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/IPython/zmq/.pyc  → routed individually
+   ×22    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/jinja2/.py
+   ×22    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/jinja2/.pyc
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/jinja2/.c  → routed individually
+   ×15    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/jinja2/testsuite/.py  → routed individually
+   ×15    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/jinja2/testsuite/.pyc  → routed individually
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/jsonschema/.py  → routed individually
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/jsonschema/.pyc  → routed individually
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/lxml-2.3.4-py2.7-win32.egg/lxml/.py  → routed individually
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/lxml-2.3.4-py2.7-win32.egg/lxml/.pyc  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/lxml-2.3.4-py2.7-win32.egg/lxml/.h  → routed individually
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/lxml-2.3.4-py2.7-win32.egg/lxml/.pyd  → routed individually
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/lxml-2.3.4-py2.7-win32.egg/lxml/.pxd  → routed individually
+   ×14    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/lxml-2.3.4-py2.7-win32.egg/lxml/html/.py  → routed individually
+   ×14    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/lxml-2.3.4-py2.7-win32.egg/lxml/html/.pyc  → routed individually
+   ×37    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/matplotlib/.py
+   ×60    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/matplotlib/.pyc
+   ×3     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/matplotlib/.pyd  → routed individually
+   ×69    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/matplotlib-1.4.3-py2.7-win32.egg/matplotlib/.py
+   ×69    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/matplotlib-1.4.3-py2.7-win32.egg/matplotlib/.pyc
+   ×10    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/matplotlib-1.4.3-py2.7-win32.egg/matplotlib/.pyd  → routed individually
+   ×36    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/matplotlib-1.4.3-py2.7-win32.egg/matplotlib/backends/.py
+   ×35    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/matplotlib-1.4.3-py2.7-win32.egg/matplotlib/backends/.pyc
+   ×4     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/matplotlib-1.4.3-py2.7-win32.egg/matplotlib/backends/.pyd  → routed individually
+   ×46    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/matplotlib-1.4.3-py2.7-win32.egg/matplotlib/mpl-data/fonts/afm/.afm
+   ×34    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/matplotlib-1.4.3-py2.7-win32.egg/matplotlib/mpl-data/fonts/ttf/.ttf
+   ×3     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/matplotlib-1.4.3-py2.7-win32.egg/matplotlib/mpl-data/fonts/ttf/.txt  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/matplotlib-1.4.3-py2.7-win32.egg/matplotlib/mpl-data/fonts/ttf/.  → routed individually
+   ×10    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/matplotlib-1.4.3-py2.7-win32.egg/matplotlib/mpl-data/images/.png  → routed individually
+   ×17    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/matplotlib-1.4.3-py2.7-win32.egg/matplotlib/mpl-data/images/.ppm  → routed individually
+   ×9     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/matplotlib-1.4.3-py2.7-win32.egg/matplotlib/mpl-data/images/.svg  → routed individually
+   ×17    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/matplotlib-1.4.3-py2.7-win32.egg/matplotlib/mpl-data/images/.xpm  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/matplotlib-1.4.3-py2.7-win32.egg/matplotlib/mpl-data/images/.gif  → routed individually
+   ×17    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/matplotlib-1.4.3-py2.7-win32.egg/mpl_toolkits/axes_grid/.py  → routed individually
+   ×17    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/matplotlib-1.4.3-py2.7-win32.egg/mpl_toolkits/axes_grid/.pyc  → routed individually
+   ×32    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/matplotlib/backends/.pyc
+   ×14    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/matplotlib/backends/.py  → routed individually
+   ×4     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/matplotlib/mpl-data/sample_data/.csv  → routed individually
+   ×4     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/matplotlib/mpl-data/sample_data/.dat  → routed individually
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/matplotlib/mpl-data/sample_data/.npy  → routed individually
+   ×5     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/matplotlib/mpl-data/sample_data/.png  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/matplotlib/mpl-data/sample_data/.raw  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/matplotlib/mpl-data/sample_data/.xrc  → routed individually
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/matplotlib/mpl-data/sample_data/.jpg  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/matplotlib/mpl-data/sample_data/.txt  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/matplotlib/mpl-data/sample_data/.ima  → routed individually
+   ×30    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/moviepy-0.2.2.11-py2.7.egg/moviepy/video/fx/.py
+   ×30    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/moviepy-0.2.2.11-py2.7.egg/moviepy/video/fx/.pyc
+   ×12    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/moviepy-0.2.2.11-py2.7.egg/moviepy/video/io/.py  → routed individually
+   ×12    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/moviepy-0.2.2.11-py2.7.egg/moviepy/video/io/.pyc  → routed individually
+   ×22    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/numpy/core/.py
+   ×22    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/numpy/core/.pyc
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/numpy/core/.pyd  → routed individually
+   ×25    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/numpy/core/include/numpy/.h
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/numpy/core/include/numpy/.txt  → routed individually
+   ×35    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/numpy/core/tests/.py
+   ×35    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/numpy/core/tests/.pyc
+   ×29    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/numpy/distutils/.pyc
+   ×28    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/numpy/distutils/.py
+   ×19    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/numpy/distutils/command/.py  → routed individually
+   ×19    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/numpy/distutils/command/.pyc  → routed individually
+   ×16    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/numpy/distutils/fcompiler/.py  → routed individually
+   ×16    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/numpy/distutils/fcompiler/.pyc  → routed individually
+   ×19    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/numpy/f2py/.py  → routed individually
+   ×19    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/numpy/f2py/.pyc  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/numpy/f2py/.1  → routed individually
+   ×14    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/numpy/f2py/docs/usersguide/.dat  → routed individually
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/numpy/f2py/docs/usersguide/.f90  → routed individually
+   ×9     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/numpy/f2py/docs/usersguide/.f  → routed individually
+   ×5     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/numpy/f2py/docs/usersguide/.pyf  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/numpy/f2py/docs/usersguide/.conf  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/numpy/f2py/docs/usersguide/.txt  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/numpy/f2py/docs/usersguide/.py  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/numpy/f2py/docs/usersguide/.pyc  → routed individually
+   ×13    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/numpy/f2py/tests/.py  → routed individually
+   ×13    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/numpy/f2py/tests/.pyc  → routed individually
+   ×26    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/numpy/lib/.py
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/numpy/lib/.pyd  → routed individually
+   ×25    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/numpy/lib/.pyc
+   ×22    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/numpy/lib/tests/.py
+   ×22    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/numpy/lib/tests/.pyc
+   ×20    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/numpy/numarray/.py
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/numpy/numarray/.pyd  → routed individually
+   ×19    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/numpy/numarray/.pyc  → routed individually
+   ×23    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/numpy/oldnumeric/.py
+   ×23    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/numpy/oldnumeric/.pyc
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/numpy/polynomial/.py  → routed individually
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/numpy/polynomial/.pyc  → routed individually
+   ×17    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/.py  → routed individually
+   ×17    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/.pyc  → routed individually
+   ×19    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/arrays/.py  → routed individually
+   ×19    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/arrays/.pyc  → routed individually
+   ×17    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/GL/AMD/.pyc  → routed individually
+   ×16    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/GL/AMD/.py  → routed individually
+   ×17    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/GL/APPLE/.py  → routed individually
+   ×16    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/GL/APPLE/.pyc  → routed individually
+   ×104   74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/GL/ARB/.py
+   ×104   74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/GL/ARB/.pyc
+   ×16    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/GL/ATI/.py  → routed individually
+   ×16    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/GL/ATI/.pyc  → routed individually
+   ×87    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/GL/EXT/.py
+   ×87    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/GL/EXT/.pyc
+   ×63    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/GL/NV/.py
+   ×63    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/GL/NV/.pyc
+   ×15    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/GL/SGIS/.py  → routed individually
+   ×15    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/GL/SGIS/.pyc  → routed individually
+   ×42    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/GL/SGIX/.py
+   ×42    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/GL/SGIX/.pyc
+   ×23    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/GL/VERSION/.py
+   ×23    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/GL/VERSION/.pyc
+   ×16    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/raw/GL/AMD/.py  → routed individually
+   ×16    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/raw/GL/AMD/.pyc  → routed individually
+   ×16    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/raw/GL/APPLE/.py  → routed individually
+   ×16    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/raw/GL/APPLE/.pyc  → routed individually
+   ×105   74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/raw/GL/ARB/.py
+   ×105   74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/raw/GL/ARB/.pyc
+   ×15    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/raw/GL/ATI/.py  → routed individually
+   ×15    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/raw/GL/ATI/.pyc  → routed individually
+   ×88    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/raw/GL/EXT/.py
+   ×88    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/raw/GL/EXT/.pyc
+   ×63    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/raw/GL/NV/.py
+   ×63    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/raw/GL/NV/.pyc
+   ×15    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/raw/GL/SGIS/.py  → routed individually
+   ×15    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/raw/GL/SGIS/.pyc  → routed individually
+   ×42    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/raw/GL/SGIX/.py
+   ×42    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/raw/GL/SGIX/.pyc
+   ×21    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/raw/GL/VERSION/.py
+   ×21    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/OpenGL/raw/GL/VERSION/.pyc
+   ×19    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/openpyxl/tests/.py  → routed individually
+   ×18    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/openpyxl/tests/.pyc  → routed individually
+   ×26    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pandas/core/.pyc
+   ×25    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pandas/core/.py
+   ×19    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pandas/io/.pyc  → routed individually
+   ×18    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pandas/io/.py  → routed individually
+   ×19    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pandas/io/tests/.py  → routed individually
+   ×19    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pandas/io/tests/.pyc  → routed individually
+   ×20    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pandas/io/tests/data/.csv
+   ×10    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pandas/io/tests/data/.html  → routed individually
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pandas/io/tests/data/.txt  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pandas/io/tests/data/.table  → routed individually
+   ×35    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pandas/io/tests/data/.dta
+   ×30    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pandas/tests/.pyc
+   ×29    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pandas/tests/.py
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pandas/tests/test_msgpack/.py  → routed individually
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pandas/tests/test_msgpack/.pyc  → routed individually
+   ×16    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pandas/tseries/.py  → routed individually
+   ×16    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pandas/tseries/.pyc  → routed individually
+   ×15    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pandas/tseries/tests/.py  → routed individually
+   ×15    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pandas/tseries/tests/.pyc  → routed individually
+   ×80    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PIL/.py
+   ×80    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PIL/.pyc
+   ×5     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PIL/.pyd  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PIL/.  → routed individually
+   ×12    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pip/.py  → routed individually
+   ×12    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pip/.pyc  → routed individually
+   ×13    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pip/_vendor/distlib/.py  → routed individually
+   ×13    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pip/_vendor/distlib/.pyc  → routed individually
+   ×4     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pip/_vendor/distlib/.exe  → routed individually
+   ×14    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pip/_vendor/requests/.py  → routed individually
+   ×14    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pip/_vendor/requests/.pyc  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pip/_vendor/requests/.pem  → routed individually
+   ×38    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pip/_vendor/requests/packages/chardet/.py
+   ×38    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pip/_vendor/requests/packages/chardet/.pyc
+   ×13    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pip/commands/.py  → routed individually
+   ×13    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pip/commands/.pyc  → routed individually
+   ×13    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pip/utils/.py  → routed individually
+   ×13    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pip/utils/.pyc  → routed individually
+   ×28    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/.py
+   ×28    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/.pyc
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/.png  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/.txt  → routed individually
+   ×24    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/app/builder/components/.py
+   ×24    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/app/builder/components/.pyc
+   ×23    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/app/builder/components/.png
+   ×28    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/app/Resources/.png
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/app/Resources/.ttf  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/app/Resources/.desktop  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/app/Resources/.icns  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/app/Resources/.ico  → routed individually
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/app/Resources/.txt  → routed individually
+   ×10    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/demos/coder/experiment_control/.py  → routed individually
+   ×10    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/demos/coder/experiment_control/.pyc  → routed individually
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/demos/coder/experiment_control/.txt  → routed individually
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/demos/coder/hardware/.py  → routed individually
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/demos/coder/hardware/.pyc  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/demos/coder/hardware/.csv  → routed individually
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/demos/coder/iohub/iosync/.py  → routed individually
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/demos/coder/iohub/iosync/.pyc  → routed individually
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/demos/coder/iohub/iosync/.png  → routed individually
+   ×30    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/demos/coder/stimuli/.py
+   ×30    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/demos/coder/stimuli/.pyc
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/demos/coder/stimuli/.jpg  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/demos/coder/stimuli/.ttf  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/demos/coder/stimuli/.mov  → routed individually
+   ×12    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/hardware/joystick/pyglet_input/.py  → routed individually
+   ×12    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/hardware/joystick/pyglet_input/.pyc  → routed individually
+   ×243   74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/tests/data/.png
+   ×3     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/tests/data/.psyexp  → routed individually
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/tests/data/.jpg  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/tests/data/.mp4  → routed individually
+   ×12    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/tests/test_all_visual/.py  → routed individually
+   ×12    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/tests/test_all_visual/.pyc  → routed individually
+   ×14    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/tools/.py  → routed individually
+   ×14    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/tools/.pyc  → routed individually
+   ×31    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/visual/.py
+   ×31    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/visual/.pyc
+   ×26    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/visual/textbox/freetype_bf/ft_enums/.py
+   ×26    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PsychoPy-1.83.04-py2.7.egg/psychopy/visual/textbox/freetype_bf/ft_enums/.pyc
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pycparser/.py  → routed individually
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pycparser/.pyc  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pycparser/.cfg  → routed individually
+   ×22    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pygame/.py
+   ×13    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pygame/.pyc  → routed individually
+   ×35    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pygame/.pyd
+   ×18    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pygame/.dll  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pygame/.ttf  → routed individually
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pygame/.html  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pygame/.  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pygame/.bmp  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pygame/.icns  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pygame/.svg  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pygame/.tiff  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pygame/.ico  → routed individually
+   ×37    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pygame/docs/ref/.html
+   ×31    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pygame/examples/.py
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pygame/examples/.txt  → routed individually
+   ×10    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pygame/examples/data/.gif  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pygame/examples/data/.jpg  → routed individually
+   ×5     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pygame/examples/data/.png  → routed individually
+   ×5     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pygame/examples/data/.bmp  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pygame/examples/data/.mpg  → routed individually
+   ×6     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pygame/examples/data/.wav  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pygame/examples/data/.mp3  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pygame/examples/data/.ogg  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pygame/examples/data/.ttf  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pygame/examples/data/.pgm  → routed individually
+   ×63    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pygame/tests/.py
+   ×26    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pyglet/gl/.py
+   ×26    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pyglet/gl/.pyc
+   ×12    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pyglet/image/codecs/.py  → routed individually
+   ×12    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pyglet/image/codecs/.pyc  → routed individually
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pyglet/input/.py  → routed individually
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pyglet/input/.pyc  → routed individually
+   ×22    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pyglet1.1.4/gl/.py
+   ×21    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pyglet1.1.4/gl/.pyc
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pyglet1.1.4/image/codecs/.py  → routed individually
+   ×10    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pyglet1.1.4/image/codecs/.pyc  → routed individually
+   ×12    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pygments/.py  → routed individually
+   ×12    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pygments/.pyc  → routed individually
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pygments/formatters/.py  → routed individually
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pygments/formatters/.pyc  → routed individually
+   ×25    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pygments/lexers/.py
+   ×25    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pygments/lexers/.pyc
+   ×20    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pygments/styles/.py
+   ×20    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pygments/styles/.pyc
+   ×28    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pyolib/.pyc
+   ×27    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pyolib/.py
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pypsignifit/.py  → routed individually
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pypsignifit/.pyc  → routed individually
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PyQt4/.py  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PyQt4/.pyc  → routed individually
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PyQt4/.exe  → routed individually
+   ×3     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PyQt4/.txt  → routed individually
+   ×23    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PyQt4/.dll
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PyQt4/.gpl2  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PyQt4/.gpl3  → routed individually
+   ×20    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PyQt4/.pyd
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PyQt4/.bat  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PyQt4/.conf  → routed individually
+   ×21    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PyQt4/examples/demos/qtdemo/.py
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PyQt4/examples/demos/qtdemo/.qml  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PyQt4/examples/demos/qtdemo/.pyw  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PyQt4/examples/demos/qtdemo/.qrc  → routed individually
+   ×15    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PyQt4/examples/tools/i18n/translations/.qm  → routed individually
+   ×15    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PyQt4/examples/tools/i18n/translations/.ts  → routed individually
+   ×30    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PyQt4/examples/widgets/stylesheet/images/.png
+   ×47    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PyQt4/include/Qsci/.h
+   ×50    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PyQt4/sip/PyQt4/Qsci/.sip
+   ×96    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PyQt4/sip/PyQt4/QtCore/.sip
+   ×25    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PyQt4/sip/PyQt4/QtDesigner/.sip
+   ×204   74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PyQt4/sip/PyQt4/QtGui/.sip
+   ×35    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PyQt4/sip/PyQt4/QtNetwork/.sip
+   ×79    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/PyQt4/translations/.qm
+   ×17    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pythonwin/pywin/Demos/.py  → routed individually
+   ×17    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pythonwin/pywin/Demos/.pyc  → routed individually
+   ×17    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pythonwin/pywin/framework/.py  → routed individually
+   ×17    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pythonwin/pywin/framework/.pyc  → routed individually
+   ×12    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pythonwin/pywin/scintilla/.py  → routed individually
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pythonwin/pywin/scintilla/.pyc  → routed individually
+   ×36    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pytz/zoneinfo/.
+   ×3     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pytz/zoneinfo/.tab  → routed individually
+   ×54    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pytz/zoneinfo/Africa/.
+   ×131   74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pytz/zoneinfo/America/.
+   ×93    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pytz/zoneinfo/Asia/.
+   ×23    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pytz/zoneinfo/Australia/.
+   ×35    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pytz/zoneinfo/Etc/.
+   ×57    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pytz/zoneinfo/Europe/.
+   ×42    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pytz/zoneinfo/Pacific/.
+   ×10    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pyzmq-13.1.0-py2.7-win32.egg/zmq/core/.py  → routed individually
+   ×10    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pyzmq-13.1.0-py2.7-win32.egg/zmq/core/.pyc  → routed individually
+   ×9     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pyzmq-13.1.0-py2.7-win32.egg/zmq/core/.pyd  → routed individually
+   ×6     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pyzmq-13.1.0-py2.7-win32.egg/zmq/core/.pxd  → routed individually
+   ×19    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pyzmq-13.1.0-py2.7-win32.egg/zmq/tests/.py  → routed individually
+   ×19    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/pyzmq-13.1.0-py2.7-win32.egg/zmq/tests/.pyc  → routed individually
+   ×15    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/requests/.py  → routed individually
+   ×18    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/requests/.pyc  → routed individually
+   ×28    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/rope/base/.py
+   ×28    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/rope/base/.pyc
+   ×22    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/rope/refactor/.py
+   ×22    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/rope/refactor/.pyc
+   ×39    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/cluster/tests/.txt
+   ×4     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/cluster/tests/.py  → routed individually
+   ×4     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/cluster/tests/.pyc  → routed individually
+   ×7     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/integrate/.py  → routed individually
+   ×7     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/integrate/.pyc  → routed individually
+   ×7     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/integrate/.pyd  → routed individually
+   ×13    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/interpolate/.py  → routed individually
+   ×13    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/interpolate/.pyc  → routed individually
+   ×5     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/interpolate/.pyd  → routed individually
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/io/.py  → routed individually
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/io/.pyc  → routed individually
+   ×9     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/io/matlab/.py  → routed individually
+   ×9     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/io/matlab/.pyc  → routed individually
+   ×3     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/io/matlab/.pyd  → routed individually
+   ×107   74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/io/matlab/tests/data/.mat
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/io/matlab/tests/data/.txt  → routed individually
+   ×46    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/io/tests/data/.sav
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/io/tests/data/.nc  → routed individually
+   ×13    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/io/tests/data/.dat  → routed individually
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/io/tests/data/.wav  → routed individually
+   ×37    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/linalg/.py
+   ×37    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/linalg/.pyc
+   ×13    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/linalg/.pyd  → routed individually
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/linalg/.pxd  → routed individually
+   ×18    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/linalg/tests/.py  → routed individually
+   ×18    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/linalg/tests/.pyc  → routed individually
+   ×10    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/ndimage/.py  → routed individually
+   ×10    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/ndimage/.pyc  → routed individually
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/ndimage/.pyd  → routed individually
+   ×24    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/optimize/.py
+   ×24    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/optimize/.pyc
+   ×8     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/optimize/.pyd  → routed individually
+   ×18    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/optimize/tests/.py  → routed individually
+   ×18    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/optimize/tests/.pyc  → routed individually
+   ×17    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/signal/.py  → routed individually
+   ×17    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/signal/.pyc  → routed individually
+   ×5     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/signal/.pyd  → routed individually
+   ×14    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/signal/tests/.py  → routed individually
+   ×14    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/signal/tests/.pyc  → routed individually
+   ×19    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/sparse/.py  → routed individually
+   ×19    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/sparse/.pyc  → routed individually
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/sparse/.pyd  → routed individually
+   ×9     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/sparse/sparsetools/.py  → routed individually
+   ×9     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/sparse/sparsetools/.pyc  → routed individually
+   ×6     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/sparse/sparsetools/.pyd  → routed individually
+   ×23    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/spatial/tests/data/.txt
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/spatial/tests/data/.npz  → routed individually
+   ×13    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/special/.py  → routed individually
+   ×13    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/special/.pyc  → routed individually
+   ×8     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/special/.pyd  → routed individually
+   ×21    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/stats/.py
+   ×22    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/stats/.pyc
+   ×5     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/stats/.pyd  → routed individually
+   ×16    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/stats/tests/.py  → routed individually
+   ×16    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/stats/tests/.pyc  → routed individually
+   ×31    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/weave/.py
+   ×31    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/weave/.pyc
+   ×71    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/weave/blitz/blitz/.h
+   ×29    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/weave/blitz/blitz/.cc
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/weave/blitz/blitz/.in  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/weave/blitz/blitz/.am  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/weave/blitz/blitz/.  → routed individually
+   ×28    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/weave/blitz/blitz/array/.h
+   ×17    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/weave/blitz/blitz/array/.cc  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/weave/blitz/blitz/array/.am  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/weave/blitz/blitz/array/.in  → routed individually
+   ×20    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/weave/examples/.py
+   ×20    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/weave/examples/.pyc
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/weave/examples/.c  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/weave/examples/.h  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/weave/examples/.i  → routed individually
+   ×16    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/weave/tests/.py  → routed individually
+   ×16    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scipy/weave/tests/.pyc  → routed individually
+   ×23    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scons-2.2.0/SCons/.py
+   ×23    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scons-2.2.0/SCons/.pyc
+   ×103   74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scons-2.2.0/SCons/Tool/.py
+   ×103   74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/scons-2.2.0/SCons/Tool/.pyc
+   ×15    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/seaborn/.py  → routed individually
+   ×15    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/seaborn/.pyc  → routed individually
+   ×16    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/sphinx/.py  → routed individually
+   ×16    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/sphinx/.pyc  → routed individually
+   ×14    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/sphinx/builders/.py  → routed individually
+   ×14    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/sphinx/builders/.pyc  → routed individually
+   ×17    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/sphinx/ext/.py  → routed individually
+   ×17    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/sphinx/ext/.pyc  → routed individually
+   ×18    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/sphinx/util/.py  → routed individually
+   ×18    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/sphinx/util/.pyc  → routed individually
+   ×19    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/spyderlib/.py  → routed individually
+   ×19    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/spyderlib/.pyc  → routed individually
+   ×31    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/spyderlib/images/.png
+   ×4     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/spyderlib/images/.svg  → routed individually
+   ×66    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/spyderlib/images/actions/.png
+   ×53    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/spyderlib/images/editor/.png
+   ×65    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/spyderlib/images/filetypes/.png
+   ×18    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/spyderlib/plugins/.py  → routed individually
+   ×18    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/spyderlib/plugins/.pyc  → routed individually
+   ×19    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/spyderlib/utils/.py  → routed individually
+   ×18    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/spyderlib/utils/.pyc  → routed individually
+   ×27    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/spyderlib/utils/external/rope/base/.pyc
+   ×22    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/spyderlib/utils/external/rope/refactor/.pyc
+   ×29    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/spyderlib/utils/inspector/js/mathjax/jax/input/MathML/entities/.js
+   ×31    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/spyderlib/widgets/.py
+   ×31    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/spyderlib/widgets/.pyc
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/spyderlib/widgets/externalshell/.py  → routed individually
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/spyderlib/widgets/externalshell/.pyc  → routed individually
+   ×19    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/svgwrite/.py  → routed individually
+   ×19    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/svgwrite/.pyc  → routed individually
+   ×29    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/tables/.py
+   ×29    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/tables/.pyc
+   ×8     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/tables/.pyd  → routed individually
+   ×7     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/tables/.dll  → routed individually
+   ×33    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/tables/tests/.py
+   ×33    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/tables/tests/.pyc
+   ×37    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/tables/tests/.h5
+   ×30    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/tornado/.py
+   ×29    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/tornado/.pyc
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/tornado/.pyd  → routed individually
+   ×34    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/tornado/test/.py
+   ×34    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/tornado/test/.pyc
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/tornado/test/.cfg  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/tornado/test/.txt  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/tornado/test/.crt  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/tornado/test/.key  → routed individually
+   ×35    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/win32/.pyd
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/win32/.dll  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/win32/.exe  → routed individually
+   ×37    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/win32/Demos/.py
+   ×37    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/win32/Demos/.pyc
+   ×20    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/win32/Demos/security/.py
+   ×20    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/win32/Demos/security/.pyc
+   ×31    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/win32/lib/.pyc
+   ×30    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/win32/lib/.py
+   ×21    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/win32/test/.py
+   ×21    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/win32/test/.pyc
+   ×12    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/win32com/client/.py  → routed individually
+   ×12    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/win32com/client/.pyc  → routed individually
+   ×39    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/win32com/test/.py
+   ×38    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/win32com/test/.pyc
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/win32com/test/.idl  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/win32com/test/.txt  → routed individually
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/win32com/test/.vbs  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/win32com/test/.sct  → routed individually
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/win32com/test/.js  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/win32com/test/.xsl  → routed individually
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/win32comext/axdebug/.py  → routed individually
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/win32comext/axdebug/.pyc  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/win32comext/axdebug/.pyd  → routed individually
+   ×23    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/wx-2.8-msw-unicode/wx/.py
+   ×23    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/wx-2.8-msw-unicode/wx/.pyc
+   ×20    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/wx-2.8-msw-unicode/wx/.pyd
+   ×37    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/wx-2.8-msw-unicode/wx/.dll
+   ×77    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/wx-2.8-msw-unicode/wx/lib/.py
+   ×77    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/wx-2.8-msw-unicode/wx/lib/.pyc
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/wx-2.8-msw-unicode/wx/lib/.idl  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/wx-2.8-msw-unicode/wx/lib/.tlb  → routed individually
+   ×36    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/wx-2.8-msw-unicode/wx/lib/agw/.py
+   ×36    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/wx-2.8-msw-unicode/wx/lib/agw/.pyc
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/wx-2.8-msw-unicode/wx/lib/agw/.png  → routed individually
+   ×13    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/wx-2.8-msw-unicode/wx/lib/agw/ribbon/.py  → routed individually
+   ×13    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/wx-2.8-msw-unicode/wx/lib/agw/ribbon/.pyc  → routed individually
+   ×19    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/wx-2.8-msw-unicode/wx/lib/pubsub/core/.py  → routed individually
+   ×19    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/wx-2.8-msw-unicode/wx/lib/pubsub/core/.pyc  → routed individually
+   ×29    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/wx-2.8-msw-unicode/wx/py/.py
+   ×28    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/wx-2.8-msw-unicode/wx/py/.pyc
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/wx-2.8-msw-unicode/wx/py/.txt  → routed individually
+   ×3     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/wx-2.8-msw-unicode/wx/py/.ico  → routed individually
+   ×4     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/wx-2.8-msw-unicode/wx/py/.png  → routed individually
+   ×21    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/wx-2.8-msw-unicode/wx/tools/XRCed/.py
+   ×21    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/wx-2.8-msw-unicode/wx/tools/XRCed/.pyc
+   ×4     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/wx-2.8-msw-unicode/wx/tools/XRCed/.txt  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/wx-2.8-msw-unicode/wx/tools/XRCed/.  → routed individually
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/wx-2.8-msw-unicode/wx/tools/XRCed/.png  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/wx-2.8-msw-unicode/wx/tools/XRCed/.htb  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/wx-2.8-msw-unicode/wx/tools/XRCed/.ico  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/wx-2.8-msw-unicode/wx/tools/XRCed/.sh  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/wx-2.8-msw-unicode/wx/tools/XRCed/.xrc  → routed individually
+   ×50    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/wx-2.8-msw-unicode/wx/tools/XRCed/plugins/bitmaps/.png
+   ×22    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/wx-2.8-msw-unicode/wxPython/.py
+   ×22    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/wx-2.8-msw-unicode/wxPython/.pyc
+   ×49    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/wx-2.8-msw-unicode/wxPython/lib/.py
+   ×48    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/wx-2.8-msw-unicode/wxPython/lib/.pyc
+   ×17    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/yaml/.py  → routed individually
+   ×17    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/site-packages/yaml/.pyc  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/test/.db  → routed individually
+   ×439   74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/test/.py
+   ×10    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/test/.pem  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/test/.1  → routed individually
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/test/.vbs  → routed individually
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/test/.txt  → routed individually
+   ×4     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/test/.uue  → routed individually
+   ×3     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/test/.pck  → routed individually
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/test/.html  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/test/.aif  → routed individually
+   ×30    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/test/cjkencodings/.txt
+   ×143   74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Lib/test/decimaltestdata/.dectest
+   ×27    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Scripts/.exe
+   ×56    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Scripts/.py
+   ×12    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Scripts/.manifest  → routed individually
+   ×17    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Scripts/.pyc  → routed individually
+   ×5     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Scripts/.  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Scripts/.pyw  → routed individually
+   ×3     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Scripts/.bat  → routed individually
+   ×78    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/tcl/tcl8.5/encoding/.enc
+   ×127   74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/tcl/tcl8.5/msgs/.msg
+   ×44    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/tcl/tcl8.5/tzdata/.
+   ×53    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/tcl/tcl8.5/tzdata/Africa/.
+   ×128   74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/tcl/tcl8.5/tzdata/America/.
+   ×86    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/tcl/tcl8.5/tzdata/Asia/.
+   ×23    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/tcl/tcl8.5/tzdata/Australia/.
+   ×35    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/tcl/tcl8.5/tzdata/Etc/.
+   ×58    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/tcl/tcl8.5/tzdata/Europe/.
+   ×40    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/tcl/tcl8.5/tzdata/Pacific/.
+   ×67    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/tcl/tix8.4.3/.tcl
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/tcl/tix8.4.3/.  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/tcl/tix8.4.3/.dll  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/tcl/tix8.4.3/.lib  → routed individually
+   ×13    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/tcl/tix8.4.3/bitmaps/.gif  → routed individually
+   ×30    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/tcl/tix8.4.3/bitmaps/.xbm
+   ×13    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/tcl/tix8.4.3/bitmaps/.xpm  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/tcl/tix8.4.3/bitmaps/.mask  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/tcl/tix8.4.3/bitmaps/.tcl  → routed individually
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/tcl/tix8.4.3/demos/bitmaps/.xpm  → routed individually
+   ×14    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/tcl/tix8.4.3/demos/bitmaps/.xbm  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/tcl/tix8.4.3/demos/bitmaps/.gif  → routed individually
+   ×47    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/tcl/tix8.4.3/demos/samples/.tcl
+   ×8     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/tcl/tix8.4.3/pref/.fs  → routed individually
+   ×6     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/tcl/tix8.4.3/pref/.fsc  → routed individually
+   ×8     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/tcl/tix8.4.3/pref/.cs  → routed individually
+   ×8     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/tcl/tix8.4.3/pref/.csc  → routed individually
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/tcl/tix8.4.3/pref/.  → routed individually
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/tcl/tix8.4.3/pref/.tcl  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/tcl/tix8.4.3/pref/.py  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/tcl/tix8.4.3/pref/.txt  → routed individually
+   ×28    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/tcl/tk8.5/.tcl
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/tcl/tk8.5/.  → routed individually
+   ×57    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/tcl/tk8.5/demos/.tcl
+   ×11    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/tcl/tk8.5/demos/.  → routed individually
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/tcl/tk8.5/demos/.msg  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/tcl/tk8.5/demos/.terms  → routed individually
+   ×22    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/tcl/tk8.5/ttk/.tcl
+   ×65    74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Tools/Scripts/.py
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Tools/Scripts/.pyw  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/pythonlibs/psychopy-libraries/Tools/Scripts/.txt  → routed individually
+   ×47    74kqe/Stimuli_and_Psychopy_Experiment/Six of Crows/Six of Crows/.mp3
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/Six of Crows/Six of Crows/.xml  → routed individually
+   ×11520  74kqe/Stimuli_and_Psychopy_Experiment/slides/slides/.png
+   ×67    74kqe/Stimuli_and_Psychopy_Experiment/sounds/.wav
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/sounds/.txt  → routed individually
+   ×2     74kqe/Stimuli_and_Psychopy_Experiment/sounds/.py  → routed individually
+   ×1     74kqe/Stimuli_and_Psychopy_Experiment/sounds/.pyc  → routed individually
+   ×30    74kqe/Stimuli_and_Psychopy_Experiment/verbvocab/.png
+
+   we need a way to capture these psychopy and other packages. 7000 batches is crazy.

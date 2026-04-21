@@ -38,7 +38,7 @@ CODEBOOK_CSV <- "./data_check/results/codebook_summary.csv"
 PSYCHDS_CSV  <- file.path(PSYCHDS_OUT_DIR, "conversion_summary.csv")
 TRACKER_CSV  <- "./data_check/results/pipeline_tracker.csv"
 
-MAX_DATA_MB  <- 5000   # psychds stage: skip if data folder exceeds this
+MAX_DATA_MB  <- 10000   # psychds stage: skip if data folder exceeds this
 
 # HEURISTIC = TRUE: skip a stage if its output files already exist on disk,
 # regardless of whether the paper appears in the summary CSVs.  Useful for
@@ -380,6 +380,7 @@ for (i in seq_along(remaining_ids)) {
       }
     }
   } else {
+    cat("  ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\n")
     cat(col_cyan("  [index]    running ...\n"))
     index_result <- tryCatch(
       run_index(paper_id = pid, download = DOWNLOAD),
@@ -445,6 +446,7 @@ for (i in seq_along(remaining_ids)) {
     message("  [codebook] skipping (", cb_tracked, "): ", pid)
     if (cb_tracked == "pending") tracker_set(pid, src, "codebook", "ok")
   } else {
+    cat("  ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\n")
     cat(col_yellow("  [codebook] running ...\n"))
     t_start <- proc.time()[["elapsed"]]
     cb_result <- tryCatch(
@@ -492,6 +494,7 @@ for (i in seq_along(remaining_ids)) {
         next
       }
     }
+    cat("  ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\n")
     cat(col_magenta("  [psychds]  running ...\n"))
     psychds_results <- tryCatch(
       convert_psychds(pid),
