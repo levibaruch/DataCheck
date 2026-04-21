@@ -1384,6 +1384,7 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
     stats_mat <- do.call(rbind, lapply(col_stats, as.data.frame, stringsAsFactors = FALSE))
 
     cat("\n")
+    col_type_method <- ifelse(is.na(col_types), NA_character_, "rules")
     list(
       columns = data.frame(
         paper_id             = paper_id,
@@ -1394,6 +1395,7 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
         column_name          = names(df),
         sample_values        = sample_vals,
         col_type             = col_types,
+        col_type_method      = col_type_method,
         n_coerced            = n_coerced_vec,
         stats_mat,
         sample_values_unique = sample_vals_unique,
@@ -1418,6 +1420,7 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
     num_ambig_rows <- which(is.na(columns_df$col_type) & columns_df$is_numeric)
     if (length(num_ambig_rows) > 0) {
       columns_df$col_type[num_ambig_rows] <- "continuous"
+      columns_df$col_type_method[num_ambig_rows] <- "rules"
       n_rules_assigned <- length(num_ambig_rows)
       cat(col_dim(sprintf("── col_type Batch 1 (rules): %d column(s) classified\n",
               n_rules_assigned)))
@@ -1465,6 +1468,7 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
       }
       n_llm_assigned <- length(char_ambig_rows)
       columns_df$col_type[char_ambig_rows] <- returned_types
+      columns_df$col_type_method[char_ambig_rows] <- "llm"
 
       # Fallback: LLM "unknown" for a character column → "text".
       char_unknown <- char_ambig_rows[columns_df$col_type[char_ambig_rows] == "unknown"]
@@ -1478,7 +1482,9 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
 
   # ── Final cleanup: fallback NAs, stat suppression, drop transient column ──
   if (!is.null(columns_df) && nrow(columns_df) > 0) {
-    columns_df$col_type[is.na(columns_df$col_type)] <- "unknown"
+    na_mask <- is.na(columns_df$col_type)
+    columns_df$col_type[na_mask] <- "unknown"
+    columns_df$col_type_method[na_mask] <- "fallback"
     stat_cols     <- c("mean", "sd", "se", "median", "min", "max", "range",
                        "p25", "p75", "iqr", "skewness", "kurtosis")
     numeric_types <- c("continuous", "continuous_comma_decimal",
@@ -1504,10 +1510,11 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
         paste0(substr(all_types, 1, 17), "..."),
         all_types)
 
-    # Count by method: rules only assigned continuous, rest are LLM
-    rules_counts <- sapply(all_types, function(t) if (t == "continuous") n_rules_assigned else 0L)
+    # Count by method: track which rows came from rules vs LLM
+    rules_counts <- sapply(all_types, function(t)
+      sum(columns_df$col_type == t & columns_df$col_type_method == "rules", na.rm = TRUE))
     llm_counts <- sapply(all_types, function(t)
-      sum(columns_df$col_type == t, na.rm = TRUE) - rules_counts[t])
+      sum(columns_df$col_type == t & columns_df$col_type_method == "llm", na.rm = TRUE))
 
     cat(col_cyan(sprintf("── col_type summary (%d total)\n", nrow(columns_df))))
     cat(sprintf("  %-10s  %s\n", "method", paste(sprintf("%8s", display_names), collapse = "  ")))
@@ -1537,7 +1544,7 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
     invalid_types <- setdiff(unique(columns_df$col_type), VALID_COL_TYPES)
     if (length(invalid_types) > 0)
       warning("Unknown col_type values: ", paste(invalid_types, collapse = ", "))
-    write.csv(columns_df, columns_out, row.names = FALSE)
+    write.csv(columns_df[, setdiff(names(columns_df), "col_type_method")], columns_out, row.names = FALSE)
   } else {
     message("── No columns extracted")
     columns_df  <- NULL
