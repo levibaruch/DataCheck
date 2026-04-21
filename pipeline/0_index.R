@@ -440,7 +440,7 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
   agg_groups_list  <- list()  # all extension groups that produce sentinels
 
   if (any(is_aggregate)) {
-    cat(col_cyan(sprintf("\n── Aggregate folders (%d detected) \u2014 classifying:\n", length(agg_dirs))))
+    agg_lines <- character(0)
     for (d in agg_dirs) {
       if (d %in% participant_agg_dirs) {
         members <- rel_paths[startsWith(rel_paths, paste0(d, "/"))]
@@ -464,13 +464,17 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
 
         if (g$route_individually) {
           extra_singletons <- c(extra_singletons, g$members)
+          agg_lines <- c(agg_lines, col_dim(sprintf("  \u00d7%-4d  %s/.%s  \u2192 routed individually\n",
+                              length(g$members), d, g$ext)))
         } else {
           agg_groups_list <- c(agg_groups_list, list(g))
-          cat(sprintf("  \u00d7%-4d  %s/.%s\n",
+          agg_lines <- c(agg_lines, sprintf("  \u00d7%-4d  %s/.%s\n",
                       length(g$members), d, g$ext))
         }
       }
     }
+    cat(col_cyan(sprintf("\n\u2500\u2500 Aggregate folders (%d detected) \u2014 classifying:\n", length(agg_groups_list))))
+    cat(agg_lines)
   }
 
   # Collect sample paths from all sentinel extension groups
@@ -1130,7 +1134,8 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
   # Only "data" files are column-extracted. Files with type = "output", "supplemental",
   # "codebook", "code", "asset", "readme", or "other" are excluded by this filter.
   data_files <- file_df[file_df$type == "data" & !file_df$is_sentinel &
-                          !is.na(file_df$data_format) & file_df$data_format == "tabular", ]
+                          !is.na(file_df$data_format) & file_df$data_format == "tabular" &
+                          (is.na(file_df$data_granularity) | file_df$data_granularity != "individual"), ]
   if (!FULL_RUN && is.finite(MAX_DATA_FILES) && nrow(data_files) > MAX_DATA_FILES) {
     message("── Capping data files: ", nrow(data_files), " → keeping first ", MAX_DATA_FILES)
     data_files <- data_files[seq_len(MAX_DATA_FILES), ]

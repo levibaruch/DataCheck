@@ -1,4 +1,33 @@
 TODO — metacheck-datacheck pipeline
+
+────────────────────────────────────────────────────────────────────────────────
+[USER] Individual-level file combiner
+  Individual-granularity data files (one CSV per participant) are currently
+  skipped during column extraction (as of today). A combiner script is needed
+  that stacks all files in a detected series into one wide CSV with a
+  `source_file` (participant ID) column prepended.
+  Requirements:
+    - Only combine files within the same aggregate folder + group
+    - Verify schema consistency (same column names) before stacking
+    - Derive participant ID from filename (strip extension, sanitise)
+    - Output to outputs/<source>/<paper_id>/combined_individual/<group>_combined.csv
+    - Re-run column extraction on the combined file only
+  Status: PENDING
+
+────────────────────────────────────────────────────────────────────────────────
+[USER] psychds FAILED message shows no error detail
+  Issue: runner prints "✗  FAILED" with no error message, making it impossible
+         to diagnose failures without digging into conversion_summary.csv.
+  Fix: In apply_ground_truth(), the assignment loop does
+         structure_df$gt_type_gt[idx] <- gt$type_gt[i]
+       When idx has length > 1 (GT file has more rows than structure.csv matches),
+       this triggers "replacement has N rows, data has M" error.
+       Root cause: GT file contains rows for files that were deduplicated or
+       missing from structure.csv, so idx returns multiple matches or zero.
+  Fix direction: guard all GT field assignments with length(idx) == 1 check,
+       or use idx[1] explicitly. Also check why GT has more rows than structure
+       (likely GT was annotated on a different run than the current structure.csv).
+  Status: UNFIXED — added error surfacing to runner (lines 510-519) as interim.
 ================================================================================
 Legend:
   [USER]   — explicitly requested by user

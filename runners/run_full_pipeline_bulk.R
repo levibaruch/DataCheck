@@ -507,8 +507,16 @@ for (i in seq_along(remaining_ids)) {
     append_conversion_summary(psychds_results, PSYCHDS_CSV)
     psy_ok <- all(vapply(psychds_results, function(r) isTRUE(r$success), logical(1)))
     tracker_set(pid, src, "psychds", if (psy_ok) "ok" else "fail")
-    cat(if (psy_ok) col_green(sprintf("  \u2514 psychds   \u2713  done\n"))
-        else col_red(sprintf("  \u2514 psychds   \u2717  FAILED\n")))
+    if (psy_ok) {
+      cat(col_green(sprintf("  \u2514 psychds   \u2713  done\n")))
+    } else {
+      failed_errs <- vapply(psychds_results, function(r)
+        if (!isTRUE(r$success)) na_fallback(r$error, "?") else NA_character_,
+        character(1))
+      failed_errs <- failed_errs[!is.na(failed_errs)]
+      cat(col_red(sprintf("  \u2514 psychds   \u2717  FAILED: %s\n",
+                          paste(unique(failed_errs), collapse = "; "))))
+    }
   }
 
   # ── Output file paths ────────────────────────────────────────────────────────
