@@ -344,9 +344,11 @@ for (i in seq_along(remaining_ids)) {
     cat(sprintf("  (%d paper(s) already done \u2014 skipped)\n", skip_since_last))
     skip_since_last <- 0L
   }
-
+  cat("\n")
   cat("═════════════════════════════════════════════════════════════\n")
   cat(col_bold(sprintf("\n\u2550\u2550 #%d / %d  \u2022  %s / %s\n", i, n_total, src, pid)))
+  cat("\n")
+  cat("═════════════════════════════════════════════════════════════\n\n")
 
   # ── Stage 1: Index ──────────────────────────────────────────────────────────
 
