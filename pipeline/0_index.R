@@ -965,7 +965,9 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
         llm_batch(paths = llm_input, system_prompt = GRANULARITY_PROMPT,
                   user_prefix = user_prefix_full,
                   key_col = "folder_path", extra_cols = "granularity",
-                  fallback_vals = list(granularity = NA_character_))
+                  fallback_vals = list(granularity = NA_character_),
+                  paper_id   = paper_id,
+                  stage_name = "granularity")
       }, error = function(e) {
         message(sprintf("  [US3-llm] ERROR: %s", conditionMessage(e)))
         NULL
@@ -1480,8 +1482,10 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
       max_char_cols <- MAX_CHAR_COL_TYPE_LLM_CALLS * LLM_BATCH_SIZE
       if (!FULL_RUN && length(char_ambig_rows) > max_char_cols)
         char_ambig_rows <- char_ambig_rows[seq_len(max_char_cols)]
-      descriptors <- paste0('"', columns_df$column_name[char_ambig_rows], '"',
-                            " (samples: ", columns_df$sample_values_unique[char_ambig_rows], ")")
+      col_names_batch <- columns_df$column_name[char_ambig_rows]
+      col_samples     <- columns_df$sample_values_unique[char_ambig_rows]
+      # Display strings include sample context; short col_name is echoed back as key.
+      descriptors     <- paste0(col_names_batch, " — samples: ", col_samples)
       cat(col_dim(sprintf("── LLM col_type Batch 2 (character): classifying %d column(s)\n",
               length(char_ambig_rows))))
       llm_result <- tryCatch(
@@ -1489,17 +1493,18 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
           paths         = descriptors,
           system_prompt = CHAR_COLUMN_TYPE_PROMPT,
           user_prefix   = "Classify each column:",
-          key_col       = "descriptor",
+          key_col       = "col_name",
           extra_cols    = "col_type",
           fallback_vals = list(col_type = "text"),
           sentinel_cols = "col_type",
+          match_keys    = col_names_batch,
           paper_id      = paper_id,
           stage_name    = "col-type Batch 2"
         ),
         error = function(e) {
           warning("LLM col_type Batch 2 failed: ", conditionMessage(e))
-          data.frame(descriptor = descriptors,
-                     col_type   = rep("text", length(descriptors)),
+          data.frame(col_name = col_names_batch,
+                     col_type = rep("text", length(col_names_batch)),
                      stringsAsFactors = FALSE)
         }
       )

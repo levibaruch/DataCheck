@@ -18,7 +18,7 @@
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-REPORT_ONLY <- FALSE
+REPORT_ONLY <- TRUE
 if (!exists("REPORT_ONLY")) REPORT_ONLY <- FALSE
 FULL_RUN <- TRUE
 
@@ -39,11 +39,12 @@ source("data_check/pipeline/0_index.R")
 source("data_check/pipeline/2_codebook_label.R")
 source("data_check/pipeline/3_psychds_convert.R")
 
-LLM_TEMPERATURE  <- 0.5
+LLM_TEMPERATURE  <- 0.7
 LLM_THINK_LEVEL  <- "low"
-TEST_TITLE       <- "120B_MD_THINKLOW_TEMP0.5"
-CAPTURE_THINKING <- TRUE   # write per-path thinking snippets to thinking_traces.csv
-llm_model("ollama/gpt-oss:120b-cloud")
+CAPTURE_THINKING <- TRUE   # write one row per prompt call to thinking_traces.csv
+LLM_MODEL        <- "ollama/gpt-oss:20b-cloud"
+llm_model(LLM_MODEL)
+TEST_TITLE       <- sprintf("_%s_MD_THINK_%s_TEMP_%s", "20b", LLM_THINK_LEVEL, LLM_TEMPERATURE) #MD stands for the markdown Prompt
 STRUCTURE_PROMPT <- STRUCTURE_PROMPT_MD
 
 # ── Report helpers ─────────────────────────────────────────────────────────────

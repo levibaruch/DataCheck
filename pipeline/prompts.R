@@ -758,8 +758,8 @@ Output ONLY the JSON array. No notes, no text outside the array.'
 # ── Character column type classification (0_index.R → llm_batch(), Batch 2) ──
 
 CHAR_COLUMN_TYPE_PROMPT <- 'You are classifying columns in psychology research data.
-For each column descriptor return a JSON array (same order).
-Each element: {"descriptor": "<exact descriptor>", "col_type": "<type>"}
+For each column return a JSON array (same order).
+Each element: {"col_name": "<exact col_name>", "col_type": "<type>"}
 
 col_type — pick one:
   categorical : unordered group or category label — condition names, gender codes,

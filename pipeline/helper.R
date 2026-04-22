@@ -413,47 +413,6 @@ clean_llm_values <- function(df) {
   df
 }
 
-# Extract the portion of a thinking trace that pertains to one specific file.
-# The LLM receives a numbered list ("1. path\n2. path\n...") so thinking traces
-# typically contain numbered segments ("1. ...", "File 1:", etc.).
-# Falls back to a character-window around the first mention of the file's basename.
-#
-# Args:
-#   thinking   — full thinking trace string (may be NULL / empty)
-#   item_idx   — 1-based position of this path in the chunk (the number in the list)
-#   item_path  — the file path (used for basename fallback search)
-#   window     — max characters to capture for the basename fallback (default 600)
-extract_thinking_snippet <- function(thinking, item_idx, item_path, window = 600L) {
-  if (is.null(thinking) || !nzchar(trimws(as.character(thinking)))) return("")
-
-  txt <- as.character(thinking)
-
-  # Strategy 1: numbered-marker split.
-  # Match "N." or "N)" or "N:" at the start of a line (possibly with whitespace).
-  pat_this <- sprintf("(?m)^\\s*%d[.):]", item_idx)
-  m_this   <- regexpr(pat_this, txt, perl = TRUE)
-
-  if (m_this > 0L) {
-    start    <- as.integer(m_this)
-    pat_next <- sprintf("(?m)^\\s*%d[.):]", item_idx + 1L)
-    m_next   <- regexpr(pat_next, txt, perl = TRUE)
-    end      <- if (m_next > 0L) as.integer(m_next) - 1L else nchar(txt)
-    return(trimws(substr(txt, start, end)))
-  }
-
-  # Strategy 2: find the basename anywhere in the trace and grab a window.
-  bn <- basename(item_path)
-  if (nzchar(bn)) {
-    m_bn <- regexpr(bn, txt, fixed = TRUE)
-    if (m_bn > 0L) {
-      start <- max(1L, as.integer(m_bn) - 100L)
-      end   <- min(nchar(txt), as.integer(m_bn) + window)
-      return(trimws(substr(txt, start, end)))
-    }
-  }
-
-  ""
-}
 
 # Run an LLM prompt over a character vector in batches, joining results by a
 # key column.  Returns a data.frame with columns c(key_col, extra_cols).
@@ -475,14 +434,20 @@ llm_batch <- function(paths, system_prompt, user_prefix, key_col, extra_cols,
                       paper_id       = NULL,
                       stage_name     = NULL,
                       input_type     = "filepath",
+                      match_keys     = NULL,
                       batch_nr       = NULL,
                       n_batches_total = NULL) {
   # input_type: "filepath" (default) = file paths as numbered list; "json_descriptor" = JSON array
+  # match_keys: optional short keys for join — when set, paths are display-only and match_keys
+  #             are used as chunk_match_keys instead. Allows long descriptor strings as display
+  #             text while echoing only short keys (e.g. column names) in LLM JSON output.
 
   # Divide paths into fixed-size chunks (LLM_BATCH_SIZE = 20).
   # Each chunk becomes one LLM call so prompts stay within the model's context window.
-  chunks     <- split(paths, ceiling(seq_along(paths) / LLM_BATCH_SIZE))
-  all_parsed <- vector("list", length(chunks))  # pre-allocated; filled in loop below
+  chunk_indices <- split(seq_along(paths), ceiling(seq_along(paths) / LLM_BATCH_SIZE))
+  chunks        <- split(paths,            ceiling(seq_along(paths) / LLM_BATCH_SIZE))
+  chunks_idx    <- chunk_indices  # used below when match_keys is set
+  all_parsed    <- vector("list", length(chunks))  # pre-allocated; filled in loop below
 
   for (i in seq_along(chunks)) {
     # Honour a user-initiated abort: if a sentinel file exists, stop immediately
@@ -494,10 +459,12 @@ llm_batch <- function(paths, system_prompt, user_prefix, key_col, extra_cols,
 
     # For JSON descriptors, extract the "path" field from each JSON string for matching.
     # Store both the full JSON (for fallback) and extracted paths (for merge logic).
-    if (input_type == "json_descriptor") {
+    if (!is.null(match_keys)) {
+      # Caller-supplied short keys: paths are display-only; match_keys drive the join.
+      chunk_match_keys <- match_keys[chunks_idx[[i]]]
+    } else if (input_type == "json_descriptor") {
       # Extract path field from JSON: {"path": "...", ...} → extract the path value
       chunk_match_keys <- vapply(chunk_paths, function(json_str) {
-        # Simple extraction: find "path": "..." and get the value
         m <- regmatches(json_str, regexpr('"path"\\s*:\\s*"([^"]+)"', json_str), invert = FALSE)
         if (length(m[[1]]) > 0) {
           sub('^.*"path"\\s*:\\s*"([^"]+)".*$', '\\1', json_str)
@@ -666,65 +633,71 @@ llm_batch <- function(paths, system_prompt, user_prefix, key_col, extra_cols,
       }
       all_parsed[[i]] <- parsed
 
-      # Thinking trace capture: write per-path snippet rows when CAPTURE_THINKING is TRUE.
-      # Each row records the model's reasoning for one file in this chunk so the
-      # operator can review which paths confused the model and refine prompts.
+      # Thinking trace capture: one row per batch call (chunk) in the CSV.
+      # The full trace is stored; per-file classifications are listed in the MD.
       if (do_capture) {
         thinking_txt <- last_raw$thinking[[1L]] %||% ""
-        if (nzchar(trimws(thinking_txt))) {
-          pid_lbl   <- if (!is.null(paper_id))   paper_id   else "<unknown>"
-          stage_lbl <- if (!is.null(stage_name)) stage_name else "<unknown>"
-          n_words   <- length(strsplit(trimws(thinking_txt), "\\s+")[[1L]])
+        answer_txt   <- last_raw$answer[[1L]]   %||% ""
+        pid_lbl      <- if (!is.null(paper_id))   paper_id   else "<unknown>"
+        stage_lbl    <- if (!is.null(stage_name)) stage_name else "<unknown>"
+        n_words      <- length(strsplit(trimws(thinking_txt), "\\s+")[[1L]])
 
-          log_rows <- lapply(seq_along(chunk_paths), function(j) {
-            data.frame(
-              paper_id         = pid_lbl,
-              stage_name       = stage_lbl,
-              chunk            = i,
-              path             = chunk_paths[[j]],
-              pred_type        = if ("type" %in% names(parsed)) parsed$type[[j]] else NA_character_,
-              thinking_snippet = extract_thinking_snippet(thinking_txt, j, chunk_paths[[j]]),
-              n_thinking_words = n_words,
-              model            = llm_model(),
-              think_level      = LLM_THINK_LEVEL,
-              temperature      = LLM_TEMPERATURE,
-              stringsAsFactors = FALSE
-            )
-          })
-          log_df <- do.call(rbind, log_rows)
+        log_row <- data.frame(
+          paper_id         = pid_lbl,
+          stage_name       = stage_lbl,
+          chunk            = i,
+          n_paths          = length(chunk_paths),
+          paths            = paste(chunk_paths, collapse = " | "),
+          thinking         = thinking_txt,
+          n_thinking_words = n_words,
+          answer           = answer_txt,
+          model            = llm_model(),
+          think_level      = LLM_THINK_LEVEL,
+          temperature      = LLM_TEMPERATURE,
+          stringsAsFactors = FALSE
+        )
 
-          # ── CSV (programmatic access) ──────────────────────────────────────
-          write.table(log_df,
-                      file      = THINKING_LOG_PATH,
-                      sep       = ",",
-                      col.names = !file.exists(THINKING_LOG_PATH),
-                      row.names = FALSE,
-                      append    = TRUE,
-                      qmethod   = "double")
+        # ── CSV (one row per prompt call) ────────────────────────────────────
+        write.table(log_row,
+                    file      = THINKING_LOG_PATH,
+                    sep       = ",",
+                    col.names = !file.exists(THINKING_LOG_PATH),
+                    row.names = FALSE,
+                    append    = TRUE,
+                    qmethod   = "double")
 
-          # ── Markdown (human-readable review) ──────────────────────────────
-          md_path <- sub("\\.csv$", ".md", THINKING_LOG_PATH)
-          md_lines <- c(
-            sprintf("## %s — stage: %s — chunk %d  (%d words, model: %s, think: %s, temp: %.1f)",
-                    pid_lbl, stage_lbl, i, n_words, llm_model(), LLM_THINK_LEVEL, LLM_TEMPERATURE),
-            ""
-          )
-          for (j in seq_len(nrow(log_df))) {
-            pred <- if (is.na(log_df$pred_type[[j]])) "?" else log_df$pred_type[[j]]
-            snip <- trimws(log_df$thinking_snippet[[j]])
-            md_lines <- c(md_lines,
-              sprintf("### %d. `%s` → **%s**", j, log_df$path[[j]], pred),
-              "",
-              if (nzchar(snip)) snip else "_no snippet extracted_",
-              "",
-              "---",
-              ""
-            )
-          }
-          cat(paste(md_lines, collapse = "\n"),
-              file = md_path, append = TRUE, sep = "")
-          cat("\n", file = md_path, append = TRUE)
+        # ── Markdown (human-readable) ────────────────────────────────────────
+        md_path  <- sub("\\.csv$", ".md", THINKING_LOG_PATH)
+        md_lines <- c(
+          sprintf("## %s — stage: %s — chunk %d  (%d paths, %d words, model: %s, think: %s, temp: %.1f)",
+                  pid_lbl, stage_lbl, i, length(chunk_paths), n_words,
+                  llm_model(), LLM_THINK_LEVEL, LLM_TEMPERATURE),
+          "",
+          "### Files sent",
+          ""
+        )
+        for (j in seq_along(chunk_paths)) {
+          md_lines <- c(md_lines, sprintf("%d. `%s`", j, chunk_paths[[j]]))
         }
+        md_lines <- c(md_lines, "", "### Classifications", "")
+        for (j in seq_along(chunk_paths)) {
+          pred <- if ("type" %in% names(parsed) && j <= length(parsed$type))
+                    parsed$type[[j]] else "?"
+          grp  <- if ("group" %in% names(parsed) && j <= length(parsed$group))
+                    parsed$group[[j]] else NA_character_
+          label <- if (!is.na(grp)) sprintf("**%s** / %s", pred, grp) else sprintf("**%s**", pred)
+          md_lines <- c(md_lines, sprintf("- `%s` → %s", chunk_paths[[j]], label))
+        }
+        if (nzchar(trimws(thinking_txt))) {
+          md_lines <- c(md_lines, "", "### Thinking trace", "", thinking_txt)
+        }
+        if (nzchar(trimws(answer_txt))) {
+          md_lines <- c(md_lines, "", "### LLM output", "", "```json", answer_txt, "```")
+        }
+        md_lines <- c(md_lines, "", "---", "")
+        cat(paste(md_lines, collapse = "\n"),
+            file = md_path, append = TRUE, sep = "")
+        cat("\n", file = md_path, append = TRUE)
       }
     } else {
       # All retries exhausted — log the failure and substitute sentinel values
