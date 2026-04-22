@@ -9,7 +9,14 @@ col_dim     <- function(x) .ansi("2",    x)
 col_bold    <- function(x) .ansi("1",    x)
 
 # ── Output directory helper ───────────────────────────────────────────────────
-source("data_check/pipeline/ollama.R")
+local({
+  dc <- getOption("dc_root")
+  if (!is.null(dc)) {
+    source(file.path(dc, "pipeline", "ollama.R"))
+  } else {
+    source("data_check/pipeline/ollama.R")
+  }
+})
 # Returns TRUE if paper_id is a Harvard Dataverse DOI slug.
 # OSF paper IDs are always numeric strings and never start with "doi_".
 is_dataverse_id <- function(paper_id) {
