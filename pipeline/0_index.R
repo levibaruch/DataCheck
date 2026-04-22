@@ -62,6 +62,13 @@ if (!exists("SKIP_COLUMNS"))               SKIP_COLUMNS                <- FALSE 
 if (!exists("COLUMNS_ONLY"))               COLUMNS_ONLY                <- FALSE  # TRUE = skip download+LLM, read existing structure.csv, run columns only
 # Folders with more than this many files are treated as aggregate datasets
 AGGREGATE_THRESHOLD <- 20
+# Software package folder detection: folders matching these names with >= threshold
+# files (recursive) are bulk-labeled "software" without LLM calls
+SOFTWARE_FOLDER_THRESHOLD <- 500L
+SOFTWARE_FOLDER_PATTERNS  <- c(
+  "node_modules", "vendor", "renv", "site-packages",
+  "__pycache__", "venv", ".venv", "libs", "lib", "dist", "build"
+)
 # Max rows to scan below row 1 for a usable sub-header in multi-level CSV files
 MULTILEVEL_HEADER_LOOKAHEAD <- 3L
 # Directory names longer than this many words are truncated; spaces → underscores
@@ -380,6 +387,28 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
   norm_base  <- normalizePath(target_dir, mustWork = FALSE)
   rel_paths  <- sub(paste0("^", norm_base, "/?"), "",
                     normalizePath(files, mustWork = FALSE))
+
+  # ── 4.5. Detect software package folders ────────────────────────────────────
+  # Folders whose basename matches SOFTWARE_FOLDER_PATTERNS and contain >=
+  # SOFTWARE_FOLDER_THRESHOLD files are bulk-labeled "software" without LLM
+  # calls. Their paths are stripped from rel_paths before aggregate detection
+  # and the LLM cap check, so they cannot trigger too_large.
+
+  sw        <- detect_software_folders(rel_paths, SOFTWARE_FOLDER_THRESHOLD,
+                                       SOFTWARE_FOLDER_PATTERNS)
+  rel_paths <- sw$clean_rel_paths
+
+  if (length(sw$software_rel_paths) > 0) {
+    sw_folders <- unique(unname(sw$software_folder_map))
+    cat(col_cyan(sprintf(
+      "\n── Software folders detected (%d folder(s), %d files bypassing LLM) ──\n",
+      length(sw_folders), length(sw$software_rel_paths)
+    )))
+    for (f in sw_folders) {
+      n <- sum(sw$software_folder_map == f)
+      cat(col_dim(sprintf("  %s  (%d files)\n", f, n)))
+    }
+  }
 
   # ── 5. Detect aggregate folders ─────────────────────────────────────────────
   # Two patterns are treated as aggregate (collapsed to a single sentinel row):
@@ -772,7 +801,23 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
     stringsAsFactors   = FALSE
   )
 
-  file_df          <- rbind(non_agg_df, agg_expanded_df)
+  software_df <- if (length(sw$software_rel_paths) > 0) {
+    data.frame(
+      path               = file.path(norm_base, sw$software_rel_paths),
+      rel_path           = sw$software_rel_paths,
+      type               = "software",
+      group              = NA_character_,
+      aggregate_folder   = unname(sw$software_folder_map[sw$software_rel_paths]),
+      type_source        = "rule_folder",
+      data_granularity   = NA_character_,
+      granularity_source = NA_character_,
+      is_sentinel        = FALSE,
+      prompt_nr          = NA_integer_,
+      stringsAsFactors   = FALSE
+    )
+  } else NULL
+
+  file_df          <- rbind(software_df, non_agg_df, agg_expanded_df)
 
 
   file_df$paper_id <- paper_id

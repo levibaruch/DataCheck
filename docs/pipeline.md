@@ -51,7 +51,22 @@ Paper ID (character string)
            ▼
 ┌─────────────────────┐
 │  4. Build file      │  Walk directory tree, collect all paths
-│     tree +          │  Aggregate detection: folders with >50 direct files (flat) or >50
+│     tree            │
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│  4.5. Software      │  detect_software_folders(): folder basename in SOFTWARE_FOLDER_PATTERNS
+│       folder        │  (node_modules, site-packages, renv, vendor, lib, …) AND >=
+│       detection     │  SOFTWARE_FOLDER_THRESHOLD (500) files recursively → bulk-label
+│                     │  type="software", type_source="rule_folder". Extension-majority
+│                     │  safety gate skips folders where >50% files are data extensions.
+│                     │  Claimed paths stripped from rel_paths before aggregate detection.
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│  5. Aggregate +     │  Aggregate detection: folders with >50 direct files (flat) or >50
 │     series detect   │  numeric subdirs (participant) → sub-grouped via detect_series().
 │                     │  detect_series() strips trailing ID/date suffix to find common prefix;
 │                     │  files sharing a prefix (≥2 chars) form a series → one sub-sentinel.
@@ -235,6 +250,8 @@ Paper ID (character string)
 | `MAX_CHAR_COL_TYPE_LLM_CALLS` | 3 | `0_index.R` | Max LLM calls for character-ambiguous column classification (Batch 2, = 60 columns max) when `!FULL_RUN` |
 | `MAX_DATA_FILES` | `Inf` | `0_index.R` | Max tabular data files to column-extract per paper; `Inf` = no cap. Set to a finite integer (e.g. `30L`) in the bulk runner as a temporary guard when `combined`/`individual` misclassification inflates N. |
 | `AGGREGATE_THRESHOLD` | 50 | `0_index.R` | Files per folder above which a sentinel row replaces individual paths |
+| `SOFTWARE_FOLDER_THRESHOLD` | 500 | `0_index.R` | Min recursive file count for a software-named folder to trigger bulk `"software"` labeling (step 4.5) |
+| `SOFTWARE_FOLDER_PATTERNS` | character vector | `0_index.R` | Folder basenames that indicate bundled software packages (node_modules, vendor, renv, site-packages, etc.) |
 | `AGGREGATE_EXT_OVERRIDE` | named vector | `0_index.R` | Extension → type map applied after sentinel expansion to correct inherited types |
 | `MAX_DIR_WORDS` | 5 | `0_index.R` | Directory name word limit before truncation |
 | `MAX_CODEBOOK_LLM_CALLS` | 3 | `2_codebook_label.R` | Max LLM calls per paper for codebook text parsing |

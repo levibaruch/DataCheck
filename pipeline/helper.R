@@ -1701,3 +1701,73 @@ detect_filename_pattern <- function(filenames, verbose = TRUE) {
 
   NULL
 }
+
+# ── Software folder bulk detection ────────────────────────────────────────────
+# Scans rel_paths for directories whose basename matches a known software
+# package folder name (e.g. node_modules, site-packages) AND contains at least
+# `threshold` files recursively. Matched folders are bulk-labeled "software"
+# without LLM calls. An extension-majority safety gate prevents data folders
+# that happen to share a name (e.g. a "lib" folder full of CSVs) from being
+# mislabeled.
+#
+# Returns a list with three fields:
+#   $software_rel_paths  — rel_paths claimed as software
+#   $software_folder_map — named character: rel_path → matched folder path
+#   $clean_rel_paths     — rel_paths not claimed by any software folder
+
+detect_software_folders <- function(rel_paths, threshold, patterns) {
+  DATA_EXTS <- c("csv", "tsv", "txt", "dat", "xlsx", "xls", "sav", "dta",
+                 "sas7bdat", "rds", "rda", "rdata")
+
+  empty <- list(
+    software_rel_paths  = character(0),
+    software_folder_map = setNames(character(0), character(0)),
+    clean_rel_paths     = rel_paths
+  )
+
+  if (length(rel_paths) == 0 || length(patterns) == 0) return(empty)
+
+  # Build all unique directory paths present in the file list (at every depth)
+  all_dirs <- unique(unlist(lapply(rel_paths, function(p) {
+    d <- dirname(p)
+    if (d == "." || d == "") return(character(0))
+    parts <- strsplit(d, "/", fixed = TRUE)[[1]]
+    vapply(seq_along(parts), function(i) paste(parts[1:i], collapse = "/"),
+           character(1))
+  }), use.names = FALSE))
+
+  # Candidates: directories whose basename exactly matches a pattern (case-insensitive)
+  patterns_lower  <- tolower(patterns)
+  candidate_dirs  <- all_dirs[tolower(basename(all_dirs)) %in% patterns_lower]
+  if (length(candidate_dirs) == 0) return(empty)
+
+  # Outermost first: sort by path depth (fewer "/" = shallower)
+  depths         <- nchar(gsub("[^/]", "", candidate_dirs, fixed = FALSE))
+  candidate_dirs <- candidate_dirs[order(depths)]
+
+  unclaimed    <- rel_paths
+  sw_paths     <- character(0)
+  sw_map       <- character(0)   # named: rel_path → matched folder
+
+  for (d in candidate_dirs) {
+    if (length(unclaimed) == 0) break
+    prefix   <- paste0(d, "/")
+    covered  <- unclaimed[startsWith(unclaimed, prefix)]
+
+    if (length(covered) < threshold) next
+
+    # Extension-majority safety gate: skip if >50% are recognisable data files
+    exts <- tolower(tools::file_ext(covered))
+    if (mean(exts %in% DATA_EXTS) > 0.5) next
+
+    sw_paths          <- c(sw_paths, covered)
+    sw_map[covered]   <- d
+    unclaimed         <- unclaimed[!startsWith(unclaimed, prefix)]
+  }
+
+  list(
+    software_rel_paths  = sw_paths,
+    software_folder_map = sw_map,
+    clean_rel_paths     = unclaimed
+  )
+}
