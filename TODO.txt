@@ -1371,3 +1371,39 @@ Querying LLM [==================================================] 1/1 00:00:00
     shared      5 data file(s)
     shared      ✓  56 vars (0 labelled)
     pilot1      79 data file(s)
+
+
+
+Bug: categorical seen as text after LLM?
+Ouptut:
+
+  0956797614536738
+  col_type: numeric ID columns — risk of unknown instead of id
+────────────────────────────────────────────────────────────────────────
+Stage 1: index
+[1] "0956797614536738"
+── Classifying 1 file path(s) via LLM (1 batch(es))
+Querying LLM [==================================================] 1/1 00:00:01
+
+── File inventory ──────────────────────────────
+             data
+  ────────  ─────
+  shared        1
+── Extracting columns + statistics from 1 data file(s)
+  [shared] price_wolfers.dta  (0.0 MB)
+── col_type Batch 1 (rules): 1 column(s) classified
+── LLM col_type Batch 2 (character): classifying 8 column(s)
+Querying LLM [==================================================] 1/1 00:00:01
+── col_type summary (20 total)
+  method            id      text    binary  continuous
+  ──────────  ────────
+  rules              1         0        10         1
+  LLM                0         8         0         0
+
+trace:
+
+Need to classify. keeper_score: values like atie, z_ahead, a_behind: unclear? Likely categorical? maybe ordinal? but strings. We'll pick categorical. team: team match names; categorical. penalty_taker: names; categorical. goalkeeper: names; categorical. directionshot: right, center, left; ordinal? but categories; maybe ordinal? but direction order? left, center, right; could be ordinal but unspecified. choose ordinal. directiondive: right, left, center; similar. result2: goal, save, miss; categorical. score: score strings like "0-0"; categorical? Could be ordinal but choose categorical.
+
+Return array.
+
+weird.
