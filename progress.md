@@ -1,5 +1,18 @@
 # Progress Log
 
+## 2026-04-22
+
+### Completed ✅
+
+**040** — software-folder-detection (branch: `040-software-folder-detection`, PR #44)
+- Detect software package folders (`node_modules`, `renv`, `site-packages`, `venv`, `lib`, etc.) before LLM classification
+- Folders matching a known basename pattern with ≥500 files (recursive) are bulk-labeled `type="software"`, `type_source="rule_folder"` without consuming any LLM calls
+- Extension-majority safety gate: folders where >50% of files are data extensions pass through to normal LLM classification unchanged
+- Validated on `doi_10.7910_DVN_4SYZHV` (dataverse, `renv`: 524 files detected correctly); no regression on baseline paper `0956797615620784`
+- Docs updated: `rule_folder` added to `output-schemas.md` type_source table; step 4.5 + constants documented in `pipeline.md`
+
+---
+
 ## 2026-04-17 – 2026-04-20
 
 ### In Progress / Unmerged 🔧

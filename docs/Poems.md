@@ -428,6 +428,25 @@ the trace remains, and the pipeline stays strong.
 
 ---
 
+## 040 — Software Folder Bulk Detection
+
+A thousand small files, named the same as the rest —
+`__init__.py`, again and again, each a guest
+in a folder called `renv`, or `site-packages` deep,
+the LLM cap looming, the pipeline asleep.
+
+But the rule woke first: count the files, check the name,
+if five hundred gather beneath it — they're claimed.
+No prompt, no token, no waiting in queue —
+just `software`/`rule_folder` stamped straight through.
+
+The safety gate watches for data disguised:
+if CSV fills the folder, the rule is surprised —
+it steps back, says nothing, lets LLM decide.
+The boundary between code and data: a matter of pride.
+
+---
+
 ## 039 — Two-Phase Aggregate Prompt + LLM Config Consolidation
 
 Two callers diverged in the pipeline's wood —
