@@ -463,3 +463,22 @@ And the aggregate prompt split into two clean phases:
 first classify the sample, then propagate the blazes.
 What the batch decides for ten, applies to a hundred whole —
 the two-phase pattern cleanest when the aggregate takes its toll.
+
+---
+
+## test+prompt — Richer Test Report + STRUCTURE_PROMPT_MD_V2
+
+The old report said: correct, total, percent.
+A fine enough thing — but the story was bent.
+It missed the kappa, the F1, the MCC,
+the paper-averaged truth that sets metrics free.
+
+Now each class gets its P and its R and its F,
+its FP source named, its FN path confessed.
+The confusion matrix doubled — file-pooled, then paper-wise,
+so a giant repo can't wear a small study's disguise.
+
+And the prompt got a version: MD_V2, revised,
+with signal priority clearly advised.
+The filename first, then the folder for light —
+codebooks in codebook folders should probably be right.

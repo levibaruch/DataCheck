@@ -16,6 +16,13 @@
 source("data_check/pipeline/0_index.R")
 source("data_check/pipeline/2_codebook_label.R")
 
+FULL_RUN       <- TRUE
+DATA_DIR       <- "/Volumes/NINJAV/data"
+OUTPUT_DIR     <- "/Volumes/NINJAV/DataCheckOut/outputs"
+PSYCHDS_OUT_DIR <- "/Volumes/NINJAV/DataCheckOut/psychds"
+LLM_TEMPERATURE <- 0.7
+LLM_THINK_LEVEL <- "low" # "none", "low", "medium", "high"
+
 # Change these to the models you are actually using! I can recommend gpt-oss:20b
 llm_use(TRUE)
 llm_model("ollama/gpt-oss:20b-cloud")
@@ -34,7 +41,7 @@ local({
   # IDs must stay as character strings — no numeric coercion
   args <- commandArgs(trailingOnly = TRUE)
   # pid <- if (length(args) > 0) args[1] else sample(all_ids, 1L)
-  pid <- "0956797614547916"
+  pid <- "0956797620972490"
   cat("\n══════════════════════════════════════════════════════════════════════\n")
   cat(sprintf("  Paper: %s\n", pid))
   cat("══════════════════════════════════════════════════════════════════════\n\n")

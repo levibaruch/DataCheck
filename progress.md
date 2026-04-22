@@ -4,6 +4,14 @@
 
 ### Completed ✅
 
+**Prompt iteration + test report overhaul** (branch: `dev`, commit `6bb5451d`)
+- Add `STRUCTURE_PROMPT_MD_V2` to `prompts.R`: Markdown-structured prompt with explicit signal-priority rule (filename first, folder as context); per-file labelling enforced in thinking trace via `NON NEGOTIABLE` instruction; type→group ordering made explicit
+- `run_tests.R` report expanded: add Cohen's κ, MCC, Macro/Micro F1, paper-averaged vs file-pooled executive summary; per-class P/R/F1/FPR/FNR table; paper-averaged per-class table with SD; both file-pooled and paper-averaged type confusion matrices; group/DG/data_format confusion matrices; extension-level error analysis; metric glossary
+- Per-paper table in section 3.3 now includes κ, Macro F1, MCC, top error pair per paper
+- Misclassification investigation: codebook FN traced to `*_annotation.txt` files (paper `0956797616685770`) and `.doc`/`.docx` naming confusion; HTML supplemental→codebook FP identified as dominant precision problem
+
+---
+
 **040** — software-folder-detection (branch: `040-software-folder-detection`, PR #44)
 - Detect software package folders (`node_modules`, `renv`, `site-packages`, `venv`, `lib`, etc.) before LLM classification
 - Folders matching a known basename pattern with ≥500 files (recursive) are bulk-labeled `type="software"`, `type_source="rule_folder"` without consuming any LLM calls

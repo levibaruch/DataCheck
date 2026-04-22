@@ -466,3 +466,62 @@ Git:
   - All merges to dev (integrate frequently)
   - Commits include rationale in body (why, not just what)
   - No force push to dev or main
+
+
+22-04-2026
+Got humbled by claude regarding my GT, it was extremely inconsistent in some of the test suite. Improving this pushed accuracy to about 82%. Amazing.
+Improving prompts now. Since we have access to the traces, it is possible to finally see the "thinking" mistake. This is extremely cool; the fact we can 
+now judge a machine on its thinking is crazy, espsecially since it makes so little sense thinking about it.
+
+Temperature of 0.7 seems to be way better in the group and individuality classificaiton as 0.3. Interesting to see.
+We changed the prompt NOw.
+  The most impactful structural change is moving supplemental to the top of the TYPE list and explicitly labelling it the default. LLMs read type definitions in order and anchor on early ones — putting
+  supplemental first means it gets established as the prior before the model encounters software, code, etc. This is a cognitive architecture change, not just documentation.                              
+
+LEts see if it changes anything
+
+It worke,d but nuked the accuracy of other types. It also destroyed group accuracy somehow. Lets investigate that. I also fixed some collumn LLM classificaiton problems; it was always classifying as text.
+
+
+Interesting structure: The LLM Sometimes labels 4 variables at the same time; like (study1.csv, study2.csv, study3.csv) and then labels all of them as shared, since they TOGETHER are shared. This can probably be fixed
+using some prompting.
+Example: 
+28-30: Output and Syntax - Study 1.doc. These are code or output? They are syntax and output. .doc. Likely code? But it's a doc file containing syntax. According to rules, code files are scripts, .doc not. So treat as supplemental. group shared.
+input: Laptop_and_Longhand_Note-Taking/Files_referenced_in_Corrigendum/Output and Syntax - Study 1.doc | Laptop_and_Longhand_Note-Taking/Files_referenced_in_Corrigendum/Output and Syntax - Study 2.doc | Laptop_and_Longhand_Note-Taking/Files_referenced_in_Corrigendum/Output and Syntax - Study 3.doc
+
+fascinating! Testing a small rule based fix to stop this behavior in todays V4 test report.
+
+Great success, this worked very well. But I am sceptical since the trace doenst seem that much different. Lets try it again, by explicitly telling it to, within its thinking trace, go over every step seperately.
+LETS TRY a very aggresive end prompt to test this 
+NON NEGOTIABLE: IN YOUR THINKING TRACE, LABEL EVERY FILE SEPERATELY, REGARDLESS OF THEIR SYNTAX SIMULARITY.
+PER FILE YOU THINK FOR AT LEAST ONE SENTENCE AND THEN DETERMINE, IN ORDER: TYPE -> GROUP.
+YOU ARE ALLOWED TO USE OTHER FILES AS CONTEXT, BUT LABEL THEM ONE BY ONE IN THE THINKING TRACE. Will be V5
+
+
+
+NIce, seems to work in most cases. Some bad stuff still. NEed to tell the LLM that the filename is just as important as the folder name sometimes!
+Going to try a new approach: first letting it determine the tpye and then the group. IN the same prompt of course. README recall also slam dunked. need tto improve
+
+
+ideal output in my opinion: 
+  We need classify each.
+
+  Rules: output: .spv always output. .docx in supplemental unless contains Output/Syntax? but here "Syntax for original analyses.docx" likely supplemental. .doc "PROCESS Output - Study 1.doc" contains Output and Syntax? but .doc. Could be output? but .doc type usually supplemental unless output signaled. Since contains "Output" and "Syntax" maybe output. But .doc considered output if name contains Output/Syntax. So treat as output. Group: ex1 or ex2 etc. Path includes Study numbers. So group ex1/ex2/ex3 accordingly.
+
+  Files:
+
+  1 PROCESS Output - Study 1.doc -> output, ex1.
+  2 PROCESS Output - Study 2.doc -> output, ex2.
+  3 Output and Syntax - Study 1.spv -> output, ex1.
+  4 Output and Syntax - Study 2.spv -> output, ex2.
+  5 Output and Syntax - Study 3.spv -> output, ex3.
+  6 PROCESS Output, Study 1.spv -> output, ex1.
+  7 PROCESS Output, Study 2.spv -> output, ex2.
+  8 Study 1 abbreviated data.sav -> data, ex1.
+  9 Study 2 abbreviated data.sav -> data, ex2.
+  10 Study 3 abbreviated data.sav -> data, ex3.
+  11 Study 1 Syntax.sps -> code? .sps is SPSS syntax, code. group ex1.
+  12 Study 2 Syntax.sps -> code, ex2.
+  13 Syntax for original analyses.docx -> supplemental, shared? It's in Files_referenced_in_Corrigendum but no ex. Likely shared. group shared.
+
+  Return array.
