@@ -30,6 +30,7 @@ TEST_OUTPUT_DIR  <- file.path(TEST_DIR, "outputs")
 TEST_PSYCHDS_DIR <- file.path(TEST_DIR, "psychds")
 TEST_LOG_PATH    <- file.path(TEST_DIR, "test_log.csv")
 REPORT_DIR       <- "./data_check/results"
+GT_DIR           <- "./data_check/ground_truth"
 
 `%||%` <- function(x, y) if (is.null(x) || length(x) == 0) y else x
 # ── Pipeline sources (only needed for full run) ────────────────────────────────
@@ -38,11 +39,11 @@ source("data_check/pipeline/0_index.R")
 source("data_check/pipeline/2_codebook_label.R")
 source("data_check/pipeline/3_psychds_convert.R")
 
-LLM_TEMPERATURE  <- 0.3
+LLM_TEMPERATURE  <- 0.5
 LLM_THINK_LEVEL  <- "low"
-TEST_TITLE       <- "20B_MD_THINKLOW_TEMP0.3"
+TEST_TITLE       <- "120B_MD_THINKLOW_TEMP0.5"
 CAPTURE_THINKING <- TRUE   # write per-path thinking snippets to thinking_traces.csv
-llm_model("ollama/gpt-oss:20b-cloud")
+llm_model("ollama/gpt-oss:120b-cloud")
 STRUCTURE_PROMPT <- STRUCTURE_PROMPT_MD
 
 # ── Report helpers ─────────────────────────────────────────────────────────────
@@ -119,7 +120,7 @@ generate_report <- function() {
       row_src <- papers_df$source[papers_df$id == pid]
       if (length(row_src) > 0 && !is.na(row_src[1])) row_src[1] else "osf"
     } else "osf"
-    gt_path  <- file.path(TEST_DIR, "ground_truth", src, paste0(pid, ".csv"))
+    gt_path  <- file.path(GT_DIR, src, paste0(pid, ".csv"))
     str_path <- file.path(TEST_DIR, "outputs", src, pid, "structure.csv")
     if (!file.exists(gt_path) || !file.exists(str_path)) next
     gt  <- read.csv(gt_path,  colClasses = c(paper_id = "character"), stringsAsFactors = FALSE)

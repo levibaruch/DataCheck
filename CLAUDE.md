@@ -1,6 +1,6 @@
 # data_check Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-04-15
+Auto-generated from all feature plans. Last updated: 2026-04-21
 
 ## Active Technologies
 - R (base R only — no new packages; `haven`/`readxl`/`jsonlite` already present) + `llm_batch()`, `extract_json()` (existing helpers in `helper.R`); `jsonlite::fromJSON` (005-codebook-column-labelling)
@@ -60,6 +60,8 @@ Auto-generated from all feature plans. Last updated: 2026-04-15
 - CSV files on local filesystem (`structure.csv`) (037-improve-granularity-detection)
 - R 4.5 (base R, no new packages per constitution.md Principle IV) + `metacheck` (llm()), `jsonlite` (fromJSON, extract_json), existing helpers in `helper.R` (038-llm-fallback-retry)
 - CSV files on local filesystem; append-only error logs (`llm_batch_errors.log`) (038-llm-fallback-retry)
+- R 4.5 (base R only — no new packages) + `helper.R` (`classify_by_rules()`), `0_index.R` (constants, `run_index()`) (040-software-folder-detection)
+- CSV files — `outputs/<source>/<id>/structure.csv` (existing schema, new `type_source` value) (040-software-folder-detection)
 
 ## Project Structure
 
@@ -77,9 +79,9 @@ tests/
 R (base R, no new packages): Follow standard conventions
 
 ## Recent Changes
+- 040-software-folder-detection: Added R 4.5 (base R only — no new packages) + `helper.R` (`classify_by_rules()`), `0_index.R` (constants, `run_index()`)
 - 038-llm-fallback-retry: Added R 4.5 (base R, no new packages per constitution.md Principle IV) + `metacheck` (llm()), `jsonlite` (fromJSON, extract_json), existing helpers in `helper.R`
 - 037-improve-granularity-detection: Added R 4.5 (base R only — no new packages per constitution.md Principle IV) + `helper.R` (`llm_batch()`, `is_participant_id()`), `prompts.R` (`GRANULARITY_PROMPT`), `0_index.R` (integration)
-- 035-sentinel-aggregate-redesign: Added R (base R only — no new packages) + `helper.R` (`llm_batch()`, `classify_by_rules()`), `0_index.R`, `3_psychds_convert.R`, `prompts.R` (`STRUCTURE_PROMPT_NEW`)
 
 
 <!-- MANUAL ADDITIONS START -->

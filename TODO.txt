@@ -1301,3 +1301,73 @@ Querying LLM [==================================================] 1/1 00:00:02
    ×30    74kqe/Stimuli_and_Psychopy_Experiment/verbvocab/.png
 
    we need a way to capture these psychopy and other packages. 7000 batches is crazy.
+
+
+   PsychDS struggles weith reconstructing .tsv files or other unknown files to csv.
+═════════════════════════════════════════════════════════════
+
+══ #278 / 2151  •  osf / 09567976231217508
+
+═════════════════════════════════════════════════════════════
+
+  ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+  [index]    running ...
+[1] "09567976231217508"
+── 3 archive(s): 3 already done
+── Removed 3 duplicate file(s) (same name, size, and content)
+
+── Aggregate folders (2 detected) — classifying:
+  ×79    Indulgent_foods_can_paradoxically_promote/Data_and_Analysis_Code_-/rawdata/tobiidata/.tsv
+   ×25    Indulgent_foods_can_paradoxically_promote/Task_Files_and_Stimuli/taskStimuli/foodImages/.jpg
+   ×5     Indulgent_foods_can_paradoxically_promote/Task_Files_and_Stimuli/taskStimuli/foodImages/.bmp  → routed individually
+── Classifying 27 file path(s) via LLM (2 batch(es))
+Querying LLM [==================================================] 1/1 00:00:07
+Querying LLM [==================================================] 1/1 00:00:04
+── Classifying 2 aggregate folder(s) via LLM
+Querying LLM [==================================================] 1/1 00:00:04
+
+── Aggregate classification results:
+  ×79    Indulgent_foods_can_paradoxically_promote/Data_and_Analysis_Code_-/rawdata/tobiidata/.tsv →  data / pilot1      combined
+  ×25    Indulgent_foods_can_paradoxically_promote/Task_Files_and_Stimuli/taskStimuli/foodImages/.jpg →  asset / shared     
+── Inferring granularity for 1 aggregate folder(s) via LLM
+Querying LLM [==================================================] 1/1 00:00:01
+  └ granularity  individual  ^fMRIPilot_Data_Export_Subj[0-9]+\.tsv$  [79 file(s)]
+
+── File inventory ──────────────────────────────
+             data   code  asset  readme
+  ────────  ─────  ─────  ─────  ──────
+  pilot1       79      .      .       .
+  shared        5     14     31       2
+── Extracting columns + statistics from 3 data file(s)
+  [shared] behavdata.csv  (4.5 MB)
+  [shared] foodNames.csv  (2.1 MB)
+  [shared] data.txt  (355.1 MB)
+── col_type Batch 1 (rules): 33 column(s) classified
+── LLM col_type Batch 2 (character): classifying 4 column(s)
+Querying LLM [==================================================] 1/1 00:00:01
+── col_type summary (69 total)
+  method          text    binary  continuous
+  ──────────  ────────
+  rules              0         0        33
+  LLM                4        14        18
+── data_granularity: 79 individual, 5 combined data file(s)
+  └ index     ✓  131 files (2 aggregate folder(s)) · 84 data · 69 cols  (49.0s)
+  ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+  [codebook] running ...
+  codebook   parsing 2 file(s)
+    → readme.txt
+  parse_codebook: structured extraction failed for readme.txt — falling back to LLM
+       parse readme.txt via LLM (1 chunk(s))
+Querying LLM [==================================================] 1/1 00:00:00
+    → readme.txt
+  parse_codebook: structured extraction failed for readme.txt — falling back to LLM
+       parse readme.txt via LLM (1 chunk(s))
+Querying LLM [==================================================] 1/1 00:00:00
+  codebook   no variables extracted — all columns unlabelled
+  └ codebook  ✓  0 / 69 cols labelled (0%)  (1.5s)
+  ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+  [psychds]  running ...
+  [psychds]   2 study group(s): shared, pilot1
+    shared      5 data file(s)
+    shared      ✓  56 vars (0 labelled)
+    pilot1      79 data file(s)
