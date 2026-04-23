@@ -604,3 +604,7 @@ Thinking trace;
 
 The thinking trace makes it obvious why; both codebooks and data are captured in one due to the relatively low aggregate N. It is a shame, but this is an inherent
 risk. Failure state
+
+
+Maybe update the N examples for granularityt:
+956797614564191,(no clear pattern),ac184_ac184.csv,cb286_cb286.csv,Codebook_Sheet1.csv,individual,2026-04-23 13:58:20
