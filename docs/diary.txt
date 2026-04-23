@@ -525,3 +525,82 @@ ideal output in my opinion:
   13 Syntax for original analyses.docx -> supplemental, shared? It's in Files_referenced_in_Corrigendum but no ex. Likely shared. group shared.
 
   Return array.
+
+
+23-04-2026
+
+I think that there is no more real opportunitiy to improve. Even with new prompting the testing suite is improved, but no real improvement found in the GT. ~82% seems to be the max.
+
+Granularity insight:
+4e. Granularity accuracy by granularity_source
+Applies only to data files with a granularity ground truth annotation.
+
+granularity_source	    N files	  N papers	Paper-avg acc	  File-pooled acc
+default_combined	      144	      183	      97.0%	          85.5%
+filename_heuristic	    6	        2	        50.0%	          83.3%
+llm	                    5613  	  16	      95.8%	          99.7%
+llm_pattern_inference	  47	      2	        50.0%	          97.9%
+
+Almost no file level heursitic is used. Could be because there area very little, but if this is the case, whats even the point of this system? The LLM seems EXTREMELY accurate, but watch out for
+leakage; most of the bulk datafiles are individual. Check this for FP and FN etc.
+
+Nevermind! It does work very well. E.g.══ #245 / 2242  •  osf / 0956797620972490. Saveda bout 5 llm inferences by reapplying a rule based one. Very cool.
+
+Every time I am happy, Some stupid stuff like this happens
+
+
+══ #282 / 2252  •  osf / 09567976211024254
+
+═════════════════════════════════════════════════════════════
+
+  ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈
+  [index]    running ...
+── Aggregate classification results:
+  ×22    NoiseIncreasesAnchoringEffects/.csv                        →  data / shared      combined             [LLM]
+── granularity: individual = one file per participant; combined = multiple participants per file
+── Inferring granularity for 1 aggregate folder(s) via LLM
+Querying LLM [==================================================] 1/1 00:00:00
+  └ granularity  combined    (no clear pattern)  [22 file(s)]  [LLM]
+── file types: data=participant data  code=scripts  codebk=codebook  asset=media  suppl=supplemental  softw=software  output=generated output  other=unclassified
+── groups inferred from folder structure
+
+── File inventory ──────────────────────────────
+             data  suppl
+  ────────  ─────  ─────
+  shared       22      2
+── Extracting columns + statistics from 22 data file(s)
+  [shared] Codebook_Experiment1A.csv  (0.0 MB)
+  [shared] Codebook_Experiment1B.csv  (0.0 MB)
+  [shared] Codebook_Experiment2A.csv  (0.0 MB)
+  [shared] Codebook_Experiment2B.csv  (0.0 MB)
+  [shared] Codebook_Experiment3A.csv  (0.0 MB)
+  [shared] Codebook_Experiment3B.csv  (0.0 MB)
+  [shared] Codebook_Experiment4A.csv  (0.0 MB)
+  [shared] Codebook_Experiment4B.csv  (0.0 MB)
+  [shared] Codebook_Experiment5.csv  (0.0 MB)
+  [shared] Codebook_Experiment6A.csv  (0.0 MB)
+  [shared] Codebook_Experiment6B.csv  (0.0 MB)
+  [shared] S1A_Sheet1.csv  (0.0 MB)
+  [shared] S1B_Sheet1.csv  (0.0 MB)
+  [shared] S2A_Sheet1.csv  (0.0 MB)
+  [shared] S2B_Sheet1.csv  (0.0 MB)
+  [shared] S3A_Sheet1.csv  (0.0 MB)
+  [shared] S3B_Sheet1.csv  (0.0 MB)
+  [shared] S4A_Sheet1.csv  (0.0 MB)
+  [shared] S4B_Sheet1.csv  (0.0 MB)
+  [shared] S5_Sheet1.csv  (0.0 MB)
+  [shared] S6A_Sheet1.csv  (0.0 MB)
+  [shared] S6B_Sheet1.csv  (0.0 MB)
+
+Thinking trace; 
+"  We have one folder: path "NoiseIncreasesAnchoringEffects/.csv". ext csv. filenames: Codebook_Experiment1A.csv, Codebook_Experiment3B.csv, S1A_Sheet1.csv, S3B_Sheet1.csv, S6B_Sheet1.csv.
+
+  We need type for folder. Files: two codebooks, three sheets. Codebook files have keyword codebook. So type likely data? Actually codebook type. The folder contains both codebooks and data sheets. Which type for folder? The instruction: classify folder as whole. We need type of folder content? Likely data? But codebook present. Maybe folder purpose is data. But include codebooks. According to guidelines: type is purpose, inferred from filenames and path. The folder has codebooks and data sheets. "NoiseIncreasesAnchoringEffects" seems experiment. Group: ex? Contains Experiment1A, Experiment3B, etc. So group ex? Which experiment number? There's Experiment1A, Experiment3B. Also S1A, S3B, S6B. Likely ex? ex? maybe ex?? The group should be ex? The naming: "Experiment1A" -> ex1a. "Experiment3B" -> ex3b. So group maybe ex? But folder contains multiple experiments. Maybe group shared? The rule: if folder has multiple experiment numbers, group shared? But group is per folder. It says "tied to a numbered experiment." If folder contains multiple, maybe shared. But "NoiseIncreasesAnchoringEffects" seems one study with multiple sub-experiments (1A,3B,6B). Could be ex? I'd choose shared.
+
+  Type: data? But codebooks present. Could be data? I think folder type likely data because contains measurement sheets. The codebooks are metadata. So type "data".
+
+  Return JSON array with one object: path, type: data, group: shared.
+"
+
+The thinking trace makes it obvious why; both codebooks and data are captured in one due to the relatively low aggregate N. It is a shame, but this is an inherent
+risk. Failure state

@@ -10,14 +10,15 @@ source("data_check/pipeline/0_index.R")
 # Run level configs
 
 DATA_DIR <- "/Volumes/NINJAV/data"
-OUTPUT_DIR <- "/Volumes/NINJAV/DataCheckOut/outputs"
-PSYCHDS_OUT_DIR <- "/Volumes/NINJAV/DataCheckOut/psychds"
+#OUTPUT_DIR <- "/Volumes/NINJAV/DataCheckOut/outputs"
+#PSYCHDS_OUT_DIR <- "/Volumes/NINJAV/DataCheckOut/psychds"
 
 
 
 # ── Config ────────────────────────────────────────────────────────────────────
 
-FULL_RUN       <- TRUE         # TRUE = no LLM call caps (file classification + col_type)
+FULL_RUN         <- TRUE         # TRUE = no LLM call caps (file classification + col_type)
+CAPTURE_THINKING <- TRUE         # TRUE = write one row per LLM call to thinking_traces.csv
 SKIP_COLUMNS   <- TRUE         # TRUE = skip column extraction (file indexing only)
 RERUN_COLUMNS  <- FALSE        # TRUE = re-run column extraction for papers previously run
                                #   without it (no columns.csv exists).  Forces

@@ -16,8 +16,9 @@ DATA_DIR       <- "/Volumes/NINJAV/data"
 OUTPUT_DIR     <- "/Volumes/NINJAV/DataCheckOut/outputs"
 PSYCHDS_OUT_DIR <- "/Volumes/NINJAV/DataCheckOut/psychds"
 
-FULL_RUN       <- TRUE
-SKIP_COLUMNS   <- FALSE
+FULL_RUN         <- TRUE
+CAPTURE_THINKING <- TRUE         # TRUE = write one row per LLM call to thinking_traces.csv
+SKIP_COLUMNS     <- FALSE
 N_RUNS         <- Inf
 SEED           <- NULL
 SHUFFLE        <- TRUE

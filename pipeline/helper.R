@@ -615,7 +615,11 @@ llm_batch <- function(paths, system_prompt, user_prefix, key_col, extra_cols,
           sprintf("batch %d/%d", batch_nr, n_batches_total)
         else
           sprintf("chunk %d", i)
-        cat(col_dim(sprintf("\u2500\u2500 LLM %s retry %d/%d \u2500\u2500\n", batch_label, attempt, LLM_RETRY_LIMIT)))
+        retry_reason <- if (inherits(parsed, "error"))
+          substr(gsub("[\n\r]", " ", conditionMessage(parsed)), 1L, 60L)
+        else ""
+        cat(col_dim(sprintf("\u2500\u2500 LLM %s retry %d/%d \u2014 %s \u2500\u2500\n",
+                            batch_label, attempt, LLM_RETRY_LIMIT, retry_reason)))
         attempt <- attempt + 1L
       } else {
         break  # retry budget exhausted — fall through to failure handler
