@@ -74,6 +74,19 @@ AGGREGATE_EXT_OVERRIDE <- c(
   rds  = "data", rda = "data", rdata = "data"
 )
 
+# ── Internal: translate_psychds_error ────────────────────────────────────────
+translate_psychds_error <- function(msg) {
+  if (grepl("replacement has (\\d+) rows, data has (\\d+)", msg)) {
+    m <- regmatches(msg, regexpr("replacement has (\\d+) rows, data has (\\d+)", msg))
+    nums <- regmatches(m, gregexpr("\\d+", m))[[1]]
+    return(sprintf("column count mismatch building study table (%s input rows vs %s in data)",
+                   nums[1], nums[2]))
+  }
+  if (grepl("^no_data_files$", trimws(msg)))
+    return("no data files found for this study group")
+  msg
+}
+
 # ── Internal: read_full_data ──────────────────────────────────────────────────
 
 # Read a complete data file (all rows, no sampling).
@@ -1057,7 +1070,7 @@ convert_psychds <- function(paper_id) {
                     source = paper_source),
       error = function(e) list(
         paper_id = paper_id, study_group = studies[1],
-        success = FALSE, error = conditionMessage(e),
+        success = FALSE, error = translate_psychds_error(conditionMessage(e)),
         n_data_files = 0L, n_raw_files = 0L,
         n_variables = 0L, n_labelled = 0L,
         has_paper_metadata = !is.null(xml_meta),
@@ -1126,7 +1139,7 @@ convert_psychds <- function(paper_id) {
                       source = paper_source),
         error = function(e) list(
           paper_id = paper_id, study_group = sg,
-          success = FALSE, error = conditionMessage(e),
+          success = FALSE, error = translate_psychds_error(conditionMessage(e)),
           n_data_files = 0L, n_raw_files = 0L,
           n_variables = 0L, n_labelled = 0L,
           has_paper_metadata = !is.null(xml_meta),

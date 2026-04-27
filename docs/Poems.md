@@ -4,6 +4,25 @@
 
 ---
 
+## 041 — Pipeline Output Transparency
+
+The pipeline once whispered its secrets in streams,
+a river of tokens, opaque as bad dreams.
+Did it succeed? Did it fail? Hard to say —
+the terminal scrolled and then vanished away.
+
+But now at the end stands a verdict in brackets,
+`[SUCCESS]` or `[FAILED]` — no more shell-script rackets.
+Each LLM call tagged: `[rules]` or `[LLM]`,
+so the researcher knows what to trust and to tally.
+
+The silent skips speak now — a warning, a cause,
+no more `0 files extracted` with nobody's clause.
+Each retry admits what went wrong on pass one,
+transparency wins when the pipeline is done.
+
+---
+
 ## 002 — Column Type Classification
 
 A column arrives, anonymous, raw —

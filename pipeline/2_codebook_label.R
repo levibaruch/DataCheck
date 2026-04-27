@@ -185,6 +185,23 @@ run_codebook_label <- function(paper_id, output_dir = NULL) {
   overall_status <- if (nrow(codebook_vars_df) == 0) "no_codebook" else
                     if (n_labelled == 0) "no_match" else "ok"
 
+  n_cb_total <- nrow(coverage_df)
+  verdict_label <- switch(overall_status,
+    ok          = "[OK]",
+    no_match    = "[NO_MATCH]",
+    no_codebook = "[NO_CODEBOOK]",
+    "[UNKNOWN]"
+  )
+  verdict_col <- if (overall_status == "ok") col_green else col_dim
+  coverage_part <- if (n_cb_total > 0)
+    sprintf("  coverage=%d/%d (%d%%)",
+            n_matched, n_cb_total, round(n_matched / n_cb_total * 100))
+  else
+    ""
+  cat(col_cyan("── Codebook label: "), verdict_col(verdict_label),
+      sprintf("  labelled=%d  unlabelled=%d%s\n",
+              n_labelled, n_unlabelled, coverage_part))
+
   list(
     labels_df       = labels_df,
     coverage_df     = coverage_df,

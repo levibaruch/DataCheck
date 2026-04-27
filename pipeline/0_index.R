@@ -16,7 +16,6 @@ source("data_check/pipeline/helper.R")
 source("data_check/pipeline/prompts.R")
 
 llm_use(TRUE)
-llm_model("ollama/gpt-oss:20b-cloud")
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -36,10 +35,13 @@ if (!exists("LLM_TEMPERATURE"))   LLM_TEMPERATURE   <- 0.7
 if (!exists("LLM_THINK_LEVEL"))   LLM_THINK_LEVEL   <- "low"
 if (!exists("LLM_BATCH_SIZE"))    LLM_BATCH_SIZE    <- 30
 if (!exists("LLM_RETRY_LIMIT"))   LLM_RETRY_LIMIT   <- 4L
+if (!exists("LLM_MODEL"))         LLM_MODEL         <- "ollama/gpt-oss:20b-cloud"
 if (!exists("LLM_ERROR_LOG"))     LLM_ERROR_LOG     <- "./data_check/logs/llm_batch_errors.log"
 if (!exists("LLM_SENTINEL_VAL"))  LLM_SENTINEL_VAL  <- "llm_error"
 if (!exists("CAPTURE_THINKING"))  CAPTURE_THINKING  <- FALSE
 if (!exists("THINKING_LOG_PATH")) THINKING_LOG_PATH <- NULL
+
+llm_model(LLM_MODEL)
 
 N_DATA_READ     <- 5
 MAX_TOTAL_DATA_MB <- 10 * 1024  # 10 GB total data read cap per paper across all data files
@@ -90,10 +92,9 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
   structure_body <- switch(structure_prompt_version,
     "v0"      = STRUCTURE_PROMPT_v0,
     "v1"      = STRUCTURE_PROMPT_v1,
-    "current" = STRUCTURE_PROMPT,
-    STRUCTURE_PROMPT  # default
+    "current" = STRUCTURE_PROMPT_MD_V2,
+    STRUCTURE_PROMPT_MD_V2  # MD DEFAULT
   )
-
   # ── 0. Resolve paper ────────────────────────────────────────────────────────
 
   if (is.na(paper_id)) {
@@ -111,6 +112,11 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
     dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
     output_dir
   } else paper_output_dir(source, paper_id)
+
+  if (isTRUE(CAPTURE_THINKING)) {
+    THINKING_LOG_PATH <<- file.path(eff_dir, "thinking_traces.csv")
+    dir.create(eff_dir, recursive = TRUE, showWarnings = FALSE)
+  }
 
   target_dir <- paper_path("data", source, paper_id)
 
@@ -755,8 +761,8 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
 
       agg_expanded <- c(agg_expanded, list(member_df))
 
-      gran_label <- if (is_data) { if (is_series) "individual" else "combined" } else ""
-      cat(sprintf("  \u00d7%-4d  %-58s \u2192  %-18s %s\n",
+      gran_label <- if (is_data) { if (is_series) "individual [rules]" else "combined" } else ""
+      cat(sprintf("  \u00d7%-4d  %-58s \u2192  %-18s %-20s [LLM]\n",
                   length(grp$members),
                   paste0(grp$folder, "/.", grp$ext),
                   paste0(agg_type, " / ", agg_group),
@@ -846,6 +852,7 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
   # where the folder structure does NOT clearly indicate participant series
   # (i.e., subdirectory names don't match participant patterns).
   # Use LLM to infer granularity based on FILENAME PATTERNS, not columns.
+  granularity_legend_printed <- FALSE
   unclear_agg_idx <- which(file_df$type == "data" &
                            file_df$granularity_source == "folder_heuristic" &
                            !is.na(file_df$aggregate_folder) &
@@ -959,6 +966,11 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
 
 
       # Call LLM with GRANULARITY_PROMPT
+      if (!granularity_legend_printed) {
+        cat(col_dim("── granularity: individual = one file per participant; combined = multiple participants per file
+"))
+        granularity_legend_printed <- TRUE
+      }
       cat(col_dim(sprintf("── Inferring granularity for %d aggregate folder(s) via LLM\n",
                   length(gran_queries))))
       gran_result <- tryCatch({
@@ -991,7 +1003,7 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
             q <- gran_queries[[agg_folder_result]]
             pattern_display <- if (!is.null(q$pattern_display)) q$pattern_display else q$filename_pattern
             gran_col <- if (gran_val == "individual") col_green else col_dim
-            cat(gran_col(sprintf("  \u2514 granularity  %-10s  %s  [%d file(s)]\n",
+            cat(gran_col(sprintf("  \u2514 granularity  %-10s  %s  [%d file(s)]  [LLM]\n",
                         gran_val, pattern_display, length(file_idx))))
           }
         }
@@ -1126,6 +1138,10 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
   # ── 8. Save structure ────────────────────────────────────────────────────────
 
   structure_out <- file.path(eff_dir, "structure.csv")
+  cat(col_dim("── file types: data=participant data  code=scripts  codebk=codebook  asset=media  suppl=supplemental  softw=software  output=generated output  other=unclassified
+"))
+  cat(col_dim("── groups inferred from folder structure
+"))
   cat(col_cyan("\n── File inventory ──────────────────────────────\n"))
   local({
     type_order <- c("data","code","codebook","asset","output",
@@ -1596,13 +1612,28 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
       warning("Unknown col_type values: ", paste(invalid_types, collapse = ", "))
     write.csv(columns_df[, setdiff(names(columns_df), "col_type_method")], columns_out, row.names = FALSE)
   } else {
-    message("── No columns extracted")
+    n_indiv <- if (exists("file_df") && is.data.frame(file_df))
+      sum(file_df$type == "data" & !is.na(file_df$data_granularity) &
+          file_df$data_granularity == "individual", na.rm = TRUE)
+    else 0L
+    if (n_indiv > 0L) {
+      message("── No columns extracted — pipeline indexes combined-granularity files only;",
+              " individual-granularity datasets produce zero columns by design")
+    } else {
+      message("── No columns extracted")
+    }
     columns_df  <- NULL
     columns_out <- NULL
   }
 
   t_col <- proc.time()[["elapsed"]] - t_col_start
   elapsed <- proc.time()[["elapsed"]] - t_start
+
+  n_cols_out  <- if (!is.null(columns_df)) nrow(columns_df) else 0L
+  n_data_out  <- sum(file_df$type == "data" & !file_df$is_sentinel, na.rm = TRUE)
+  cat(col_cyan("── Index: "), col_green("[OK]"),
+      sprintf("  files=%d  data=%d  columns=%d  elapsed=%.1fs\n",
+              nrow(file_df), n_data_out, n_cols_out, elapsed))
 
   # ── Return structured result ─────────────────────────────────────────────────
 

@@ -1,7 +1,7 @@
 # run_single.R
 # ─────────────────────────────────────────────────────────────────────────────
-# Run the full pipeline (index + codebook label) for one randomly selected
-# paper.  Useful for smoke-testing the pipeline and inspecting outputs.
+# Run the full pipeline (index + codebook label + psychds) for one paper.
+# Useful for smoke-testing the pipeline and inspecting outputs.
 #
 # Usage: Rscript data_check/run_single.R
 #        or source("./data_check/run_single.R") from an interactive session
@@ -9,19 +9,24 @@
 # Output: data_check/outputs/<paper_id>/
 #           structure.csv, columns.csv   (from run_index)
 #           labels.csv, codebook_coverage.csv  (from run_codebook_label)
+#         psychds/<source>/<paper_id>/   (from convert_psychds)
 # ─────────────────────────────────────────────────────────────────────────────
 
 `%||%` <- function(x, y) if (is.null(x) || length(x) == 0) y else x
 
 source("data_check/pipeline/0_index.R")
 source("data_check/pipeline/2_codebook_label.R")
+source("data_check/pipeline/3_psychds_convert.R")
 
 FULL_RUN       <- TRUE
 DATA_DIR       <- "/Volumes/NINJAV/data"
-OUTPUT_DIR     <- "/Volumes/NINJAV/DataCheckOut/outputs"
-PSYCHDS_OUT_DIR <- "/Volumes/NINJAV/DataCheckOut/psychds"
+#OUTPUT_DIR     <- "/Volumes/NINJAV/DataCheckOut/outputs"
+#PSYCHDS_OUT_DIR <- "/Volumes/NINJAV/DataCheckOut/psychds"
 LLM_TEMPERATURE <- 0.7
 LLM_THINK_LEVEL <- "low" # "none", "low", "medium", "high"
+CAPTURE_THINKING <- TRUE   # write one row per prompt call to thinking_traces.csv
+
+
 
 # Change these to the models you are actually using! I can recommend gpt-oss:20b
 llm_use(TRUE)
@@ -41,10 +46,12 @@ local({
   # IDs must stay as character strings — no numeric coercion
   args <- commandArgs(trailingOnly = TRUE)
   # pid <- if (length(args) > 0) args[1] else sample(all_ids, 1L)
-  pid <- "0956797620972490"
+  pid <- "09567976211024254"
   cat("\n══════════════════════════════════════════════════════════════════════\n")
   cat(sprintf("  Paper: %s\n", pid))
   cat("══════════════════════════════════════════════════════════════════════\n\n")
+
+  src <- if (is_dataverse_id(pid)) "dataverse" else "osf"
 
   # ── Stage 1: run_index ───────────────────────────────────────────────────────
 
@@ -80,7 +87,6 @@ local({
 
   cat("\n── Stage 2: run_codebook_label ─────────────────────────────────────────\n")
 
-  src          <- if (is_dataverse_id(pid)) "dataverse" else "osf"
   columns_path <- paper_path("outputs", src, pid, "columns.csv")
 
   if (!file.exists(columns_path)) {
@@ -98,20 +104,67 @@ local({
   t2_elapsed <- proc.time()[["elapsed"]] - t2_start
 
   if (isFALSE(stage2$success)) {
-    cat(sprintf("  FAILED — %s\n", stage2$error))
-    return(invisible(NULL))
-  }
+    cat(sprintf("  FAILED — %s\n  (Stage 3 will still run)\n", stage2$error))
+  } else {
 
   cat(sprintf(
-    "  label_status=%s  labelled=%s  unlabelled=%s  elapsed=%.1fs\n",
-    stage2$label_status %||% "NA",
-    stage2$n_labelled %||% "NA",
-    stage2$n_unlabelled %||% "NA",
-    t2_elapsed
-  ))
+      "  label_status=%s  labelled=%s  unlabelled=%s  elapsed=%.1fs\n",
+      stage2$label_status %||% "NA",
+      stage2$n_labelled %||% "NA",
+      stage2$n_unlabelled %||% "NA",
+      t2_elapsed
+    ))
+  }
 
-  # ── Done ─────────────────────────────────────────────────────────────────────
+  # ── Stage 3: psychds ─────────────────────────────────────────────────────────
 
-  cat(sprintf("\n── Outputs: %s\n\n", paper_path("outputs", src, pid)))
+  cat("\n── Stage 3: convert_psychds ────────────────────────────────────────────\n")
+
+  PSYCHDS_CSV <- file.path(PSYCHDS_OUT_DIR, "conversion_summary.csv")
+
+  t3_start <- proc.time()[["elapsed"]]
+
+  psychds_results <- tryCatch(
+    convert_psychds(pid),
+    error = function(e) list(list(
+      paper_id = pid, study_group = "all",
+      success = FALSE, error = conditionMessage(e),
+      n_data_files = 0L, n_raw_files = 0L,
+      n_variables = 0L, n_labelled = 0L,
+      has_paper_metadata = FALSE, has_ground_truth = FALSE,
+      output_path = NA_character_
+    ))
+  )
+
+  t3_elapsed <- proc.time()[["elapsed"]] - t3_start
+
+  append_conversion_summary(psychds_results, PSYCHDS_CSV)
+
+  psy_ok <- all(vapply(psychds_results, function(r) isTRUE(r$success), logical(1)))
+  if (psy_ok) {
+    cat(sprintf("  success=TRUE  elapsed=%.1fs\n", t3_elapsed))
+  } else {
+    errs <- unique(vapply(psychds_results, function(r)
+      if (!isTRUE(r$success)) r$error %||% "?" else NA_character_, character(1)))
+    errs <- errs[!is.na(errs)]
+    cat(sprintf("  FAILED — %s\n", paste(errs, collapse = "; ")))
+  }
+
+  # ── Output file paths ─────────────────────────────────────────────────────────
+
+  out_base  <- paper_path("outputs", src, pid)
+  out_files <- c(
+    structure = file.path(out_base, "structure.csv"),
+    columns   = file.path(out_base, "columns.csv"),
+    labels    = file.path(out_base, "labels.csv"),
+    coverage  = file.path(out_base, "codebook_coverage.csv"),
+    thinking  = file.path(out_base, "thinking_traces.csv")
+  )
+  existing <- out_files[file.exists(out_files)]
+
+  cat(sprintf("\n── Outputs:\n"))
+  for (nm in names(existing))
+    cat(sprintf("    %-10s %s\n", nm, existing[[nm]]))
+  cat("\n")
 
 })

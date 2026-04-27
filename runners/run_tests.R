@@ -18,7 +18,7 @@
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-REPORT_ONLY <- TRUE
+REPORT_ONLY <- FALSE
 if (!exists("REPORT_ONLY")) REPORT_ONLY <- FALSE
 FULL_RUN <- TRUE
 
@@ -42,9 +42,9 @@ source("data_check/pipeline/3_psychds_convert.R")
 LLM_TEMPERATURE  <- 0.7
 LLM_THINK_LEVEL  <- "low"
 CAPTURE_THINKING <- TRUE   # write one row per prompt call to thinking_traces.csv
-LLM_MODEL        <- "ollama/gpt-oss:20b-cloud"
+LLM_MODEL        <- "ollama/gpt-oss:120b-cloud"
 llm_model(LLM_MODEL)
-TEST_TITLE       <- sprintf("_NEWGT_%s_MD_V2_6_THINK_%s_TEMP_%sNEWSTRUC_", "20b", LLM_THINK_LEVEL, LLM_TEMPERATURE) #MD stands for the markdown Prompt
+TEST_TITLE       <- sprintf("_%s_MD_V2_THINK_%s_TEMP_%s", "120b", LLM_THINK_LEVEL, LLM_TEMPERATURE) #MD stands for the markdown Prompt
 STRUCTURE_PROMPT <- STRUCTURE_PROMPT_MD_V2
 
 # ── Report helpers ─────────────────────────────────────────────────────────────
@@ -1043,9 +1043,6 @@ for (tp in TEST_PAPERS) {
   cat(sprintf("\n%s\n  %s\n  %s\n%s\n", divider, pid, label, divider))
 
   row <- list(run_id = RUN_ID, paper_id = pid, label = label)
-
-  # Per-paper thinking log path — llm_batch writes snippets here when CAPTURE_THINKING=TRUE
-  THINKING_LOG_PATH <<- file.path(pid_out_dir, "thinking_traces.csv")
 
   # Stage 1: index
   cat("Stage 1: index\n")

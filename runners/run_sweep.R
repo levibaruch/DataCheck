@@ -238,6 +238,8 @@ main <- function() {
   source("data_check/pipeline/0_index.R")
   source("data_check/pipeline/2_codebook_label.R")
 
+  CAPTURE_THINKING <- TRUE         # TRUE = write one row per LLM call to thinking_traces.csv
+
   run_paper_sweep(args$paper_id, args$temperatures, args$repeats, args$sweep_dir)
 }
 

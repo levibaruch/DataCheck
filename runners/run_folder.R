@@ -18,6 +18,8 @@ source("data_check/pipeline/2_codebook_label.R")
 source("data_check/pipeline/3_psychds_convert.R")
 
 # Change these to the models you are actually using! I can recommend gpt-oss:20b
+CAPTURE_THINKING <- TRUE         # TRUE = write one row per LLM call to thinking_traces.csv
+
 llm_use(TRUE)
 llm_model("ollama/gpt-oss:20b-cloud")
 
