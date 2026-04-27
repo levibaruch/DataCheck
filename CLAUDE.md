@@ -1,73 +1,65 @@
 # data_check Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-04-21
+Auto-generated from all feature plans. Last updated: 2026-04-23
 
 ## Active Technologies
-- R (base R only — no new packages; `haven`/`readxl`/`jsonlite` already present) + `llm_batch()`, `extract_json()` (existing helpers in `helper.R`); `jsonlite::fromJSON` (005-codebook-column-labelling)
-- `structure/<paper_id>_labels.csv`, `structure/<paper_id>_codebook_coverage.csv` (new); reads existing `_structure.csv` and `_columns.csv` (005-codebook-column-labelling)
-- R (base R only — no new packages) + `llm()` from `metacheck`; `jsonlite::fromJSON`, `extract_json()` — all already presen (006-llm-fuzzy-matching)
-- Extends `structure/<paper_id>_labels.csv` with new `label_method` column; no new files (006-llm-fuzzy-matching)
-- R (base R, no new packages) + `metacheck`, `haven`, `readxl`, `jsonlite` — all already presen (007-per-id-output-structure)
-- CSV files on local filesystem; `outputs/<paper_id>/` directories (007-per-id-output-structure)
-- R (base R, no new packages) + `metacheck`, `haven`, `readxl` — already present; `helper.R` (shared helpers) (008-bulk-label-runners)
-- CSV files on local filesystem; `outputs/<paper_id>/` directories (from feature 007) (008-bulk-label-runners)
-- R (base R + already-installed: `officer`, `pdftools`, `haven`, `readxl`) + `officer` (DOCX), `pdftools` (PDF) — both already installed (009-multi-format-codebooks)
-- R (base R, no new packages) + `metacheck` (`llm()`), `jsonlite` (`fromJSON`, `extract_json`) — all already presen (010-fix-label-ambiguity)
-- CSV files; `outputs/<paper_id>/labels.csv` (modified in-place by pipeline) (010-fix-label-ambiguity)
-- CSV files; `outputs/<paper_id>/columns.csv` restored in-place (011-merge-columns-output)
-- R (base R, no new packages) + `0_index.R`, `2_codebook_label.R`, `helper.R` — all already presen (012-single-dataset-runner)
-- CSV files on local filesystem under `data_check/outputs/<paper_id>/` (012-single-dataset-runner)
-- R (base R, no new packages) + `0_index.R`, `helper.R` — both already present; no external packages added (013-fix-r-file-misclassification)
-- CSV files on local filesystem (`outputs/<paper_id>/`) (013-fix-r-file-misclassification)
-- R (base R, no new packages) + `readxl` (already present), `haven` (already present) — `read_data_head()` in `helper.R` unchanged (014-fix-multilevel-csv-headers)
-- CSV files on local filesystem — `outputs/<paper_id>/columns.csv`, `outputs/<paper_id>/structure.csv` (014-fix-multilevel-csv-headers)
-- R (base R, no new packages) + `metacheck` (`llm()`), `jsonlite` — already presen (015-verbatim-codebook-labels)
-- CSV files on local filesystem — `outputs/<paper_id>/labels.csv`, `outputs/<paper_id>/codebook_coverage.csv` (015-verbatim-codebook-labels)
-- R (base R, no new packages) + `haven`, `readxl`, `jsonlite` — all already present; not needed for this feature (read-only CSV reporting) (016-pipeline-quality-report)
-- CSV files on local filesystem — `bulk_summary.csv`, `codebook_summary.csv`, `outputs/<paper_id>/columns.csv`, `outputs/<paper_id>/codebook_coverage.csv` (016-pipeline-quality-report)
-- R (base R, no new packages) + `metacheck` (`llm()`), `haven`, `readxl`, `jsonlite` — all already installed; `helper.R`, `0_index.R`, `2_codebook_label.R` sourced at runtime (017-llm-temperature-testing)
-- CSV files on local filesystem under `sweep_results/<paper_id>/`; new `sweep_bulk_log.csv` at `sweep_results/sweep_bulk_log.csv` (017-llm-temperature-testing)
-- R (base R, no new packages) + `haven`, `readxl`, `jsonlite` — all already installed; `helper.R` (shared helpers), `2_codebook_label.R` (coverage output) (018-fix-csv-codebook-parsing)
-- CSV files on local filesystem — `outputs/<paper_id>/codebook_coverage.csv` (018-fix-csv-codebook-parsing)
-- R (base R, no new packages) + `haven` (already installed) — source of labelled type; vctrs (transitively via haven) — source of precision error on rbind (019-fix-index-labelled-stats)
-- CSV files — `outputs/<paper_id>/columns.csv`, `results/bulk_summary.csv` (019-fix-index-labelled-stats)
-- R (base R + already-installed: `shiny`, `bslib`, `haven`) + `shiny` (UI + server), `bslib` (layout/theming), `haven`/`readxl` (020-validation-gui)
-- Local CSV files; `ground_truth/<paper_id>.csv` per paper; no database (020-validation-gui)
-- R 4.5 (base R, no new packages) + `haven`, `readxl`, `jsonlite`, `xml2`, `pdftools`, `officer` — all already installed (021-psychds-conversion)
-- Local filesystem — `data_check/psychds/<paper_id>/` output roo (021-psychds-conversion)
-- R (base R, no new packages) + `metacheck` (`llm_batch()`), `haven`, `readxl`, `jsonlite` — all already installed (022-file-type-taxonomy-refactor)
-- CSV files on local filesystem — `outputs/<paper_id>/structure.csv` (schema change), `docs/output-schemas.md` (doc update) (022-file-type-taxonomy-refactor)
-- R (base R, no new packages) + `metacheck` (`llm_batch()`), `haven`, `readxl`, `jsonlite` — all already installed (023-sentinel-aggregate-revamp)
-- CSV files on local filesystem — `outputs/<paper_id>/structure.csv`, `ground_truth/<paper_id>.csv` (023-sentinel-aggregate-revamp)
-- R (base R, no new packages) + `metacheck` (`llm_batch()`), `haven`, `readxl`, `jsonlite` — all already installed (026-add-output-file-type)
-- R (base R, no new packages) + `pipeline/helper.R` (`llm_batch()`), `pipeline/0_index.R` (constants + fallback rules), `docs/output-schemas.md` (027-llm-retry-logging)
-- Append-only plain-text log at `logs/llm_batch_errors.log` (relative to `data_check/` root); auto-created by pipeline if absen (027-llm-retry-logging)
-- R (base R, no new packages) + `haven`, `readxl`, `jsonlite`, `tools` (base) — all already installed; `metacheck` (`llm_batch()`) (028-data-format-subtype)
-- CSV files on local filesystem (`outputs/<paper_id>/structure.csv`, `ground_truth/<paper_id>.csv`, `results/bulk_summary.csv`) (028-data-format-subtype)
-- R (base R, no new packages) + `metacheck` (`llm_batch()`), `shiny` + `bslib` (validation GUI) — all already installed (029-software-file-type)
-- CSV files on local filesystem (`outputs/<paper_id>/structure.csv`, `ground_truth/<paper_id>.csv`) (029-software-file-type)
-- R (base R, no new packages) + `metacheck` (`llm_batch()`), `haven`, `readxl`, `jsonlite`, `xml2` — all already installed (031-dataverse-source-support)
-- CSV files on local filesystem; `data_check/data/dataverse/`, `data_check/outputs/`, `data_check/psychds/` (031-dataverse-source-support)
-- R (base R, no new packages per constitution) + `haven`, `readxl`, `jsonlite`, `xml2`, `metacheck` — all already installed (032-source-aware-storage)
-- Local filesystem; CSV files; directory trees under `data/`, `outputs/`, `psychds/`, `ground_truth/` (032-source-aware-storage)
-- R (base R only) + None — prompt string edit only (033-llm-prompt-refinements)
-- R (base R + already-installed: `readxl`, `haven`, `metacheck`) + `readxl` (xlsm), `system2` (unrar via shell), `haven` (codebook parsing) — all presen (034-classification-parsing-fixes)
-- CSV files on local filesystem; `structure.csv`, `columns.csv`, `labels.csv`, `codebook_coverage.csv` (034-classification-parsing-fixes)
-- R (base R only — no new packages) + `helper.R` (`llm_batch()`, `classify_by_rules()`), `0_index.R`, `3_psychds_convert.R`, `prompts.R` (`STRUCTURE_PROMPT_NEW`) (035-sentinel-aggregate-redesign)
-- CSV files — `outputs/<source>/<id>/structure.csv` (modified), `docs/output-schemas.md` (updated) (035-sentinel-aggregate-redesign)
-- R (base R, no new packages) + `helper.R` (`classify_col_type_rules()`), `0_index.R` (`COLUMN_TYPE_PROMPT`, `run_index()`) (004-reduce-unknown-coltypes)
-- R 4.5 (base R only — no new packages per constitution.md Principle IV) + `helper.R` (`llm_batch()`, `is_participant_id()`), `prompts.R` (`GRANULARITY_PROMPT`), `0_index.R` (integration) (037-improve-granularity-detection)
-- CSV files on local filesystem (`structure.csv`) (037-improve-granularity-detection)
-- R 4.5 (base R, no new packages per constitution.md Principle IV) + `metacheck` (llm()), `jsonlite` (fromJSON, extract_json), existing helpers in `helper.R` (038-llm-fallback-retry)
-- CSV files on local filesystem; append-only error logs (`llm_batch_errors.log`) (038-llm-fallback-retry)
-- R 4.5 (base R only — no new packages) + `helper.R` (`classify_by_rules()`), `0_index.R` (constants, `run_index()`) (040-software-folder-detection)
-- CSV files — `outputs/<source>/<id>/structure.csv` (existing schema, new `type_source` value) (040-software-folder-detection)
+
+- **Language:** R 4.5, base R only — no new packages
+- **Installed packages:** `metacheck`, `haven`, `readxl`, `jsonlite`, `xml2`, `pdftools`, `officer`, `shiny`, `bslib`
+- **LLM interface:** `llm_batch()` calls `llm_ollama()` in `pipeline/ollama.R` → Ollama `/api/chat` directly via `httr2` (bypasses `metacheck`/ellmer to support the `think` parameter)
+- **Key helpers:** `pipeline/helper.R` (`llm_batch`, `classify_by_rules`, `read_data_head`, `extract_json`), `pipeline/prompts.R`, `pipeline/0_index.R`
+- **Storage:** CSV files on local filesystem — no database
+- **Shell deps:** `system2` for `.rar` unpacking (macOS unrar binary)
+- **Known pitfall:** `vctrs` (loaded transitively via `haven`) is the source of a precision error on `rbind` — surfaced in feature 019
 
 ## Project Structure
 
 ```text
-src/
-tests/
+data_check/
+├── pipeline/               # Core pipeline scripts
+│   ├── 0_index.R           # Main run_index() — download, classify, extract
+│   ├── 2_codebook_label.R  # Codebook matching and label output
+│   ├── 3_psychds_convert.R # PsychDS conversion
+│   ├── helper.R            # Shared helpers (read_data_head, llm_batch, etc.)
+│   ├── prompts.R           # All LLM prompt strings
+│   └── ollama.R            # Ollama interface
+├── runners/                # Entry-point scripts (not sourced by pipeline)
+│   ├── run_single.R        # Run one paper
+│   ├── run_0_index_bulk.R  # Bulk indexing runner
+│   ├── run_full_pipeline_bulk.R
+│   ├── run_tests.R         # Run test suite
+│   ├── run_sweep.R / run_sweep_bulk.R
+│   ├── run_validation_gui.R
+│   └── ...
+├── outputs/                # Per-paper pipeline outputs (large, gitignored)
+│   └── <source>/<id>/      # structure.csv, columns.csv, labels.csv, etc.
+├── results/                # Aggregate outputs and reports
+│   ├── bulk_summary.csv
+│   ├── codebook_summary.csv
+│   └── normal_report_<date>/
+├── tests/                  # Test infrastructure
+│   ├── test_papers.csv     # Registered test paper catalogue
+│   ├── test_log.csv        # Test run history
+│   └── outputs/            # Test paper outputs
+├── ground_truth/           # Human-validated labels per paper
+│   └── osf/<id>.csv
+├── specs/                  # Feature specs (NNN-feature-name/)
+├── docs/                   # Canonical documentation
+│   ├── pipeline.md         # End-to-end flow, constants, retry logic
+│   ├── output-schemas.md   # CSV column definitions, enum values
+│   └── diary.txt
+├── reports/                # Report scripts
+│   ├── report_normal.R
+│   ├── report_quality.R
+│   └── report_sweep.R
+├── ab_test/                # A/B prompt test harness and logs
+├── tools/                  # Standalone utility scripts
+│   └── validation_gui/     # Shiny validation GUI
+├── logs/                   # Append-only error logs
+│   ├── llm_batch_errors.log
+│   └── codebook_parse_failures.log
+├── data/                   # Downloaded raw repos (large, gitignored)
+└── psychds/                # PsychDS conversion outputs
 ```
 
 ## Commands
@@ -79,9 +71,9 @@ tests/
 R (base R, no new packages): Follow standard conventions
 
 ## Recent Changes
+- 041-pipeline-output-transparency: Added R 4.5 (base R only — no new packages) + `helper.R` (`classify_by_rules()`, `llm_batch()`), `prompts.R` — both already present; no additions
 - 040-software-folder-detection: Added R 4.5 (base R only — no new packages) + `helper.R` (`classify_by_rules()`), `0_index.R` (constants, `run_index()`)
 - 038-llm-fallback-retry: Added R 4.5 (base R, no new packages per constitution.md Principle IV) + `metacheck` (llm()), `jsonlite` (fromJSON, extract_json), existing helpers in `helper.R`
-- 037-improve-granularity-detection: Added R 4.5 (base R only — no new packages per constitution.md Principle IV) + `helper.R` (`llm_batch()`, `is_participant_id()`), `prompts.R` (`GRANULARITY_PROMPT`), `0_index.R` (integration)
 
 
 <!-- MANUAL ADDITIONS START -->
@@ -92,21 +84,41 @@ R (base R, no new packages): Follow standard conventions
 
 | File | What it documents | Update when... |
 |---|---|---|
-| `docs/pipeline.md` | End-to-end flow from paper ID to CSV outputs, all constants, resource limits, retry behaviour, **test infrastructure** | Stage added/removed/reordered; constant changes; retry logic changes; new LLM prompt added; test paper added |
-| `docs/output-schemas.md` | Column definitions for `_structure.csv`, `_columns.csv`, `bulk_summary.csv`; all type/group enum values | Column added/removed/renamed in any output CSV; new `col_type`, file `type`, `group`, or error code introduced |
+| `docs/pipeline.md` | Entry points table; end-to-end flow diagram; key constants; resource limits; bulk runner config flags; LLM model; retry behaviour; **test infrastructure** (runner, test log columns, test paper catalogue) | Stage added/removed/reordered; new entry point added; constant or resource limit changes; new bulk runner flag; retry logic changes; new LLM prompt added; test paper added |
+| `docs/output-schemas.md` | Column definitions for all 8 output CSVs (`structure.csv`, `columns.csv`, `bulk_summary.csv`, `codebook_summary.csv`, `labels.csv`, `codebook_coverage.csv`, `psychds/conversion_summary.csv`, `label_summary.csv`); all type/group/`type_source`/`granularity_source`/`label_status` enum values; error codes | Column added/removed/renamed in any output CSV; new `col_type`, file `type`, `group`, `type_source`, `granularity_source`, `label_status`, or error code introduced; new output CSV added |
 
 ### Update rules
 
 - New pipeline stage → add step to flow diagram in `pipeline.md`
-- Constant change (e.g. `N_DATA_READ`, `LLM_BATCH_SIZE`, resource limits) → update constants table in `pipeline.md`
+- New entry point script → add row to Entry Points table in `pipeline.md`
+- Constant change (e.g. `N_DATA_READ`, `LLM_BATCH_SIZE`, resource limits) → update constants / resource limits tables in `pipeline.md`
+- New bulk runner flag → add row to Bulk Runner Config table in `pipeline.md`
 - New `col_type` → add to Column Types table in `output-schemas.md`
 - New file classification `type` or `group` → update File Types / Groups tables in `output-schemas.md`
+- New `type_source` value → update Type Source Values table in `output-schemas.md`
+- New `granularity_source` value → update `structure.csv` schema table in `output-schemas.md`
 - New error code → update Error Codes table in `output-schemas.md`
 - New output CSV column → add to relevant schema table in `output-schemas.md`
+- New output CSV file → add full schema table in `output-schemas.md`
 - New feature or PR → add/update `progress.md`
 - All PRs MUST target `dev`, not `main`
-- New feature → run `runners/run_tests.R` then `runners/report_tests.R`; review quality report before merging (see **Testing** in `pipeline.md`)
+- New feature → run `runners/run_tests.R`; review test log before merging (see **Testing** in `pipeline.md`)
 - New edge case found → add to `data_check/tests/test_papers.csv` and test paper catalogue in `pipeline.md`
 
+
+## Permission & Safety Rules
+- NEVER run `rm -rf` or other destructive shell commands without explicit user confirmation, even if implied by context
+- NEVER use `git reset --hard` on a repo with uncommitted changes; prefer stash, branch, or PR workflows
+- NEVER stage large test data folders or build artifacts; check `.gitignore` and file sizes before `git add`
+
+## Debugging Practices
+- Investigate root cause before patching. Do NOT add ad-hoc rules, hardcoded thresholds, or benchmark-hack workarounds
+- If a fix involves tuning a number/threshold, ask the user for the target before guessing
+- After applying a fix, re-run the original failing test/output and confirm it is resolved before declaring done
+
+## Workflow Conventions
+- Before committing, confirm with the user; do not auto-commit while a task is still in progress (e.g., progress.md not updated, fix not verified)
+- When adding new functionality, determine whether it belongs upstream (e.g., `0_index.R`) vs. in a single runner before writing code
+- For path resolution in R scripts, use script-relative paths rather than the working directory
 
 <!-- MANUAL ADDITIONS END -->
