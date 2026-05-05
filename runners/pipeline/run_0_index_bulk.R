@@ -46,7 +46,7 @@ RESUME      <- TRUE
 # Set PRIORITISE_GT = TRUE to process papers that have a ground_truth CSV first.
 # Within each group (GT / non-GT), the existing SHUFFLE/SEED ordering applies.
 PRIORITISE_GT <- TRUE
-GT_DIR        <- "./ground_truth"
+GT_DIR        <- "./tests/ground_truth"
 
 if (RERUN_COLUMNS) {
   SKIP_COLUMNS <- FALSE

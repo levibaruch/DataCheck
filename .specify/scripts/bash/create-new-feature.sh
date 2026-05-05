@@ -210,7 +210,7 @@ unset _SPECIFY_PARENT _INIT_OPTIONS _HERE_FLAG
 
 cd "$REPO_ROOT"
 
-SPECS_DIR="$REPO_ROOT/specs"
+SPECS_DIR="$REPO_ROOT/docs/specs"
 mkdir -p "$SPECS_DIR"
 
 # Function to generate branch name with stop word filtering and length filtering

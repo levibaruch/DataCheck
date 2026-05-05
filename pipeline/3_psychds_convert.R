@@ -23,7 +23,7 @@ if (!exists("DATA_DIR")) {
   DATA_DIR <- "./data"
 }
 if (!exists("GROUND_TRUTH_DIR")) {
-  GROUND_TRUTH_DIR <- "./ground_truth"
+  GROUND_TRUTH_DIR <- "./tests/ground_truth"
 }
 DATA_SIZE_LIMIT_MB <- 500
 PIPELINE_VERSION   <- "021"

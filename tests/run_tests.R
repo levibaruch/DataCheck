@@ -30,7 +30,7 @@ TEST_OUTPUT_DIR  <- file.path(TEST_DIR, "outputs")
 TEST_PSYCHDS_DIR <- file.path(TEST_DIR, "psychds")
 TEST_LOG_PATH    <- file.path(TEST_DIR, "test_log.csv")
 REPORT_DIR       <- "./results"
-GT_DIR           <- "./ground_truth"
+GT_DIR           <- "./tests/ground_truth"
 
 `%||%` <- function(x, y) if (is.null(x) || length(x) == 0) y else x
 # ── Pipeline sources (only needed for full run) ────────────────────────────────

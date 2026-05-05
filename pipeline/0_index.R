@@ -23,7 +23,7 @@ llm_use(TRUE)
 if (!exists("DATA_DIR"))         DATA_DIR         <- "./data"
 if (!exists("OUTPUT_DIR"))       OUTPUT_DIR       <- "./outputs"
 if (!exists("PSYCHDS_OUT_DIR"))  PSYCHDS_OUT_DIR  <- "./psychds"
-if (!exists("GROUND_TRUTH_DIR")) GROUND_TRUTH_DIR <- "./ground_truth"
+if (!exists("GROUND_TRUTH_DIR")) GROUND_TRUTH_DIR <- "./tests/ground_truth"
 ARCHIVE_EXTS    <- c("zip", "gz", "tar", "tgz", "bz2", "xz", "rar")
 
 

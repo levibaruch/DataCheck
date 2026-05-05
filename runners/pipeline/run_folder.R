@@ -27,7 +27,7 @@ PROCESS_DIR      <- "/Volumes/NINJAV/data/dataverse"  # directory containing fol
 DATA_DIR         <- "/Volumes/NINJAV/data"
 OUTPUT_DIR       <- "/Volumes/NINJAV/DataCheckOut/outputs"
 PSYCHDS_OUT_DIR  <- "/Volumes/NINJAV/DataCheckOut/psychds"
-GROUND_TRUTH_DIR <- "./ground_truth"
+GROUND_TRUTH_DIR <- "./tests/ground_truth"
 
 local({
 

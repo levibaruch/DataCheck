@@ -30,7 +30,7 @@ llm_model("ollama/gpt-oss:20b-cloud")
 # ── Constants ─────────────────────────────────────────────────────────────────
 
 if (!exists("OUTPUT_DIR")) OUTPUT_DIR             <- "./outputs"
-if (!exists("GROUND_TRUTH_DIR")) GROUND_TRUTH_DIR       <- "./ground_truth"
+if (!exists("GROUND_TRUTH_DIR")) GROUND_TRUTH_DIR       <- "./tests/ground_truth"
 if (!exists("LLM_BATCH_SIZE")) LLM_BATCH_SIZE         <- 20L   # shared constant — needed by llm_batch() in helper.R
 if (!exists("MAX_CODEBOOK_LLM_CALLS")) MAX_CODEBOOK_LLM_CALLS    <- 10L   # max LLM calls per codebook file for text parsing (ignored when FULL_RUN = TRUE)
 if (!exists("MAX_CODEBOOK_FILES"))    MAX_CODEBOOK_FILES        <- 10L   # max codebook/readme files parsed per paper

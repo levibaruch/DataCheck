@@ -22,7 +22,7 @@
 
 # Set flag so report_sweep.R's !interactive() guard does not trigger main()
 REPORT_SWEEP_SOURCED_AS_LIB <- TRUE
-source("reports/report_sweep.R")
+source("runners/reports/report_sweep.R")
 source("pipeline/helper.R")
 source("pipeline/0_index.R")
 

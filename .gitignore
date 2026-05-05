@@ -22,13 +22,8 @@ sweep_results/
 tests/outputs/
 tests/psychds/
 
-# AB test
-ab_test/results/
-ab_test/ab_log.csv
-ab_test/ab_report_*.md
-
 # Ground truth archives (zip only, CSVs are tracked)
-ground_truth/osf.zip
+tests/ground_truth/osf.zip
 
 # Old archive data
 _old/outputs_old/
@@ -43,3 +38,7 @@ quality_report_*.md
 # Raw data files (inside data/ already, but belt+suspenders)
 *.sav
 *.xlsx
+
+# Claude and specify
+.claude/
+.specify/

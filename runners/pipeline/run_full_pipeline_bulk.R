@@ -27,7 +27,7 @@ FROM_LOCAL     <- TRUE
 RESUME         <- TRUE
 
 PRIORITISE_GT  <- TRUE
-GT_DIR         <- "./ground_truth"
+GT_DIR         <- "./tests/ground_truth"
 
 LLM_BATCH_SIZE         <- 20L
 MAX_COL_TYPE_LLM_CALLS <- 5L

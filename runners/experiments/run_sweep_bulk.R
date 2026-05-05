@@ -11,7 +11,7 @@
 
 # Set flag so run_sweep.R's !interactive() guard does not trigger main()
 RUN_SWEEP_SOURCED_AS_LIB <- TRUE
-source("runners/run_sweep.R")   # provides run_paper_sweep() + helpers
+source("runners/experiments/run_sweep.R")   # provides run_paper_sweep() + helpers
 # run_sweep.R's main() sources helper.R, 0_index.R, 2_codebook_label.R at
 # runtime; source them explicitly here so XML_DIR is available at top level.
 source("pipeline/helper.R")

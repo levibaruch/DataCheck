@@ -9,18 +9,18 @@
 # Accuracy is evaluated against tests/ground_truth/<paper_id>.csv.
 #
 # Outputs:
-#   ab_test/results/v0/<paper_id>/ — structure.csv for condition v0
-#   ab_test/results/v1/<paper_id>/ — structure.csv for condition v1
-#   ab_test/results/v2/<paper_id>/ — structure.csv for condition v2
-#   ab_test/ab_log.csv             — one row per paper × condition
-#   ab_test/ab_report_<date>.md    — side-by-side comparison report
+#   results/ab_test/v0/<paper_id>/ — structure.csv for condition v0
+#   results/ab_test/v1/<paper_id>/ — structure.csv for condition v1
+#   results/ab_test/v2/<paper_id>/ — structure.csv for condition v2
+#   results/ab_test/ab_log.csv     — one row per paper × condition
+#   results/ab_test/ab_report_<date>.md — side-by-side comparison report
 #
-# Usage:  Rscript ab_test/run_ab_test.R
-#         source("ab_test/run_ab_test.R")
+# Usage:  Rscript runners/experiments/ab_test.R
+#         source("runners/experiments/ab_test.R")
 #
 # To rerun a single condition and overwrite its log rows + results:
 #   RERUN_CONDITION <- "v2"   # or "v0", "v1"
-#   source("ab_test/run_ab_test.R")
+#   source("runners/experiments/ab_test.R")
 # ─────────────────────────────────────────────────────────────────────────────
 FULL_RUN <- TRUE
 REPORT_ONLY <- FALSE
@@ -32,8 +32,8 @@ if (!exists("REPORT_ONLY"))     REPORT_ONLY     <- FALSE  # TRUE = skip pipeline
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
 
-AB_DIR      <- "./ab_test"
-RESULTS_DIR <- file.path(AB_DIR, "results")
+AB_DIR      <- "./results/ab_test"
+RESULTS_DIR <- AB_DIR
 V0_DIR      <- file.path(RESULTS_DIR, "v0")
 V1_DIR      <- file.path(RESULTS_DIR, "v1")
 V2_DIR      <- file.path(RESULTS_DIR, "v2")
@@ -314,7 +314,7 @@ generate_report <- function(run_id = NULL) {
   L("- **v1**: `STRUCTURE_PROMPT_OLD` — 2026-04 exhaustive rule list with per-extension lookup tables.")
   L("- **v2**: `STRUCTURE_PROMPT` — 2026-04 principle-based with annotated examples; ~40% shorter.")
   L("- Only Stage 1 (structure index) was run; codebook and PsychDS stages were skipped.")
-  L("- Outputs: `ab_test/results/v0/`, `ab_test/results/v1/`, and `ab_test/results/v2/`")
+  L("- Outputs: `results/ab_test/v0/`, `results/ab_test/v1/`, and `results/ab_test/v2/`")
   BR()
   L("---")
   BR()
