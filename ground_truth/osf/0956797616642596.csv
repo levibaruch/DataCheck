@@ -1,0 +1,6 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797616642596","Fear_of_Ebola_The_Influence/Ebola.Codebook.pdf","codebook","shared",NA,"2026-03-30T14:37:07","Levi Baruch",NA
+"0956797616642596","Fear_of_Ebola_The_Influence/Ebola.composites.syntax.pdf","supplemental","shared",NA,"2026-03-30T14:37:25","Levi Baruch",NA
+"0956797616642596","Fear_of_Ebola_The_Influence/Ebola.Materials.pdf","supplemental","shared",NA,"2026-03-30T14:37:29","Levi Baruch",NA
+"0956797616642596","Fear_of_Ebola_The_Influence/Ebola.Stata_Commands.pdf","code","shared",NA,"2026-03-30T14:37:43","Levi Baruch",NA
+"0956797616642596","Fear_of_Ebola_The_Influence/EbolaData_Sheet1.csv","data","shared","combined","2026-03-30T14:37:46","Levi Baruch","tabular"

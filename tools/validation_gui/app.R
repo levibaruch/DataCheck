@@ -1,8 +1,8 @@
 # app.R  —  Validation GUI
 # Human ground-truth labelling tool for pipeline structure.csv outputs.
 #
-# Launch from data_check/:  shiny::runApp("tools/validation_gui")
-# Launch from repo root:    shiny::runApp("data_check/tools/validation_gui")
+# Launch from :  shiny::runApp("tools/validation_gui")
+# Launch from repo root:    shiny::runApp("tools/validation_gui")
 
 library(shiny)
 library(bslib)

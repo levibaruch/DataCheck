@@ -14,7 +14,7 @@ local({
   if (!is.null(dc)) {
     source(file.path(dc, "pipeline", "ollama.R"))
   } else {
-    source("data_check/pipeline/ollama.R")
+    source("pipeline/ollama.R")
   }
 })
 # Returns TRUE if paper_id is a Harvard Dataverse DOI slug.
@@ -1041,7 +1041,7 @@ parse_codebook <- function(path) {
   # ── LLM fallback for unstructured / unparseable files ────────────────────────
   if (is.null(result) || (is.data.frame(result) && nrow(result) == 0)) {
     message("  parse_codebook: structured extraction failed for ", src, " — falling back to LLM")
-    codebook_fail_log <- "data_check/logs/codebook_parse_failures.log"
+    codebook_fail_log <- "logs/codebook_parse_failures.log"
     dir.create(dirname(codebook_fail_log), recursive = TRUE, showWarnings = FALSE)
     cat(format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "|", src, "\n",
         file = codebook_fail_log, append = TRUE)

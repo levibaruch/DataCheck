@@ -1,0 +1,7 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
+"09567976241267854","Childrens_cooperation_in_a_threshold/README.txt","readme","shared",NA,NA,"2026-04-08T10:40:12","Levi Baruch"
+"09567976241267854","Childrens_cooperation_in_a_threshold/WaterGame_contribution_coop_data.txt","data","shared","combined","tabular","2026-04-08T10:40:13","Levi Baruch"
+"09567976241267854","Childrens_cooperation_in_a_threshold/WaterGame_RcodeResults_V2.pdf","output","shared",NA,NA,"2026-04-08T10:40:15","Levi Baruch"
+"09567976241267854","Childrens_cooperation_in_a_threshold/WaterGame_reliability_data.txt","data","shared","combined","tabular","2026-04-08T10:40:23","Levi Baruch"
+"09567976241267854","Childrens_cooperation_in_a_threshold/WaterGame_SUPPLEMENT_Materials and Methods.pdf","supplemental","shared",NA,NA,"2026-04-08T10:40:24","Levi Baruch"
+"09567976241267854","Childrens_cooperation_in_a_threshold/WaterGame_utterances_data.txt","data","shared","combined","tabular","2026-04-08T10:40:27","Levi Baruch"

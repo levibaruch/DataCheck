@@ -1,6 +1,6 @@
 # gt_store.R
 # Ground-truth CSV read/write and paper discovery helpers.
-# Paths are resolved relative to the data_check/ root set by app.R.
+# Paths are resolved relative to the  root set by app.R.
 #
 # Override options (set before launching the app to change default directories):
 #   dc_outputs_dir   — override for outputs/<paper_id>/ root

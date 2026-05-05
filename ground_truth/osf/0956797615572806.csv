@@ -1,0 +1,18 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797615572806","3jiyw/Not_so_innocent_Toddlers_inferences/Data/AnalyzeData.R","code","shared",NA,"2026-04-01T13:14:54","Levi Baruch",NA
+"0956797615572806","3jiyw/Not_so_innocent_Toddlers_inferences/Data/JaraEttinger_Tenenbaum_Schulz_Results.csv","data","shared","combined","2026-04-01T13:14:57","Levi Baruch","tabular"
+"0956797615572806","3jiyw/Not_so_innocent_Toddlers_inferences/Experiment_scripts/Exp1.pdf","supplemental","ex1",NA,"2026-04-01T13:15:01","Levi Baruch",NA
+"0956797615572806","3jiyw/Not_so_innocent_Toddlers_inferences/Experiment_scripts/Exp2.pdf","supplemental","ex2",NA,"2026-04-01T13:15:01","Levi Baruch",NA
+"0956797615572806","3jiyw/Not_so_innocent_Toddlers_inferences/Experiment_scripts/Exp3_Nicer.pdf","supplemental","ex3",NA,"2026-04-01T13:15:03","Levi Baruch",NA
+"0956797615572806","3jiyw/Not_so_innocent_Toddlers_inferences/Experiment_scripts/Exp3_NicerBaseline.pdf","supplemental","ex3",NA,"2026-04-01T13:15:04","Levi Baruch",NA
+"0956797615572806","3jiyw/Not_so_innocent_Toddlers_inferences/Experiment_scripts/Exp3_Play.pdf","supplemental","ex3",NA,"2026-04-01T13:15:06","Levi Baruch",NA
+"0956797615572806","3jiyw/Not_so_innocent_Toddlers_inferences/Experiment_scripts/ScriptSketchForParents_Nicer.pdf","supplemental","ex3",NA,"2026-04-01T13:15:14","Levi Baruch",NA
+"0956797615572806","3jiyw/Not_so_innocent_Toddlers_inferences/Experiment_scripts/ScriptSketchForParents_Play.pdf","supplemental","ex3",NA,"2026-04-01T13:15:14","Levi Baruch",NA
+"0956797615572806","3jiyw/Not_so_innocent_Toddlers_inferences/Materials/Demos.m4v","supplemental","shared",NA,"2026-04-01T13:20:26","Levi Baruch",NA
+"0956797615572806","3jiyw/Not_so_innocent_Toddlers_inferences/Materials/Puppet_A.JPG","supplemental","shared",NA,"2026-04-01T13:20:26","Levi Baruch",NA
+"0956797615572806","3jiyw/Not_so_innocent_Toddlers_inferences/Materials/Puppet_B.JPG","supplemental","shared",NA,"2026-04-01T13:20:26","Levi Baruch",NA
+"0956797615572806","3jiyw/Not_so_innocent_Toddlers_inferences/Materials/Puppet_C.JPG","supplemental","shared",NA,"2026-04-01T13:20:26","Levi Baruch",NA
+"0956797615572806","3jiyw/Not_so_innocent_Toddlers_inferences/Materials/Puppet_D.JPG","supplemental","shared",NA,"2026-04-01T13:20:26","Levi Baruch",NA
+"0956797615572806","3jiyw/Not_so_innocent_Toddlers_inferences/Materials/PuppetDetails.txt","supplemental","shared",NA,"2026-04-01T13:19:56","Levi Baruch",NA
+"0956797615572806","3jiyw/Not_so_innocent_Toddlers_inferences/Materials/Toy_side_view.JPG","supplemental","shared",NA,"2026-04-01T13:20:02","Levi Baruch",NA
+"0956797615572806","3jiyw/Not_so_innocent_Toddlers_inferences/Materials/Toy_top_view.JPG","supplemental","shared",NA,"2026-04-01T13:20:04","Levi Baruch",NA

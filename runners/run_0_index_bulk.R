@@ -5,7 +5,7 @@
 # papers are skipped automatically.
 # ─────────────────────────────────────────────────────────────────────────────
 
-source("data_check/pipeline/0_index.R")
+source("pipeline/0_index.R")
 
 # Run level configs
 
@@ -27,7 +27,7 @@ RERUN_COLUMNS  <- FALSE        # TRUE = re-run column extraction for papers prev
 N_RUNS       <- Inf            # Inf = all papers; set an integer to cap
 SEED        <- NULL            # set an integer for reproducibility, or NULL
 SHUFFLE     <- TRUE            # TRUE = randomise paper order; FALSE = process in discovery order
-SUMMARY_CSV <- "./data_check/results/bulk_summary.csv"
+SUMMARY_CSV <- "./results/bulk_summary.csv"
 DOWNLOAD    <- TRUE            # Whether the script should attempt downloads or not
 
 LLM_BATCH_SIZE         <- 20L  # paths sent per LLM call for file classification
@@ -46,7 +46,7 @@ RESUME      <- TRUE
 # Set PRIORITISE_GT = TRUE to process papers that have a ground_truth CSV first.
 # Within each group (GT / non-GT), the existing SHUFFLE/SEED ordering applies.
 PRIORITISE_GT <- TRUE
-GT_DIR        <- "./data_check/ground_truth"
+GT_DIR        <- "./ground_truth"
 
 if (RERUN_COLUMNS) {
   SKIP_COLUMNS <- FALSE

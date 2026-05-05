@@ -1,0 +1,6 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797616662271","Your_Understanding_is_My_Understanding/Sloman & Rabb Data_Experiment 1.csv","data","ex1","combined","2026-03-30T14:29:06","Levi Baruch","tabular"
+"0956797616662271","Your_Understanding_is_My_Understanding/Sloman & Rabb Data_Experiment 2.csv","data","ex2","combined","2026-03-30T14:29:07","Levi Baruch","tabular"
+"0956797616662271","Your_Understanding_is_My_Understanding/Sloman & Rabb Data_Experiment 3.csv","data","ex3","combined","2026-03-30T14:29:08","Levi Baruch","tabular"
+"0956797616662271","Your_Understanding_is_My_Understanding/Sloman & Rabb Data_Experiment 4.csv","data","ex4","combined","2026-03-30T14:29:10","Levi Baruch","tabular"
+"0956797616662271","Your_Understanding_is_My_Understanding/Sloman & Rabb Materials.docx","supplemental","shared",NA,"2026-03-30T14:29:27","Levi Baruch",NA

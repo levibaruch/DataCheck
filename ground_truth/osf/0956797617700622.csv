@@ -1,0 +1,11 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797617700622","Global_Increases_in_Individualism/Global Increases in Individualism Data.csv","data","shared","combined","2026-04-01T09:20:56","Levi Baruch","tabular"
+"0956797617700622","Global_Increases_in_Individualism/Global Increases in Individualism Open Data Readme.docx","readme","shared",NA,"2026-04-01T09:20:58","Levi Baruch",NA
+"0956797617700622","Global_Increases_in_Individualism/Global Increases in Individualism R Notebook.html","output","shared",NA,"2026-04-01T09:21:14","Levi Baruch",NA
+"0956797617700622","Global_Increases_in_Individualism/Global Increases in Individualism R Syntax.R","code","shared",NA,"2026-04-01T09:21:20","Levi Baruch",NA
+"0956797617700622","Global_Increases_in_Individualism/Global Increases in Individualism SOM.docx","supplemental","shared",NA,"2026-04-01T09:21:30","Levi Baruch",NA
+"0956797617700622","Global_Increases_in_Individualism/MLM_for_Socioeconomic_Development_Effects/Data.csv","data","shared","combined","2026-04-01T09:21:31","Levi Baruch","tabular"
+"0956797617700622","Global_Increases_in_Individualism/MLM_for_Socioeconomic_Development_Effects/MLM results for SED effects controlling for year w code error fixed.txt","output","shared",NA,"2026-04-01T09:21:40","Levi Baruch",NA
+"0956797617700622","Global_Increases_in_Individualism/MLM_for_Socioeconomic_Development_Effects/MLM results for SED effects on practices and values controlling for Year,Disasters,Pathogens,Climate.txt","output","shared",NA,"2026-04-01T09:21:43","Levi Baruch",NA
+"0956797617700622","Global_Increases_in_Individualism/MLM_for_Socioeconomic_Development_Effects/MLM's for SED with controls 2.13.22.R","code","shared",NA,"2026-04-01T09:21:44","Levi Baruch",NA
+"0956797617700622","Global_Increases_in_Individualism/MLM_for_Socioeconomic_Development_Effects/MLM's for SED with controls.R","code","shared",NA,"2026-04-01T09:21:45","Levi Baruch",NA

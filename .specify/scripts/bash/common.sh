@@ -4,7 +4,7 @@
 # Get repository root, with fallback for non-git repositories.
 # When init-options.json has "here": true, the .specify parent directory is
 # used as the project root instead of the git root. This allows specs/ to live
-# inside a subdirectory (e.g. data_check/) rather than the outer git root.
+# inside a subdirectory (e.g. ) rather than the outer git root.
 get_repo_root() {
     local script_dir="$(CDPATH="" cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     local specify_parent="$(CDPATH="" cd "$script_dir/../../.." && pwd)"

@@ -1,0 +1,4 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
+"0956797617744771","Subjective_confidence_predicts_information_seeking/readmefirst.txt","readme","shared",NA,NA,"2026-04-07T15:44:04","Levi Baruch"
+"0956797617744771","Subjective_confidence_predicts_information_seeking/ReviewChoices30June15.txt","data","shared",NA,NA,"2026-04-07T15:44:15","Levi Baruch"
+"0956797617744771","Subjective_confidence_predicts_information_seeking/ReviewChoicesNED14dec16.txt","supplemental","shared",NA,NA,"2026-04-07T15:44:16","Levi Baruch"

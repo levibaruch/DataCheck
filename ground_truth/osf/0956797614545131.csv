@@ -1,0 +1,8 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797614545131","Asymmetrical_Social_Mach_Bands_Exaggeration/Study_1_Data/study1.csv","data","ex1","combined","2026-03-31T10:15:26","Levi Baruch","tabular"
+"0956797614545131","Asymmetrical_Social_Mach_Bands_Exaggeration/Study_1_Materials/study1instructions.docx","supplemental","ex1",NA,"2026-03-31T10:15:34","Levi Baruch",NA
+"0956797614545131","Asymmetrical_Social_Mach_Bands_Exaggeration/Study_2_Data/study2.csv","data","ex2","combined","2026-03-31T10:15:35","Levi Baruch","tabular"
+"0956797614545131","Asymmetrical_Social_Mach_Bands_Exaggeration/Study_2_Materials/study2instructions.docx","supplemental","ex2",NA,"2026-03-31T10:15:35","Levi Baruch",NA
+"0956797614545131","Asymmetrical_Social_Mach_Bands_Exaggeration/Study_3_Data/study3.csv","data","ex3","combined","2026-03-31T10:15:36","Levi Baruch","tabular"
+"0956797614545131","Asymmetrical_Social_Mach_Bands_Exaggeration/Study_3_Materials/study3stimuli.docx","supplemental","ex3",NA,"2026-03-31T10:15:41","Levi Baruch",NA
+"0956797614545131","Asymmetrical_Social_Mach_Bands_Exaggeration/UserGuide.docx","codebook","shared",NA,"2026-03-31T10:15:57","Levi Baruch",NA

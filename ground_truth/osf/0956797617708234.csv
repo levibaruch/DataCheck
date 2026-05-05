@@ -1,0 +1,6 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797617708234","MB-ADHD/Instructions.odt","supplemental","shared",NA,"2026-04-01T11:37:51","Levi Baruch",NA
+"0956797617708234","MB-ADHD/data-ad.txt","data","shared","combined","2026-04-01T11:38:36","Levi Baruch","tabular"
+"0956797617708234","MB-ADHD/data-kid.txt","data","shared","combined","2026-04-01T11:38:36","Levi Baruch","tabular"
+"0956797617708234","MB-ADHD/info-ad.txt","data","shared","combined","2026-04-01T11:38:36","Levi Baruch","tabular"
+"0956797617708234","MB-ADHD/info-kid.txt","data","shared","combined","2026-04-01T11:38:36","Levi Baruch","tabular"

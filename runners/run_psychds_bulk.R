@@ -6,12 +6,12 @@
 # all studies already have success == TRUE in the summary.
 #
 # Usage:
-#   Rscript data_check/runners/run_psychds_bulk.R
-#   or source("data_check/runners/run_psychds_bulk.R")
+#   Rscript runners/run_psychds_bulk.R
+#   or source("runners/run_psychds_bulk.R")
 # ─────────────────────────────────────────────────────────────────────────────
 
-source("data_check/pipeline/helper.R")
-source("data_check/pipeline/3_psychds_convert.R")
+source("pipeline/helper.R")
+source("pipeline/3_psychds_convert.R")
 
 SUMMARY_CSV <- file.path(PSYCHDS_OUT_DIR, "conversion_summary.csv")
 MAX_DATA_MB <- 150
@@ -37,8 +37,8 @@ folder_size_mb <- function(path) {
 
 # ── 1. Load target papers from bulk_summary.csv ───────────────────────────────
 
-bulk_path <- "./data_check/results/bulk_summary.csv"
-if (!file.exists(bulk_path)) bulk_path <- "./data_check/bulk_summary.csv"
+bulk_path <- "./results/bulk_summary.csv"
+if (!file.exists(bulk_path)) bulk_path <- "./bulk_summary.csv"
 if (!file.exists(bulk_path))
   stop("bulk_summary.csv not found. Run the index pipeline first.")
 
@@ -50,8 +50,8 @@ target_ids <- unique(target_ids)
 
 # ── Codebook filter ───────────────────────────────────────────────────────────
 if (CODEBOOK_ONLY) {
-  cb_path <- "./data_check/results/codebook_summary.csv"
-  if (!file.exists(cb_path)) cb_path <- "./data_check/codebook_summary.csv"
+  cb_path <- "./results/codebook_summary.csv"
+  if (!file.exists(cb_path)) cb_path <- "./codebook_summary.csv"
   if (!file.exists(cb_path))
     stop("CODEBOOK_ONLY = TRUE but codebook_summary.csv not found. Run the codebook pipeline first.")
   cb <- read.csv(cb_path, stringsAsFactors = FALSE,
@@ -122,7 +122,7 @@ for (k in seq_along(papers_to_run)) {
 
   # Size check — skip if downloaded data folder exceeds MAX_DATA_MB
   if (is.finite(MAX_DATA_MB)) {
-    data_dir <- file.path("./data_check/data", pid)
+    data_dir <- file.path("./data", pid)
     mb <- folder_size_mb(data_dir)
     if (mb > MAX_DATA_MB) {
       cat(sprintf("SKIPPED (%.1f MB > %.0f MB limit)\n", mb, MAX_DATA_MB))

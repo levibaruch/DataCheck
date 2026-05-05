@@ -1,0 +1,8 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
+"0956797617753606","Religious_targets_are_trusted_because/Experiment 1 Data.sav","data","ex1","combined","tabular","2026-04-07T16:08:53","Levi Baruch"
+"0956797617753606","Religious_targets_are_trusted_because/Experiment 1 Syntax.sps","code","ex1",NA,NA,"2026-04-07T16:08:54","Levi Baruch"
+"0956797617753606","Religious_targets_are_trusted_because/Experiment 2 Data.sav","data","ex2","combined","tabular","2026-04-07T16:08:55","Levi Baruch"
+"0956797617753606","Religious_targets_are_trusted_because/Experiment 2 Syntax.sps","code","ex2",NA,NA,"2026-04-07T16:08:55","Levi Baruch"
+"0956797617753606","Religious_targets_are_trusted_because/Experiment 3 Data.sav","data","ex3","combined","tabular","2026-04-07T16:08:56","Levi Baruch"
+"0956797617753606","Religious_targets_are_trusted_because/Experiment 3 Syntax.sps","code","ex3",NA,NA,"2026-04-07T16:08:57","Levi Baruch"
+"0956797617753606","Religious_targets_are_trusted_because/Stimuli and Measures.pdf","codebook","shared",NA,NA,"2026-04-07T16:09:13","Levi Baruch"

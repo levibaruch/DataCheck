@@ -1,0 +1,4 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
+"0956797617719084","Schepers_amp_Bouton_-_Psychological/Renewal In The Context of Satiety_Exp 2.csv","data","ex2","combined","tabular","2026-04-07T13:59:44","Levi Baruch"
+"0956797617719084","Schepers_amp_Bouton_-_Psychological/Renewal In The Context of Satiety_Exp1.csv","data","ex1","combined","tabular","2026-04-07T13:59:45","Levi Baruch"
+"0956797617719084","Schepers_amp_Bouton_-_Psychological/Renewal In The Context of Satiety_Exp3.csv","data","ex3","combined","tabular","2026-04-07T13:59:46","Levi Baruch"

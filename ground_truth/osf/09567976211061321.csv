@@ -1,0 +1,57 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"09567976211061321","ewpyq/Additional_analyses.docx/Additional analyses.docx","output","shared",NA,"2026-03-30T15:51:24","Levi Baruch",NA
+"09567976211061321","q3tfh/Additional_Figures.docx/Additional Figures.docx","output","shared",NA,"2026-03-30T15:51:27","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Analysis_scripts/Bracketing_1a.R","code","ex1a",NA,"2026-03-30T15:51:33","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Analysis_scripts/Bracketing_1b.R","code","ex1b",NA,"2026-03-30T15:51:38","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Analysis_scripts/Bracketing_2.R","code","ex2",NA,"2026-03-30T15:51:40","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Analysis_scripts/Bracketing_3.R","code","ex3",NA,"2026-03-30T15:51:43","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Analysis_scripts/Bracketing_4.R","code","ex4",NA,"2026-03-30T15:51:46","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Analysis_scripts/Combining experiments.R","code","shared",NA,"2026-03-30T15:51:48","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Analysis_scripts/Comp_corr_coefficents_1a.R","code","ex1a",NA,"2026-03-30T15:51:52","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Analysis_scripts/Comp_corr_coefficents_1b.R","code","ex1b",NA,"2026-03-30T15:51:54","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Analysis_scripts/Comp_corr_coefficents_2.R","code","ex2",NA,"2026-03-30T15:51:57","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Analysis_scripts/Comp_corr_coefficents_3.R","code","ex3",NA,"2026-03-30T15:51:59","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Analysis_scripts/Comp_corr_coefficents_4_Wave1.R","code","ex4",NA,"2026-03-30T15:52:02","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Analysis_scripts/Comp_corr_coefficents_4_Wave2.R","code","ex4",NA,"2026-03-30T15:52:04","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Analysis_scripts/Comp_corr_coefficents_4.R","code","ex4",NA,"2026-03-30T15:52:50","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Analysis_scripts/Direction of second guess.R","code","shared",NA,"2026-03-30T15:53:02","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Analysis_scripts/Figure 1.R","code","ex1",NA,"2026-03-30T15:53:11","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Analysis_scripts/Footnote 3.R","code","shared",NA,"2026-03-30T15:53:16","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Analysis_scripts/Histograms_1a.R","code","ex1a",NA,"2026-03-30T15:53:19","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Analysis_scripts/Histograms_1b.R","code","ex1b",NA,"2026-03-30T15:53:24","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Analysis_scripts/Histograms_2.R","code","ex2",NA,"2026-03-30T15:54:44","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Analysis_scripts/Histograms_3.R","code","ex3",NA,"2026-03-30T15:54:57","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Analysis_scripts/Histograms_4.R","code","ex4",NA,"2026-03-30T15:54:59","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Analysis_scripts/Scatterplots_1a.R","code","ex1a",NA,"2026-03-30T15:55:01","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Analysis_scripts/Scatterplots_1b.R","code","ex1b",NA,"2026-03-30T15:55:04","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Analysis_scripts/Scatterplots_2.R","code","ex2",NA,"2026-03-30T15:55:07","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Analysis_scripts/Scatterplots_3.R","code","shared",NA,"2026-03-30T15:55:11","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Analysis_scripts/Scatterplots_4.R","code","ex4",NA,"2026-03-30T15:55:14","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Analysis_scripts/SvD Analysis_1a.R","code","shared",NA,"2026-03-30T15:55:50","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Analysis_scripts/SvD Analysis_1b.R","code","ex1b",NA,"2026-03-30T15:55:54","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Analysis_scripts/SvDvA Analysis_2.R","code","ex2",NA,"2026-03-30T15:56:36","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Analysis_scripts/SvDvA Analysis_3.R","code","ex3",NA,"2026-03-30T15:56:39","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Analysis_scripts/SvDvA Analysis_4 - Wave1.R","code","ex4",NA,"2026-03-30T15:56:41","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Analysis_scripts/SvDvA Analysis_4 - Wave2.R","code","ex4",NA,"2026-03-30T15:56:43","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Analysis_scripts/SvDvA Analysis_4.R","code","ex4",NA,"2026-03-30T15:56:46","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Analysis_scripts/Understanding bracketing.R","code","shared",NA,"2026-03-30T15:56:48","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Data/1a - weights.csv","data","ex1a","combined","2026-03-30T15:56:52","Levi Baruch","tabular"
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Data/1b - time.csv","data","ex1b","combined","2026-03-30T15:56:57","Levi Baruch","tabular"
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Data/2 - percentages.csv","data","ex2","combined","2026-03-30T15:56:59","Levi Baruch","tabular"
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Data/3 - mechanism.csv","data","ex3","combined","2026-03-30T15:57:02","Levi Baruch","tabular"
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Data/4a - Large test.csv","data","ex4a","combined","2026-03-30T15:57:06","Levi Baruch","tabular"
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Data/4b - Prereg test.csv","data","ex4b","combined","2026-03-30T15:57:09","Levi Baruch","tabular"
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Data/alldata.csv","data","shared","combined","2026-03-30T15:57:10","Levi Baruch","tabular"
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Data/bayestest.csv","output","shared",NA,"2026-03-30T15:57:15","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Materials/ex1a.qsf","supplemental","ex1a",NA,"2026-03-30T15:57:26","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Materials/ex1b.qsf","supplemental","ex1b",NA,"2026-03-30T15:57:27","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Materials/ex2.qsf","supplemental","ex2",NA,"2026-03-30T15:57:27","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Materials/ex3.qsf","supplemental","ex3",NA,"2026-03-30T15:57:28","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Materials/ex4.qsf","supplemental","ex4",NA,"2026-03-30T15:57:28","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Materials/Experiment_1a_materials.docx","supplemental","ex1a",NA,"2026-03-30T15:57:31","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Materials/Experiment_1b_materials.docx","supplemental","ex1b",NA,"2026-03-30T15:57:40","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Materials/Experiment_2_materials.docx","supplemental","ex2",NA,"2026-03-30T15:57:43","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Materials/Experiment_3_materials.docx","supplemental","ex3",NA,"2026-03-30T15:57:45","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Materials/Experiment_4_materials.docx","supplemental","ex4",NA,"2026-03-30T15:57:50","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Materials/READ-ME.docx","readme","shared",NA,"2026-03-30T15:57:57","Levi Baruch",NA
+"09567976211061321","Taking_a_disagreeing_perspective_improves/Preregistrations/Preregistration links.docx","supplemental","shared",NA,"2026-03-30T15:58:01","Levi Baruch",NA

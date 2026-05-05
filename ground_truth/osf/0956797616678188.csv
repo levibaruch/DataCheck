@@ -1,0 +1,6 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797616678188","Ensemble_perception_of_dynamic_emotional/Experiment 1.xlsm","data","ex1","combined","2026-03-31T19:06:46","Levi Baruch","tabular"
+"0956797616678188","Ensemble_perception_of_dynamic_emotional/Experiment 2_Sheet1.csv","data","ex2","combined","2026-03-31T19:06:49","Levi Baruch","tabular"
+"0956797616678188","Ensemble_perception_of_dynamic_emotional/Experiment 3_AllFaceExp2Data.csv","data","ex3","combined","2026-03-31T19:09:40","Levi Baruch","tabular"
+"0956797616678188","Ensemble_perception_of_dynamic_emotional/Experiment 3_Sheet2.csv","data","ex3","combined","2026-03-31T19:09:41","Levi Baruch","tabular"
+"0956797616678188","Ensemble_perception_of_dynamic_emotional/Explanation of headings.xlsm","codebook","shared",NA,"2026-03-31T19:11:15","Levi Baruch",NA

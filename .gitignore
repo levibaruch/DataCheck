@@ -1,0 +1,45 @@
+# R
+.Rproj.user
+.Rhistory
+.Rdata
+.httr-oauth
+.DS_Store
+._*
+
+# Data & outputs (large/generated)
+data/
+outputs/*/
+psychds/*/
+psychds/*.csv
+!psychds/EXPERIMENTAL.txt
+logs/
+user_tests/
+results/
+structure/
+sweep_results/
+
+# Test artifacts
+tests/outputs/
+tests/psychds/
+
+# AB test
+ab_test/results/
+ab_test/ab_log.csv
+ab_test/ab_report_*.md
+
+# Ground truth archives (zip only, CSVs are tracked)
+ground_truth/osf.zip
+
+# Old archive data
+_old/outputs_old/
+_old/comparison_results/
+_old/sample_size_stuff/
+
+# Reports & misc generated files
+download_progress.csv
+quality_report_*.md
+*.png
+
+# Raw data files (inside data/ already, but belt+suspenders)
+*.sav
+*.xlsx

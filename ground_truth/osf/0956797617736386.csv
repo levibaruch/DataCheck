@@ -1,0 +1,5 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797617736386","Lee_et_al2018_Data_and/Lee et al.(2018) Study 1 Data.sav","data","ex1","combined","2026-03-30T14:43:19","Levi Baruch","tabular"
+"0956797617736386","Lee_et_al2018_Data_and/Lee et al.(2018) Study 2 Data.sav","data","ex2","combined","2026-03-30T14:43:19","Levi Baruch","tabular"
+"0956797617736386","Lee_et_al2018_Data_and/Lee et al.(2018) Study 3 Data.sav","data","ex3","combined","2026-03-30T14:43:20","Levi Baruch","tabular"
+"0956797617736386","Lee_et_al2018_Data_and/Lee et al.(2018) Study Materials.docx","supplemental","shared",NA,"2026-03-30T14:43:21","Levi Baruch",NA

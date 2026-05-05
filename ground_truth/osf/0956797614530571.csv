@@ -1,0 +1,16 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797614530571","Spatial_Orientation_Shrinks_and_Expands/Data/S1_Subway_Sheet1.csv","data","ex1","combined","2026-03-31T15:13:01","Levi Baruch","tabular"
+"0956797614530571","Spatial_Orientation_Shrinks_and_Expands/Data/S2_Facing_Sheet1.csv","data","ex2","combined","2026-03-31T15:13:13","Levi Baruch","tabular"
+"0956797614530571","Spatial_Orientation_Shrinks_and_Expands/Data/S3a_Shoppers_Sheet1.csv","data","ex3a","combined","2026-03-31T15:13:16","Levi Baruch","tabular"
+"0956797614530571","Spatial_Orientation_Shrinks_and_Expands/Data/S3b_Starbucks_Sheet1.csv","data","ex3b","combined","2026-03-31T15:13:19","Levi Baruch","tabular"
+"0956797614530571","Spatial_Orientation_Shrinks_and_Expands/Data/S4_probability_Sheet1.csv","data","ex4","combined","2026-03-31T15:13:23","Levi Baruch","tabular"
+"0956797614530571","Spatial_Orientation_Shrinks_and_Expands/Data/S5_LA_Chicago_Sheet1.csv","data","ex5","combined","2026-03-31T15:13:26","Levi Baruch","tabular"
+"0956797614530571","Spatial_Orientation_Shrinks_and_Expands/Materials/S1_blooryonge_071013.doc","supplemental","ex1",NA,"2026-03-31T15:13:30","Levi Baruch",NA
+"0956797614530571","Spatial_Orientation_Shrinks_and_Expands/Materials/S1_sherbourne_071013.doc","supplemental","ex1",NA,"2026-03-31T15:13:32","Levi Baruch",NA
+"0956797614530571","Spatial_Orientation_Shrinks_and_Expands/Materials/S1_spadina_071013.doc","supplemental","ex1",NA,"2026-03-31T15:13:35","Levi Baruch",NA
+"0956797614530571","Spatial_Orientation_Shrinks_and_Expands/Materials/S1_stgeorge_071013.doc","supplemental","ex1",NA,"2026-03-31T15:13:38","Levi Baruch",NA
+"0956797614530571","Spatial_Orientation_Shrinks_and_Expands/Materials/S2_uoftcampus_120613.doc","supplemental","ex2",NA,"2026-03-31T15:13:40","Levi Baruch",NA
+"0956797614530571","Spatial_Orientation_Shrinks_and_Expands/Materials/S3_script.docx","supplemental","ex3",NA,"2026-03-31T15:13:44","Levi Baruch",NA
+"0956797614530571","Spatial_Orientation_Shrinks_and_Expands/Materials/S4_probability_060513.doc","supplemental","ex4",NA,"2026-03-31T15:13:46","Levi Baruch",NA
+"0956797614530571","Spatial_Orientation_Shrinks_and_Expands/Materials/S5_social_distance_arriving.doc","supplemental","ex5",NA,"2026-03-31T15:13:49","Levi Baruch",NA
+"0956797614530571","Spatial_Orientation_Shrinks_and_Expands/Materials/S5_social_distance_departing.doc","supplemental","ex5",NA,"2026-03-31T15:13:51","Levi Baruch",NA

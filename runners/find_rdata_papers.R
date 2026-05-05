@@ -3,9 +3,9 @@
 # Scans all downloaded paper directories for .rda / .rdata files and writes
 # a CSV index of findings.
 #
-# Usage: Rscript data_check/runners/find_rdata_papers.R
+# Usage: Rscript runners/find_rdata_papers.R
 #
-# Output: data_check/results/rdata_index.csv
+# Output: results/rdata_index.csv
 #   paper_id   – paper ID (character)
 #   rel_path   – path relative to the paper's data directory
 #   n_objects  – total number of R objects in the file
@@ -14,8 +14,8 @@
 #   file_bytes – file size in bytes
 # ─────────────────────────────────────────────────────────────────────────────
 
-DATA_DIR   <- "./data_check/data"
-OUTPUT_CSV <- "./data_check/results/rdata_index.csv"
+DATA_DIR   <- "./data"
+OUTPUT_CSV <- "./results/rdata_index.csv"
 
 paper_ids <- list.dirs(DATA_DIR, full.names = FALSE, recursive = FALSE)
 paper_ids <- paper_ids[nchar(paper_ids) > 0]

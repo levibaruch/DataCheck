@@ -1,0 +1,11 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797617703667","Wade_Garry_amp_Pezdek_comment/Details of Experiments 1 and 2 in Wade_Garry_Pezdek.pdf","supplemental","shared",NA,"2026-04-01T09:22:28","Levi Baruch",NA
+"0956797617703667","Wade_Garry_amp_Pezdek_comment/Wade_Garry_Pezdek_2017_recoding _Shaw_and_Porter_2015_Overview - all schemes.csv","data","shared","combined","2026-04-01T09:23:45","Levi Baruch","tabular"
+"0956797617703667","Wade_Garry_amp_Pezdek_comment/Wade_Garry_Pezdek_2017_recoding _Shaw_and_Porter_2015_Recoding with Lindsay.csv","data","shared","combined","2026-04-01T09:23:46","Levi Baruch","tabular"
+"0956797617703667","Wade_Garry_amp_Pezdek_comment/Wade_Garry_Pezdek_2017_recoding _Shaw_and_Porter_2015_Recoding with Scoboria.csv","data","shared","combined","2026-04-01T09:23:46","Levi Baruch","tabular"
+"0956797617703667","Wade_Garry_amp_Pezdek_comment/Wade_Garry_Pezdek_2017_recoding _Shaw_and_Porter_2015_Recoding with Shaw .csv","data","shared","combined","2026-04-01T09:23:46","Levi Baruch","tabular"
+"0956797617703667","Wade_Garry_amp_Pezdek_comment/Wade_Garry_Pezdek_comment_on_Shaw_Porter_2015_dataset_Expt_1_data.csv","data","ex1","combined","2026-04-01T09:23:49","Levi Baruch","tabular"
+"0956797617703667","Wade_Garry_amp_Pezdek_comment/Wade_Garry_Pezdek_comment_on_Shaw_Porter_2015_dataset_Expt_1_eliminated_data.csv","data","ex1","combined","2026-04-01T09:23:50","Levi Baruch","tabular"
+"0956797617703667","Wade_Garry_amp_Pezdek_comment/Wade_Garry_Pezdek_comment_on_Shaw_Porter_2015_dataset_Expt_2_data.csv","data","ex2","combined","2026-04-01T09:23:51","Levi Baruch","tabular"
+"0956797617703667","Wade_Garry_amp_Pezdek_comment/Wade_Garry_Pezdek_comment_on_Shaw_Porter_2015_dataset_Expt_2_eliminated_data.csv","data","ex2","combined","2026-04-01T09:23:51","Levi Baruch","tabular"
+"0956797617703667","Wade_Garry_amp_Pezdek_comment/Wade_Garry_Pezdek_inpress_Mar2017_PSCI.pdf","supplemental","shared",NA,"2026-04-01T09:24:01","Levi Baruch",NA

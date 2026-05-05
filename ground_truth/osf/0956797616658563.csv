@@ -1,0 +1,6 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797616658563","Power_Posing_-_P-Curve/[1] R - Answers to Round 3 Reviews - Power to reject null based on effect size and number of studies.R","code","shared",NA,"2026-03-31T10:54:18","Levi Baruch",NA
+"0956797616658563","Power_Posing_-_P-Curve/[2] R - Answers to Round 3 Reviews - Power to accept flat when true effect is zero across 24 studies.R","code","shared",NA,"2026-03-31T10:54:19","Levi Baruch",NA
+"0956797616658563","Power_Posing_-_P-Curve/p-curve disclosure table for Power Posing review - 2016 09 26_Copy paste to p-curve app.csv","data","shared","combined","2026-03-31T10:54:23","Levi Baruch","tabular"
+"0956797616658563","Power_Posing_-_P-Curve/p-curve disclosure table for Power Posing review - 2016 09 26_DisclosureTable.csv","data","shared","combined","2026-03-31T10:54:24","Levi Baruch","tabular"
+"0956797616658563","Power_Posing_-_P-Curve/pcurve_app4.052.r","code","shared",NA,"2026-03-31T10:54:26","Levi Baruch",NA

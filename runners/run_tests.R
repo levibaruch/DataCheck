@@ -3,15 +3,15 @@
 # Runs the full pipeline (index → codebook label → psychds) on the hard-dataset
 # papers (tests/test_papers.csv) and writes a quality report.
 #
-# All papers must already be downloaded (data_check/data/<paper_id>/).
+# All papers must already be downloaded (data/<paper_id>/).
 # Outputs are written to:
-#   data_check/tests/outputs/<paper_id>/     (stages 1 & 2)
-#   data_check/tests/psychds/<paper_id>/     (stage 3)
-#   data_check/tests/test_log.csv            (one row per paper, appended each run)
-#   data_check/results/test_report_<date>.md (generated after each run)
+#   tests/outputs/<paper_id>/     (stages 1 & 2)
+#   tests/psychds/<paper_id>/     (stage 3)
+#   tests/test_log.csv            (one row per paper, appended each run)
+#   results/test_report_<date>.md (generated after each run)
 #
-# Usage (interactive):  source("data_check/runners/run_tests.R")
-# Usage (CLI):          Rscript data_check/runners/run_tests.R
+# Usage (interactive):  source("runners/run_tests.R")
+# Usage (CLI):          Rscript runners/run_tests.R
 #
 # Set REPORT_ONLY <- TRUE to regenerate the report from the last run without
 # re-running the pipeline.
@@ -25,19 +25,19 @@ FULL_RUN <- TRUE
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
 
-TEST_DIR         <- "./data_check/tests"
+TEST_DIR         <- "./tests"
 TEST_OUTPUT_DIR  <- file.path(TEST_DIR, "outputs")
 TEST_PSYCHDS_DIR <- file.path(TEST_DIR, "psychds")
 TEST_LOG_PATH    <- file.path(TEST_DIR, "test_log.csv")
-REPORT_DIR       <- "./data_check/results"
-GT_DIR           <- "./data_check/ground_truth"
+REPORT_DIR       <- "./results"
+GT_DIR           <- "./ground_truth"
 
 `%||%` <- function(x, y) if (is.null(x) || length(x) == 0) y else x
 # ── Pipeline sources (only needed for full run) ────────────────────────────────
-source("data_check/pipeline/prompts.R", local = TRUE)
-source("data_check/pipeline/0_index.R")
-source("data_check/pipeline/2_codebook_label.R")
-source("data_check/pipeline/3_psychds_convert.R")
+source("pipeline/prompts.R", local = TRUE)
+source("pipeline/0_index.R")
+source("pipeline/2_codebook_label.R")
+source("pipeline/3_psychds_convert.R")
 
 LLM_TEMPERATURE  <- 0.7
 LLM_THINK_LEVEL  <- "low"

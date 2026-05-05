@@ -192,7 +192,7 @@ else
 fi
 
 # Respect "here": true in init-options.json — use .specify parent dir as project root
-# instead of the git root. SCRIPT_DIR is .specify/scripts/bash, so ../../.. is data_check/.
+# instead of the git root. SCRIPT_DIR is .specify/scripts/bash, so ../../.. is .
 _SPECIFY_PARENT="$(CDPATH="" cd "$SCRIPT_DIR/../../.." && pwd)"
 _INIT_OPTIONS="$_SPECIFY_PARENT/.specify/init-options.json"
 if [ -f "$_INIT_OPTIONS" ]; then

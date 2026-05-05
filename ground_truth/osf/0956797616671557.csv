@@ -1,0 +1,3 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797616671557","Emotion-Cognition_Interaction_in_Non-Human_Primates/Blanchette et al Psychological Science_data.csv","data","shared","combined","2026-03-31T16:05:46","Levi Baruch","tabular"
+"0956797616671557","Emotion-Cognition_Interaction_in_Non-Human_Primates/Blanchette et al._Codebook.docx","codebook","shared",NA,"2026-03-31T16:05:47","Levi Baruch",NA

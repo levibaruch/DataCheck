@@ -15,12 +15,12 @@
 #   ab_test/ab_log.csv             — one row per paper × condition
 #   ab_test/ab_report_<date>.md    — side-by-side comparison report
 #
-# Usage:  Rscript data_check/ab_test/run_ab_test.R
-#         source("data_check/ab_test/run_ab_test.R")
+# Usage:  Rscript ab_test/run_ab_test.R
+#         source("ab_test/run_ab_test.R")
 #
 # To rerun a single condition and overwrite its log rows + results:
 #   RERUN_CONDITION <- "v2"   # or "v0", "v1"
-#   source("data_check/ab_test/run_ab_test.R")
+#   source("ab_test/run_ab_test.R")
 # ─────────────────────────────────────────────────────────────────────────────
 FULL_RUN <- TRUE
 REPORT_ONLY <- FALSE
@@ -32,13 +32,13 @@ if (!exists("REPORT_ONLY"))     REPORT_ONLY     <- FALSE  # TRUE = skip pipeline
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
 
-AB_DIR      <- "./data_check/ab_test"
+AB_DIR      <- "./ab_test"
 RESULTS_DIR <- file.path(AB_DIR, "results")
 V0_DIR      <- file.path(RESULTS_DIR, "v0")
 V1_DIR      <- file.path(RESULTS_DIR, "v1")
 V2_DIR      <- file.path(RESULTS_DIR, "v2")
 LOG_PATH    <- file.path(AB_DIR, "ab_log.csv")
-TEST_DIR    <- "./data_check/tests"
+TEST_DIR    <- "./tests"
 GT_DIR      <- file.path(TEST_DIR, "ground_truth/osf")
 
 for (d in c(V0_DIR, V1_DIR, V2_DIR)) dir.create(d, recursive = TRUE, showWarnings = FALSE)
@@ -69,7 +69,7 @@ md_table <- function(df) {
 
 # ── Sources (skipped in report-only mode) ─────────────────────────────────────
 
-if (!REPORT_ONLY) source("data_check/pipeline/0_index.R")  # loads STRUCTURE_PROMPT + SCHEMA_STRUCTURE_PROMPT
+if (!REPORT_ONLY) source("pipeline/0_index.R")  # loads STRUCTURE_PROMPT + SCHEMA_STRUCTURE_PROMPT
 
 # ── Log ────────────────────────────────────────────────────────────────────────
 
@@ -330,7 +330,7 @@ generate_report <- function(run_id = NULL) {
   # Load prompts from file if not already in environment
   prompts_env <- new.env(parent = emptyenv())
   if (!all(sapply(unlist(prompt_vars), exists, envir = globalenv(), USE.NAMES = FALSE))) {
-    source("data_check/pipeline/prompts.R", local = prompts_env)
+    source("pipeline/prompts.R", local = prompts_env)
   }
   get_prompt <- function(var_name) {
     if (exists(var_name, envir = globalenv())) get(var_name, envir = globalenv())

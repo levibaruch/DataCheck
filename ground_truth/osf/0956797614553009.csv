@@ -1,0 +1,24 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797614553009","5hzv9/Materials_for_Power_and_Voice/S1_HighRank_instructions_alternative.doc","supplemental","ex1",NA,"2026-03-31T15:19:14","Levi Baruch",NA
+"0956797614553009","5hzv9/Materials_for_Power_and_Voice/S1_HighRank_instructions_info.doc","supplemental","ex1",NA,"2026-03-31T15:19:18","Levi Baruch",NA
+"0956797614553009","5hzv9/Materials_for_Power_and_Voice/S1_HighRank_instructions_sense.doc","supplemental","ex1",NA,"2026-03-31T15:19:20","Levi Baruch",NA
+"0956797614553009","5hzv9/Materials_for_Power_and_Voice/S1_HighRank_instructions_status.doc","supplemental","ex1",NA,"2026-03-31T15:19:21","Levi Baruch",NA
+"0956797614553009","5hzv9/Materials_for_Power_and_Voice/S1_LowRank_instructions_alternative.doc","supplemental","ex1",NA,"2026-03-31T15:19:21","Levi Baruch",NA
+"0956797614553009","5hzv9/Materials_for_Power_and_Voice/S1_LowRank_instructions_info.doc","supplemental","ex1",NA,"2026-03-31T15:19:21","Levi Baruch",NA
+"0956797614553009","5hzv9/Materials_for_Power_and_Voice/S1_LowRank_instructions_sense.doc","supplemental","ex1",NA,"2026-03-31T15:19:22","Levi Baruch",NA
+"0956797614553009","5hzv9/Materials_for_Power_and_Voice/S1_LowRank_instructions_status.doc","supplemental","ex1",NA,"2026-03-31T15:19:22","Levi Baruch",NA
+"0956797614553009","5hzv9/Materials_for_Power_and_Voice/S1_powerManipCheck_demo.doc","supplemental","ex1",NA,"2026-03-31T15:19:22","Levi Baruch",NA
+"0956797614553009","5hzv9/Materials_for_Power_and_Voice/S2_perciever_instructions.docx","supplemental","ex2",NA,"2026-03-31T15:19:24","Levi Baruch",NA
+"0956797614553009","Dataset/Codebook_all_data_sets.docx","codebook","shared",NA,"2026-03-31T15:19:26","Levi Baruch",NA
+"0956797614553009","Dataset/form_r.csv","data","shared","combined","2026-03-31T15:21:48","Levi Baruch","tabular"
+"0956797614553009","Dataset/form_s.csv","data","shared","combined","2026-03-31T15:21:48","Levi Baruch","tabular"
+"0956797614553009","Dataset/intense_r.csv","data","shared","combined","2026-03-31T15:21:48","Levi Baruch","tabular"
+"0956797614553009","Dataset/intense_s.csv","data","shared","combined","2026-03-31T15:21:48","Levi Baruch","tabular"
+"0956797614553009","Dataset/pitch_r.csv","data","shared","combined","2026-03-31T15:21:48","Levi Baruch","tabular"
+"0956797614553009","Dataset/pitch_s.csv","data","shared","combined","2026-03-31T15:21:48","Levi Baruch","tabular"
+"0956797614553009","Dataset/Replic_study_Final.csv","data","shared","combined","2026-03-31T15:21:48","Levi Baruch","tabular"
+"0956797614553009","Dataset/S1_voice_level_Final.csv","data","ex1","combined","2026-03-31T15:21:51","Levi Baruch","tabular"
+"0956797614553009","Dataset/S2_acc.csv","data","ex2","combined","2026-03-31T15:21:52","Levi Baruch","tabular"
+"0956797614553009","Dataset/S2_demographics.csv","data","ex2","combined","2026-03-31T15:21:53","Levi Baruch","tabular"
+"0956797614553009","Dataset/S2_mlm.csv","data","ex2","combined","2026-03-31T15:21:54","Levi Baruch","tabular"
+"0956797614553009","Dataset/S2_voice_level_Final.csv","data","ex2","combined","2026-03-31T15:21:55","Levi Baruch","tabular"

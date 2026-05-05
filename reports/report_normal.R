@@ -21,13 +21,13 @@
 #   results/normal_report_<date>_dg_conf.png          data_granularity confusion heatmap
 #   results/normal_report_<date>_df_conf.png           data_format confusion heatmap
 #
-# Usage (interactive):  source("data_check/runners/report_normal.R")
-# Usage (CLI):          Rscript data_check/runners/report_normal.R
+# Usage (interactive):  source("runners/report_normal.R")
+# Usage (CLI):          Rscript runners/report_normal.R
 # ─────────────────────────────────────────────────────────────────────────────
 
-OUTPUTS_DIR  <- "./data_check/outputs"
-GT_DIR       <- "./data_check/ground_truth"
-REPORT_DIR   <- "./data_check/results"
+OUTPUTS_DIR  <- "./outputs"
+GT_DIR       <- "./ground_truth"
+REPORT_DIR   <- "./results"
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 

@@ -1,0 +1,17 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"09567976211052476","5._Emotion_and_Aging_During/1._Study_1/FigureS1.pdf","output","ex1",NA,"2026-03-30T15:39:19","Levi Baruch",NA
+"09567976211052476","5._Emotion_and_Aging_During/1._Study_1/materials/Study1_Materials.docx","supplemental","ex1",NA,"2026-03-30T15:39:20","Levi Baruch",NA
+"09567976211052476","5._Emotion_and_Aging_During/1._Study_1/Mplus_code_and_data/cc2.dat","data","ex1","combined","2026-03-30T15:39:30","Levi Baruch","tabular"
+"09567976211052476","5._Emotion_and_Aging_During/1._Study_1/Mplus_code_and_data/zero_order_continuous.inp","code","ex1",NA,"2026-03-30T15:39:32","Levi Baruch",NA
+"09567976211052476","5._Emotion_and_Aging_During/1._Study_1/R_code_and_data/control_global_figures_sr.csv","data","ex1","combined","2026-03-30T15:39:35","Levi Baruch","tabular"
+"09567976211052476","5._Emotion_and_Aging_During/1._Study_1/R_code_and_data/emotion_aging_Study1_cross_culture.R","code","ex1",NA,"2026-03-30T15:39:36","Levi Baruch",NA
+"09567976211052476","5._Emotion_and_Aging_During/1._Study_1/R_code_and_data/study1_data.csv","data","ex1","combined","2026-03-30T15:39:37","Levi Baruch","tabular"
+"09567976211052476","5._Emotion_and_Aging_During/2._Study_2/2008_2020_Additional_analyses/aging_liss_analysis_osf.R","code","ex2",NA,"2026-03-30T15:39:42","Levi Baruch",NA
+"09567976211052476","5._Emotion_and_Aging_During/2._Study_2/2008_2020_Additional_analyses/data_cleaning_liss_2008_2020.R","code","ex2",NA,"2026-03-30T15:39:44","Levi Baruch",NA
+"09567976211052476","5._Emotion_and_Aging_During/2._Study_2/2019_2020_Preliminary_and_primary_analyses/1. data_cleaning_panas_19_20.R","code","ex2",NA,"2026-03-30T15:39:47","Levi Baruch",NA
+"09567976211052476","5._Emotion_and_Aging_During/2._Study_2/2019_2020_Preliminary_and_primary_analyses/2_2019_2020_analyses.R","code","ex2",NA,"2026-03-30T15:39:50","Levi Baruch",NA
+"09567976211052476","5._Emotion_and_Aging_During/2._Study_2/2019_2020_Preliminary_and_primary_analyses/3_2019_2020_plot_Fig1.R","code","ex2",NA,"2026-03-30T15:39:51","Levi Baruch",NA
+"09567976211052476","5._Emotion_and_Aging_During/2._Study_2/materials/LISS_codebook_BackgroundVariables_EN_9.0.pdf","codebook","ex2",NA,"2026-03-30T15:39:57","Levi Baruch",NA
+"09567976211052476","5._Emotion_and_Aging_During/2._Study_2/materials/LISS_Health_codebook_ch20m_EN_1.0.pdf","codebook","ex2",NA,"2026-03-30T15:39:58","Levi Baruch",NA
+"09567976211052476","5._Emotion_and_Aging_During/2._Study_2/materials/LISS_Personality_codebook_cp20l_EN_1.1.pdf","codebook","ex2",NA,"2026-03-30T15:39:58","Levi Baruch",NA
+"09567976211052476","5._Emotion_and_Aging_During/2._Study_2/Study2_readme.txt","readme","ex2",NA,"2026-03-30T15:40:01","Levi Baruch",NA

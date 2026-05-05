@@ -1,0 +1,3 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
+"0956797615609578","What_comes_after_f_Prediction/Raw_Data/data.txt","data","shared","combined","tabular","2026-04-07T14:47:51","Levi Baruch"
+"0956797615609578","What_comes_after_f_Prediction/R_Scripts_for_Analysis/lmer.5.R","code","shared",NA,NA,"2026-04-07T14:47:53","Levi Baruch"

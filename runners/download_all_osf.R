@@ -10,7 +10,7 @@ library(metacheck)
 
 DATA_DIR          <- "/Volumes/NINJAV/data"
 XML_DIR           <- "/Users/levibaruch/Downloads/expanded_xml"
-PROGRESS_CSV      <- "./data_check/download_progress.csv"
+PROGRESS_CSV      <- "./download_progress.csv"
 BADGE_REPOS       <- c("tvyxz", "osf.io/tvyxz/", "osf.io/tvyxz")
 DOWNLOAD_TIMEOUT_SEC <- NULL # TODO Timelimit is now not epr paper but per run. very stupid
 

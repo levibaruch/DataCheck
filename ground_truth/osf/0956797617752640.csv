@@ -1,0 +1,6 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
+"0956797617752640","Of_Mice_Men_and_Trolleys/Analysis.R","code","shared",NA,NA,"2026-04-07T16:08:25","Levi Baruch"
+"0956797617752640","Of_Mice_Men_and_Trolleys/Data.txt","data","shared","combined","tabular","2026-04-07T16:08:27","Levi Baruch"
+"0956797617752640","Of_Mice_Men_and_Trolleys/Documentation.pdf","codebook","shared",NA,NA,"2026-04-07T16:08:45","Levi Baruch"
+"0956797617752640","Of_Mice_Men_and_Trolleys/Reply.R","code","shared",NA,NA,"2026-04-07T16:08:48","Levi Baruch"
+"0956797617752640","Of_Mice_Men_and_Trolleys/Supplementary Materials.pdf","supplemental","shared",NA,NA,"2026-04-07T16:08:52","Levi Baruch"

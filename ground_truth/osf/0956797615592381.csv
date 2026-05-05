@@ -1,0 +1,3 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797615592381","6rfmv/Full_Survey/Neuropsychology_survey_of_family_members_FTD_Alzheimers_ALS.docx","supplemental","shared",NA,"2026-03-30T14:22:55","Levi Baruch",NA
+"0956797615592381","Raw_Data/Strohminger-Nichols-neurodegeneration-data.csv","data","shared","combined","2026-03-30T14:22:58","Levi Baruch","tabular"

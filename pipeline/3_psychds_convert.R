@@ -9,21 +9,21 @@
 # psychds/conversion_summary.csv (Principle I — callee never writes summary).
 # ─────────────────────────────────────────────────────────────────────────────
 
-source("data_check/pipeline/helper.R")
+source("pipeline/helper.R")
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 
 if (!exists("PSYCHDS_OUT_DIR")) {
-  PSYCHDS_OUT_DIR <- "./data_check/psychds"
+  PSYCHDS_OUT_DIR <- "./psychds"
 }
 if (!exists("OUTPUT_DIR")) {
-  OUTPUT_DIR <- "./data_check/outputs"
+  OUTPUT_DIR <- "./outputs"
 }
 if (!exists("DATA_DIR")) {
-  DATA_DIR <- "./data_check/data"
+  DATA_DIR <- "./data"
 }
 if (!exists("GROUND_TRUTH_DIR")) {
-  GROUND_TRUTH_DIR <- "./data_check/ground_truth"
+  GROUND_TRUTH_DIR <- "./ground_truth"
 }
 DATA_SIZE_LIMIT_MB <- 500
 PIPELINE_VERSION   <- "021"
@@ -979,9 +979,9 @@ convert_psychds <- function(paper_id) {
 
   # 1. Check bulk_summary.csv
   paper_row <- NULL  # initialise; populated below if bulk_summary.csv exists
-  bulk_path <- "./data_check/results/bulk_summary.csv"
+  bulk_path <- "./results/bulk_summary.csv"
   if (!file.exists(bulk_path))
-    bulk_path <- "./data_check/bulk_summary.csv"
+    bulk_path <- "./bulk_summary.csv"
   if (file.exists(bulk_path)) {
     bulk <- tryCatch(
       read.csv(bulk_path, stringsAsFactors = FALSE,

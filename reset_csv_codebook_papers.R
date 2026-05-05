@@ -1,9 +1,9 @@
 # Remove papers that have CSV codebooks/readmes from codebook_summary.csv so they
 # will be re-processed by run_2_codebook_bulk.R with the improved CSV parser.
-# Run from data_check/ root: Rscript runners/reset_csv_codebook_papers.R
+# Run from  root: Rscript runners/reset_csv_codebook_papers.R
 
-OUTPUT_DIR   <- "./data_check/outputs"
-SUMMARY_CSV  <- "./data_check/results/codebook_summary.csv"
+OUTPUT_DIR   <- "./outputs"
+SUMMARY_CSV  <- "./results/codebook_summary.csv"
 
 # ── 1. Collect paper_ids that have at least one CSV codebook/readme ────────────
 

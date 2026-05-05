@@ -1,0 +1,34 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797617711291","The_Love_of_Large_Numbers/Data_Files/Exp1_Data_raw_binary DV.csv","data","ex1","combined","2026-04-01T11:51:50","Levi Baruch","tabular"
+"0956797617711291","The_Love_of_Large_Numbers/Data_Files/Exp1_Data_raw_raw DV.csv","data","ex1","combined","2026-04-01T11:51:51","Levi Baruch","tabular"
+"0956797617711291","The_Love_of_Large_Numbers/Data_Files/exp1exp2_data_leftRight.csv","data","shared","combined","2026-04-01T11:52:03","Levi Baruch","tabular"
+"0956797617711291","The_Love_of_Large_Numbers/Data_Files/Exp2_Data_raw_binary DV.csv","data","ex2","combined","2026-04-01T11:52:05","Levi Baruch","tabular"
+"0956797617711291","The_Love_of_Large_Numbers/Data_Files/Exp2_Data_raw_raw DV.csv","data","ex2","combined","2026-04-01T11:52:05","Levi Baruch","tabular"
+"0956797617711291","The_Love_of_Large_Numbers/Data_Files/output_emp_25-150_lin_util.csv","output","shared",NA,"2026-04-01T11:52:13","Levi Baruch",NA
+"0956797617711291","The_Love_of_Large_Numbers/Data_Files/output_emp_25-150_log_util.csv","output","shared",NA,"2026-04-01T11:52:13","Levi Baruch",NA
+"0956797617711291","The_Love_of_Large_Numbers/Data_Files/output_emp_25-150_tdist.csv","output","shared",NA,"2026-04-01T11:52:13","Levi Baruch",NA
+"0956797617711291","The_Love_of_Large_Numbers/Data_Files/output_emp_6-26_lin_util.csv","output","shared",NA,"2026-04-01T11:52:14","Levi Baruch",NA
+"0956797617711291","The_Love_of_Large_Numbers/Data_Files/output_emp_6-26_log_util.csv","output","shared",NA,"2026-04-01T11:52:14","Levi Baruch",NA
+"0956797617711291","The_Love_of_Large_Numbers/Data_Files/output_emp_6-26_tdist.csv","output","shared",NA,"2026-04-01T11:52:14","Levi Baruch",NA
+"0956797617711291","The_Love_of_Large_Numbers/Data_Files/output_unif_25-150_tdist.csv","output","shared",NA,"2026-04-01T11:52:14","Levi Baruch",NA
+"0956797617711291","The_Love_of_Large_Numbers/Data_Files/output_unif_6-26_tdist.csv","output","shared",NA,"2026-04-01T11:52:15","Levi Baruch",NA
+"0956797617711291","The_Love_of_Large_Numbers/Materials/Materials_exp1.pdf","supplemental","ex1",NA,"2026-04-01T11:53:27","Levi Baruch",NA
+"0956797617711291","The_Love_of_Large_Numbers/Materials/Materials_exp2.pdf","supplemental","ex2",NA,"2026-04-01T11:53:29","Levi Baruch",NA
+"0956797617711291","The_Love_of_Large_Numbers/Materials/SOM_tables.docx","output","shared",NA,"2026-04-01T11:53:34","Levi Baruch",NA
+"0956797617711291","The_Love_of_Large_Numbers/Matlab/bayes_rev_product_compare_utility.m","code","shared",NA,"2026-04-01T11:53:44","Levi Baruch",NA
+"0956797617711291","The_Love_of_Large_Numbers/Matlab/bayes_rev_product_compare.m","code","shared",NA,"2026-04-01T11:53:51","Levi Baruch",NA
+"0956797617711291","The_Love_of_Large_Numbers/Matlab/bayesRev.m","code","shared",NA,"2026-04-01T11:53:52","Levi Baruch",NA
+"0956797617711291","The_Love_of_Large_Numbers/Matlab/cell_prior.mat","data","shared","combined","2026-04-01T11:53:56","Levi Baruch","raw"
+"0956797617711291","The_Love_of_Large_Numbers/Matlab/exp1exp2_data_LR_matlab.csv","data","shared","combined","2026-04-01T11:53:58","Levi Baruch","tabular"
+"0956797617711291","The_Love_of_Large_Numbers/Outputs/Fig1.png","output","shared",NA,"2026-04-01T12:38:02","Levi Baruch",NA
+"0956797617711291","The_Love_of_Large_Numbers/Outputs/Fig2_print.eps","output","shared",NA,"2026-04-01T12:38:03","Levi Baruch",NA
+"0956797617711291","The_Love_of_Large_Numbers/Outputs/Fig3_print.eps","output","shared",NA,"2026-04-01T12:38:03","Levi Baruch",NA
+"0956797617711291","The_Love_of_Large_Numbers/Outputs/Fig5_print.eps","output","shared",NA,"2026-04-01T12:38:03","Levi Baruch",NA
+"0956797617711291","The_Love_of_Large_Numbers/Outputs/Fig6_print.eps","output","shared",NA,"2026-04-01T12:38:03","Levi Baruch",NA
+"0956797617711291","The_Love_of_Large_Numbers/report.pdf","output","shared",NA,"2026-04-01T12:38:08","Levi Baruch",NA
+"0956797617711291","The_Love_of_Large_Numbers/report.Rmd","code","shared",NA,"2026-04-01T12:38:12","Levi Baruch",NA
+"0956797617711291","The_Love_of_Large_Numbers/Data_Files/rev_avgs_cell_5orMore_meta.csv","data","shared",NA,"2026-04-01T12:39:15","Levi Baruch","tabular"
+"0956797617711291","The_Love_of_Large_Numbers/Data_Files/rev_avgs_electronics_5orMore_meta.csv","data","shared",NA,"2026-04-01T12:39:15","Levi Baruch","tabular"
+"0956797617711291","The_Love_of_Large_Numbers/Data_Files/rev_avgs_health_5orMore_meta.csv","data","shared",NA,"2026-04-01T12:39:16","Levi Baruch","tabular"
+"0956797617711291","The_Love_of_Large_Numbers/Data_Files/rev_avgs_kitchendining_5orMore_meta.csv","data","shared",NA,"2026-04-01T12:39:17","Levi Baruch","tabular"
+"0956797617711291","The_Love_of_Large_Numbers/Matlab/model_fits.m","code","shared",NA,"2026-04-01T12:39:19","Levi Baruch",NA

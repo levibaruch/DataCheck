@@ -1,0 +1,16 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797616676600","data/data_Goudeau_Croizet_codebook.csv","codebook","shared",NA,"2026-03-31T16:39:23","Levi Baruch",NA
+"0956797616676600","data/data_Goudeau_Croizet_study1.csv","data","ex1","combined","2026-03-31T16:39:29","Levi Baruch","tabular"
+"0956797616676600","data/data_Goudeau_Croizet_study2.csv","data","ex2","combined","2026-03-31T16:39:30","Levi Baruch","tabular"
+"0956797616676600","data/data_Goudeau_Croizet_study3.csv","data","ex3","combined","2026-03-31T16:39:30","Levi Baruch","tabular"
+"0956797616676600","data/script_R/R_script _for_analyses_Goudeau_Croizet.R","code","shared",NA,"2026-03-31T16:39:39","Levi Baruch",NA
+"0956797616676600","jbfbp/material/booklets/study1_reading_comprehension_test.pdf","supplemental","ex1",NA,"2026-03-31T16:39:42","Levi Baruch",NA
+"0956797616676600","jbfbp/material/booklets/study2_coding_test.pdf","supplemental","ex2",NA,"2026-03-31T16:39:44","Levi Baruch",NA
+"0956797616676600","jbfbp/material/booklets/study2_high_familiarity.pdf","supplemental","ex2",NA,"2026-03-31T16:39:45","Levi Baruch",NA
+"0956797616676600","jbfbp/material/booklets/study2_low_familiarity.pdf","supplemental","ex2",NA,"2026-03-31T16:39:46","Levi Baruch",NA
+"0956797616676600","jbfbp/material/booklets/study3_coding_test.pdf","supplemental","ex3",NA,"2026-03-31T16:39:47","Levi Baruch",NA
+"0956797616676600","jbfbp/material/booklets/study3_high_familiarity.pdf","supplemental","ex3",NA,"2026-03-31T16:39:48","Levi Baruch",NA
+"0956797616676600","jbfbp/material/booklets/study3_low_familiarity.pdf","supplemental","ex3",NA,"2026-03-31T16:39:49","Levi Baruch",NA
+"0956797616676600","jbfbp/material/material and instruction study 1 (French).docx","supplemental","ex1",NA,"2026-03-31T16:39:51","Levi Baruch",NA
+"0956797616676600","jbfbp/material/material and instructions study 2 (French).docx","supplemental","ex2",NA,"2026-03-31T16:39:51","Levi Baruch",NA
+"0956797616676600","jbfbp/material/material and instructions study 3 (French).docx","supplemental","ex3",NA,"2026-03-31T16:39:52","Levi Baruch",NA

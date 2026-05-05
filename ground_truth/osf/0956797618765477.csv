@@ -1,0 +1,4 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
+"0956797618765477","Motor_Visual_Face_Adaptation/Results_data/experiment1.txt","data","ex1","combined","tabular","2026-04-08T13:47:41","Levi Baruch"
+"0956797618765477","Motor_Visual_Face_Adaptation/Results_data/experiment2.txt","data","ex2","combined","tabular","2026-04-08T13:47:42","Levi Baruch"
+"0956797618765477","Motor_Visual_Face_Adaptation/Results_data/README.txt","readme","shared",NA,NA,"2026-04-08T13:47:45","Levi Baruch"

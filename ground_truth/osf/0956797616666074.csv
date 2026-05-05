@@ -1,0 +1,7 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797616666074","Data/Exp1_RealEstate.sav","data","ex1","combined","2026-03-31T15:57:30","Levi Baruch","tabular"
+"0956797616666074","Data/Exp2_Jewelry.sav","data","ex2","combined","2026-03-31T15:57:30","Levi Baruch","tabular"
+"0956797616666074","Data/Exp3_RealEstate.sav","data","ex3","combined","2026-03-31T15:57:31","Levi Baruch","tabular"
+"0956797616666074","Data/Exp4_Cars.sav","data","ex4","combined","2026-03-31T15:57:31","Levi Baruch","tabular"
+"0956797616666074","Data/Exp5_Recruiters.sav","data","ex5","combined","2026-03-31T15:57:32","Levi Baruch","tabular"
+"0956797616666074","Data/SOM-R/SOM-R_2016-07-07.docx","output","shared",NA,"2026-03-31T15:58:07","Levi Baruch",NA

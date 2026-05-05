@@ -11,20 +11,20 @@
 
 # Set flag so run_sweep.R's !interactive() guard does not trigger main()
 RUN_SWEEP_SOURCED_AS_LIB <- TRUE
-source("data_check/runners/run_sweep.R")   # provides run_paper_sweep() + helpers
+source("runners/run_sweep.R")   # provides run_paper_sweep() + helpers
 # run_sweep.R's main() sources helper.R, 0_index.R, 2_codebook_label.R at
 # runtime; source them explicitly here so XML_DIR is available at top level.
-source("data_check/pipeline/helper.R")
-source("data_check/pipeline/0_index.R")
-source("data_check/pipeline/2_codebook_label.R")
+source("pipeline/helper.R")
+source("pipeline/0_index.R")
+source("pipeline/2_codebook_label.R")
 
 # ── Config ────────────────────────────────────────────────────────────────────
 
 TEMPERATURES <- c(0.0, 0.3, 0.7, 1.0)  # temperatures to sweep
 REPEATS      <- 3L                      # repeats per temperature per paper
 N_PAPERS     <- Inf                     # Inf = all; set an integer to cap
-SWEEP_DIR    <- "./data_check/sweep_results"
-BULK_LOG     <- "./data_check/sweep_results/sweep_bulk_log.csv"
+SWEEP_DIR    <- "./sweep_results"
+BULK_LOG     <- "./sweep_results/sweep_bulk_log.csv"
 SEED         <- NULL                    # integer for reproducible paper order, or NULL
 
 if (!is.null(SEED)) set.seed(SEED)

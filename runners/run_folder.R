@@ -3,19 +3,19 @@
 # Run the full pipeline (index + codebook label) for one randomly selected
 # paper.  Useful for smoke-testing the pipeline and inspecting outputs.
 #
-# Usage: Rscript data_check/run_single.R
-#        or source("./data_check/run_single.R") from an interactive session
+# Usage: Rscript run_single.R
+#        or source("./run_single.R") from an interactive session
 #
-# Output: data_check/outputs/<paper_id>/
+# Output: outputs/<paper_id>/
 #           structure.csv, columns.csv   (from run_index)
 #           labels.csv, codebook_coverage.csv  (from run_codebook_label)
 # ─────────────────────────────────────────────────────────────────────────────
 
 `%||%` <- function(x, y) if (is.null(x) || length(x) == 0) y else x
 
-source("data_check/pipeline/0_index.R")
-source("data_check/pipeline/2_codebook_label.R")
-source("data_check/pipeline/3_psychds_convert.R")
+source("pipeline/0_index.R")
+source("pipeline/2_codebook_label.R")
+source("pipeline/3_psychds_convert.R")
 
 # Change these to the models you are actually using! I can recommend gpt-oss:20b
 CAPTURE_THINKING <- TRUE         # TRUE = write one row per LLM call to thinking_traces.csv
@@ -27,7 +27,7 @@ PROCESS_DIR      <- "/Volumes/NINJAV/data/dataverse"  # directory containing fol
 DATA_DIR         <- "/Volumes/NINJAV/data"
 OUTPUT_DIR       <- "/Volumes/NINJAV/DataCheckOut/outputs"
 PSYCHDS_OUT_DIR  <- "/Volumes/NINJAV/DataCheckOut/psychds"
-GROUND_TRUTH_DIR <- "./data_check/ground_truth"
+GROUND_TRUTH_DIR <- "./ground_truth"
 
 local({
 

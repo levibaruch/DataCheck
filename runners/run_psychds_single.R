@@ -4,19 +4,19 @@
 #
 # Usage:
 #   paper_id <- "0956797615620784"   # set before sourcing (optional)
-#   source("data_check/runners/run_psychds_single.R")
+#   source("runners/run_psychds_single.R")
 #
 #   Or run from repo root:
-#   Rscript data_check/runners/run_psychds_single.R [paper_id]
+#   Rscript runners/run_psychds_single.R [paper_id]
 #
 # If paper_id is not set, picks a random successfully indexed paper from
 # results/bulk_summary.csv.
 #
-# Output: data_check/psychds/<paper_id>/
+# Output: psychds/<paper_id>/
 # ─────────────────────────────────────────────────────────────────────────────
 
-source("data_check/pipeline/helper.R")
-source("data_check/pipeline/3_psychds_convert.R")
+source("pipeline/helper.R")
+source("pipeline/3_psychds_convert.R")
 
 # Allow paper_id to be passed as a command-line argument
 args <- commandArgs(trailingOnly = TRUE)
@@ -32,8 +32,8 @@ if (exists(".psychds_paper_id_was_random") && .psychds_paper_id_was_random) {
 
 # If paper_id is not defined (interactive use without setting it), pick randomly
 if (!exists("paper_id") || is.null(paper_id) || !nzchar(paper_id)) {
-  bulk_path <- "./data_check/results/bulk_summary.csv"
-  if (!file.exists(bulk_path)) bulk_path <- "./data_check/bulk_summary.csv"
+  bulk_path <- "./results/bulk_summary.csv"
+  if (!file.exists(bulk_path)) bulk_path <- "./bulk_summary.csv"
   if (!file.exists(bulk_path))
     stop("No paper_id set and no bulk_summary.csv found. ",
          "Set `paper_id <- '...'` before sourcing this script.")

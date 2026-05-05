@@ -1,0 +1,8 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797616685771","Why_we_hate_hypocrites_-/Jordan et al data_Key.csv","codebook","shared",NA,"2026-03-31T19:11:31","Levi Baruch",NA
+"0956797616685771","Why_we_hate_hypocrites_-/Jordan et al data_Study1.csv","data","ex1","combined","2026-03-31T19:11:33","Levi Baruch","tabular"
+"0956797616685771","Why_we_hate_hypocrites_-/Jordan et al data_Study2.csv","data","ex2","combined","2026-03-31T19:11:34","Levi Baruch","tabular"
+"0956797616685771","Why_we_hate_hypocrites_-/Jordan et al data_Study3.csv","data","ex3","combined","2026-03-31T19:11:34","Levi Baruch","tabular"
+"0956797616685771","Why_we_hate_hypocrites_-/Jordan et al data_Study4.csv","data","ex4","combined","2026-03-31T19:11:34","Levi Baruch","tabular"
+"0956797616685771","Why_we_hate_hypocrites_-/Jordan et al data_Study5.csv","data","ex5","combined","2026-03-31T19:11:34","Levi Baruch","tabular"
+"0956797616685771","Why_we_hate_hypocrites_-/Jordan et al experimental materials.docx","supplemental","shared",NA,"2026-03-31T19:11:37","Levi Baruch",NA

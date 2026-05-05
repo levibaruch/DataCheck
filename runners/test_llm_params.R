@@ -7,7 +7,7 @@
 # Outputs per-setting accuracy tables (easy / medium / hard / total),
 # latency, and stability (same answer across reps).
 #
-# Usage:  source("data_check/runners/test_llm_params.R")
+# Usage:  source("runners/test_llm_params.R")
 #
 # Config knobs at top:
 #   OLLAMA_MODEL  — swap to 120b-cloud for higher-quality sweep
@@ -17,8 +17,8 @@
 # ─────────────────────────────────────────────────────────────────────────────
 
 library(metacheck)
-source("data_check/pipeline/helper.R")
-source("data_check/pipeline/prompts.R")
+source("pipeline/helper.R")
+source("pipeline/prompts.R")
 
 llm_use(TRUE)
 llm_max_calls(500)

@@ -1,0 +1,6 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797617718816","Social_Reach_Psychological_Science-2016-Ramenzoni_Liszkowski-0956797616659938/Data_Exp_1/Data_Experiment_1_Data.csv","data","ex1","combined","2026-04-01T13:23:52","Levi Baruch","tabular"
+"0956797617718816","Social_Reach_Psychological_Science-2016-Ramenzoni_Liszkowski-0956797616659938/Data_Exp_1/Data_Experiment_1_Reliability Information.csv","data","ex1","combined","2026-04-01T13:23:57","Levi Baruch","tabular"
+"0956797617718816","Social_Reach_Psychological_Science-2016-Ramenzoni_Liszkowski-0956797616659938/Data_Exp_2/Data_Experiment_2_Data.csv","data","ex2","combined","2026-04-01T13:23:59","Levi Baruch","tabular"
+"0956797617718816","Social_Reach_Psychological_Science-2016-Ramenzoni_Liszkowski-0956797616659938/Data_Exp_2/Data_Experiment_2_Reliability Information.csv","data","ex2","combined","2026-04-01T13:24:00","Levi Baruch","tabular"
+"0956797617718816","Social_Reach_Psychological_Science-2016-Ramenzoni_Liszkowski-0956797616659938/Photograph_chairs_used/Suplemental Material_Chairs used for data collection.docx","supplemental","shared",NA,"2026-04-01T13:24:19","Levi Baruch",NA

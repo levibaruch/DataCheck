@@ -1,0 +1,4 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797614531439","Caregiving_Salience/caregiving_salience_paper_raw_data_Study 1.csv","data","ex1","combined","2026-03-31T10:06:25","Levi Baruch","tabular"
+"0956797614531439","Caregiving_Salience/caregiving_salience_paper_raw_data_Study 2.csv","data","ex2","combined","2026-03-31T10:06:26","Levi Baruch","tabular"
+"0956797614531439","Caregiving_Salience/caregiving_salience_paper_raw_data_Study 3.csv","data","ex3","combined","2026-03-31T10:06:29","Levi Baruch","tabular"

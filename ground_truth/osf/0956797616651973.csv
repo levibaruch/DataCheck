@@ -1,0 +1,49 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797616651973","Open_Materials_and_Data_for/Data/codebook_Study1.csv","codebook","ex1",NA,"2026-03-31T10:49:24","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Data/codebook_Study2.csv","codebook","ex2",NA,"2026-03-31T10:49:25","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Data/codebook_Study3.csv","codebook","ex3",NA,"2026-03-31T10:49:25","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Data/Study1_Data.csv","data","ex1","combined","2026-03-31T10:49:26","Levi Baruch","tabular"
+"0956797616651973","Open_Materials_and_Data_for/Data/Study2_Data.csv","data","ex2","combined","2026-03-31T10:49:27","Levi Baruch","tabular"
+"0956797616651973","Open_Materials_and_Data_for/Data/Study3_Data.csv","data","ex3","combined","2026-03-31T10:49:27","Levi Baruch","tabular"
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_1_Materials/Distractor_Stimuli/DistractorVideo1.mp4","asset","ex1",NA,"2026-03-31T10:49:29","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_1_Materials/Distractor_Stimuli/DistractorVideo2.mp4","asset","ex1",NA,"2026-03-31T10:49:31","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_1_Materials/Distractor_Stimuli/DistractorVideo3.mp4","asset","ex1",NA,"2026-03-31T10:49:31","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_1_Materials/Distractor_Stimuli/DistractorVideo4.mp4","asset","ex1",NA,"2026-03-31T10:49:32","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_1_Materials/Distractor_Stimuli/DistractorVideo5.mp4","asset","ex1",NA,"2026-03-31T10:49:32","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_1_Materials/Song_Stimuli/Average Song 1_Cant Hurry Love.mp4","asset","ex1",NA,"2026-03-31T10:52:35","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_1_Materials/Song_Stimuli/Average Song 2_Isnt She Lovely.mp4","asset","ex1",NA,"2026-03-31T10:52:35","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_1_Materials/Song_Stimuli/Average Song 3_Set Fire to the Rain.mp4","asset","ex1",NA,"2026-03-31T10:52:37","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_1_Materials/Song_Stimuli/Bad1_Genie in a bottle.mp4","asset","ex1",NA,"2026-03-31T10:52:37","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_1_Materials/Song_Stimuli/Bad2_Shouldve Said No.mp4","asset","ex1",NA,"2026-03-31T10:52:39","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_1_Materials/Song_Stimuli/Good1_I'll Be.mp4","asset","ex1",NA,"2026-03-31T10:52:39","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_1_Materials/Song_Stimuli/Good2_I Will Always Love You.mp4","asset","ex1",NA,"2026-03-31T10:52:40","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_1_Materials/Song_Stimuli/YouTube Citations for Song Stimuli.docx","supplemental","ex1",NA,"2026-03-31T10:52:48","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_1_Materials/Study 1_Survey.docx","supplemental","ex1",NA,"2026-03-31T10:52:53","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_2_Materials/Study2_Questionnaire_T1-Bottom_Condition.docx","supplemental","ex2",NA,"2026-03-31T10:53:02","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_2_Materials/Study2_Questionnaire_T1-Top_Condition.docx","supplemental","ex2",NA,"2026-03-31T10:53:05","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_2_Materials/Study2_RA Script.docx","supplemental","ex2",NA,"2026-03-31T10:53:13","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_3_Materials/Butterflies_on_Flowers_Stimuli/T1-bottom_Day1.png","asset","ex3",NA,"2026-03-31T10:53:30","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_3_Materials/Butterflies_on_Flowers_Stimuli/T1-bottom_Day2.png","asset","ex3",NA,"2026-03-31T10:53:30","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_3_Materials/Butterflies_on_Flowers_Stimuli/T1-bottom_Day3.png","asset","ex3",NA,"2026-03-31T10:53:30","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_3_Materials/Butterflies_on_Flowers_Stimuli/T1-bottom_Day4.png","asset","ex3",NA,"2026-03-31T10:53:30","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_3_Materials/Butterflies_on_Flowers_Stimuli/T1-bottom_Day5.png","asset","ex3",NA,"2026-03-31T10:53:30","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_3_Materials/Butterflies_on_Flowers_Stimuli/T1-bottom_Day6.png","asset","ex3",NA,"2026-03-31T10:53:30","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_3_Materials/Butterflies_on_Flowers_Stimuli/T1-bottom_Day7.png","asset","ex3",NA,"2026-03-31T10:53:30","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_3_Materials/Butterflies_on_Flowers_Stimuli/T1-top_Day1.png","asset","ex3",NA,"2026-03-31T10:53:30","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_3_Materials/Butterflies_on_Flowers_Stimuli/T1-top_Day2.png","asset","ex3",NA,"2026-03-31T10:53:30","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_3_Materials/Butterflies_on_Flowers_Stimuli/T1-top_Day3.png","asset","ex3",NA,"2026-03-31T10:53:30","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_3_Materials/Butterflies_on_Flowers_Stimuli/T1-top_Day4.png","asset","ex3",NA,"2026-03-31T10:53:30","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_3_Materials/Butterflies_on_Flowers_Stimuli/T1-top_Day5.png","asset","ex3",NA,"2026-03-31T10:53:30","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_3_Materials/Butterflies_on_Flowers_Stimuli/T1-top_Day6.png","asset","ex3",NA,"2026-03-31T10:53:30","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_3_Materials/Butterflies_on_Flowers_Stimuli/T1-top_Day7.png","asset","ex3",NA,"2026-03-31T10:53:30","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_3_Materials/Butterflies_on_Flowers_Stimuli/Week 2_Day1.png","asset","ex3",NA,"2026-03-31T10:53:30","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_3_Materials/Butterflies_on_Flowers_Stimuli/Week 2_Day2.png","asset","ex3",NA,"2026-03-31T10:53:30","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_3_Materials/Butterflies_on_Flowers_Stimuli/Week2_Day3.png","asset","ex3",NA,"2026-03-31T10:53:30","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_3_Materials/Butterflies_on_Flowers_Stimuli/Week2_Day4.png","asset","ex3",NA,"2026-03-31T10:53:30","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_3_Materials/Butterflies_on_Flowers_Stimuli/Week2_Day5.png","asset","ex3",NA,"2026-03-31T10:53:30","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_3_Materials/Butterflies_on_Flowers_Stimuli/Week2_Day6.png","asset","ex3",NA,"2026-03-31T10:53:30","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_3_Materials/Butterflies_on_Flowers_Stimuli/Week2_Day7.png","asset","ex3",NA,"2026-03-31T10:53:30","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_3_Materials/Distractor Task.pdf","supplemental","ex3",NA,"2026-03-31T10:53:39","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_3_Materials/Flowers_Stimuli/Flowers-Week 1.png","asset","ex3",NA,"2026-03-31T10:53:45","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_3_Materials/Flowers_Stimuli/Flowers-Week 2.png","asset","ex3",NA,"2026-03-31T10:53:45","Levi Baruch",NA
+"0956797616651973","Open_Materials_and_Data_for/Materials/Study_3_Materials/Study 3_Survey.docx","supplemental","ex3",NA,"2026-03-31T10:53:54","Levi Baruch",NA

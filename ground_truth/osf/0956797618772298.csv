@@ -1,0 +1,7 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
+"0956797618772298","raw_data_Stroopxlsx/raw data Stroop_Exeriment 3 raw.csv","data","ex3","combined","tabular","2026-04-07T16:28:21","Levi Baruch"
+"0956797618772298","raw_data_Stroopxlsx/raw data Stroop_Experiment 1 summary.csv","data","ex1","combined","tabular","2026-04-07T16:28:35","Levi Baruch"
+"0956797618772298","raw_data_Stroopxlsx/raw data Stroop_Experiment 1.csv","data","ex1","combined","tabular","2026-04-07T16:28:35","Levi Baruch"
+"0956797618772298","raw_data_Stroopxlsx/raw data Stroop_Experiment 2 summary.csv","data","ex2","combined","tabular","2026-04-07T16:28:35","Levi Baruch"
+"0956797618772298","raw_data_Stroopxlsx/raw data Stroop_Experiment 2.csv","data","ex2","combined","tabular","2026-04-07T16:28:36","Levi Baruch"
+"0956797618772298","raw_data_Stroopxlsx/raw data Stroop_results.csv","data","shared","combined","tabular","2026-04-07T16:28:39","Levi Baruch"

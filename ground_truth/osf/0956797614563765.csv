@@ -1,0 +1,5 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
+"0956797614563765","Data_files_for_Social_Structure/all.data.11.20.2014.csv","data","shared","combined","tabular","2026-04-07T14:13:50","Levi Baruch"
+"0956797614563765","Data_files_for_Social_Structure/legend for data Grossmann and Varnum, 2014_Sheet1.csv","codebook","shared",NA,NA,"2026-04-07T14:13:52","Levi Baruch"
+"0956797614563765","qt6kp/R-codeSPSS-Syntax_for_Social_Structure_Infectious/GrossmannVarnum.archives.R","code","shared",NA,NA,"2026-04-07T14:13:55","Levi Baruch"
+"0956797614563765","qt6kp/R-codeSPSS-Syntax_for_Social_Structure_Infectious/multiple regression syntax.txt.txt","code","shared",NA,NA,"2026-04-07T14:13:56","Levi Baruch"

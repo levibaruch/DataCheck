@@ -1,0 +1,5 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
+"0956797619837981","Timing_of_size-weight_illusion/data_experiment1'.txt","data","ex1","combined","tabular","2026-04-08T13:51:20","Levi Baruch"
+"0956797619837981","Timing_of_size-weight_illusion/data_experiment2.tsv","data","ex2","combined","tabular","2026-04-08T13:51:21","Levi Baruch"
+"0956797619837981","Timing_of_size-weight_illusion/data_experiment3.tsv","data","ex3","combined","tabular","2026-04-08T13:51:22","Levi Baruch"
+"0956797619837981","Timing_of_size-weight_illusion/Size-Weight_Timing-PSY2019.pdf","supplemental","shared",NA,NA,"2026-04-08T13:51:30","Levi Baruch"

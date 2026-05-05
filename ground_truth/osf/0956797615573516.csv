@@ -1,0 +1,6 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
+"0956797615573516","evikb/Materials/study 1.pdf","supplemental","ex1",NA,NA,"2026-04-07T14:28:44","Levi Baruch"
+"0956797615573516","evikb/Materials/study 2.pdf","supplemental","ex2",NA,NA,"2026-04-07T14:28:45","Levi Baruch"
+"0956797615573516","evikb/Materials/study 3.pdf","supplemental","ex3",NA,NA,"2026-04-07T14:28:45","Levi Baruch"
+"0956797615573516","study_1xlsx/study 1_data.csv","data","ex1","combined","tabular","2026-04-07T14:28:54","Levi Baruch"
+"0956797615573516","study_1xlsx/study 1_key.csv","codebook","ex1",NA,NA,"2026-04-07T14:28:55","Levi Baruch"

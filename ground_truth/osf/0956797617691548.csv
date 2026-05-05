@@ -1,0 +1,5 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
+"0956797617691548","Yupno_Ordered_Line/full card sets.pdf","supplemental","shared",NA,NA,"2026-04-02T18:36:25","Levi Baruch"
+"0956797617691548","Yupno_Ordered_Line/READ ME.docx","readme","shared",NA,NA,"2026-04-02T18:36:27","Levi Baruch"
+"0956797617691548","Yupno_Ordered_Line/visual guide to card sets and lists.pdf","supplemental","shared",NA,NA,"2026-04-02T18:36:29","Levi Baruch"
+"0956797617691548","Yupno_Ordered_Line/YupnoOrderedLine-allStudies-OSF.csv","data","shared","combined","tabular","2026-04-02T18:36:33","Levi Baruch"

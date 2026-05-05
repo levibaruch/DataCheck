@@ -1,0 +1,4 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
+"0956797615604625","Barker_amp_Munakata_2015_Psych/BarkerMunakata2015PS_Codebook_Sheet1.csv","codebook","shared",NA,NA,"2026-04-08T10:52:36","Levi Baruch"
+"0956797615604625","Barker_amp_Munakata_2015_Psych/BarkerMunakata2015PS_LongFormData.csv","data","shared","combined","tabular","2026-04-08T10:52:37","Levi Baruch"
+"0956797615604625","Barker_amp_Munakata_2015_Psych/Scripts and Procedure.docx","supplemental","shared",NA,NA,"2026-04-08T10:52:38","Levi Baruch"

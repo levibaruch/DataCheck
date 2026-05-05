@@ -1,7 +1,7 @@
 # Find CSV files classified as 'codebook' or 'readme' across all structure.csv outputs.
-# Run from data_check/ root: Rscript find_csv_codebooks.R
+# Run from  root: Rscript find_csv_codebooks.R
 
-OUTPUT_DIR <- "./data_check/outputs"
+OUTPUT_DIR <- "./outputs"
 
 structure_files <- list.files(OUTPUT_DIR, pattern = "^structure\\.csv$",
                               recursive = TRUE, full.names = TRUE)

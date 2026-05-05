@@ -1,0 +1,6 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
+"0956797617739704","Mindset_and_Academic_Achievement_Meta-analyses/Mindset and Academic Achievement Meta-analyses Open Data_Meta-analysis 1.csv","data","ex1","combined","tabular","2026-04-07T15:37:47","Levi Baruch"
+"0956797617739704","Mindset_and_Academic_Achievement_Meta-analyses/Mindset and Academic Achievement Meta-analyses Open Data_Meta-analysis 2.csv","data","ex2","combined","tabular","2026-04-07T15:37:50","Levi Baruch"
+"0956797617739704","Mindset_and_Academic_Achievement_Meta-analyses/Supplemental_Materials_Updates_and_Additional/Comparison of Dependent Effects Adjustment Methods.docx","output","shared",NA,NA,"2026-04-07T15:38:02","Levi Baruch"
+"0956797617739704","Mindset_and_Academic_Achievement_Meta-analyses/Supplemental_Materials_Updates_and_Additional/Mindset and Academic Achievement Meta-analysis 1 Relevant Study Update_Sheet1.csv","data","shared","combined","tabular","2026-04-07T15:38:22","Levi Baruch"
+"0956797617739704","Mindset_and_Academic_Achievement_Meta-analyses/Supplemental_Materials_Updates_and_Additional/Mindset Metas Supplemental Materials.pdf","supplemental","shared",NA,NA,"2026-04-07T15:38:29","Levi Baruch"

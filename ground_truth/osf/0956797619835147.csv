@@ -1,0 +1,4 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
+"0956797619835147","Having_a_happy_spouse_predicts/cox regression.R","code","shared",NA,NA,"2026-04-07T16:34:06","Levi Baruch"
+"0956797619835147","Having_a_happy_spouse_predicts/data preparation.sps","code","shared",NA,NA,"2026-04-07T16:34:10","Levi Baruch"
+"0956797619835147","Having_a_happy_spouse_predicts/mediation gsem.txt","output","shared",NA,NA,"2026-04-07T16:34:16","Levi Baruch"

@@ -1,0 +1,3 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797615603934","The_kilo-word_ERP_database_lexical/KWORD_ERP_LEXICAL_DECISION_DGMH2015.txt","data","shared","combined","2026-03-31T15:51:39","Levi Baruch","tabular"
+"0956797615603934","The_kilo-word_ERP_database_lexical/KWORD_VARIABLES_DGMH2015.txt","codebook","shared",NA,"2026-03-31T15:51:40","Levi Baruch",NA

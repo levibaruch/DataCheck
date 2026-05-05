@@ -1,0 +1,13 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797614567341","R_Code/(1) - R Code - Figures 1 & 2.R","code","shared",NA,"2026-03-31T15:27:01","Levi Baruch",NA
+"0956797614567341","R_Code/(2) - R Code - Figure 3 - Actual vs Claimed power in replications.R","code","shared",NA,"2026-03-31T15:27:01","Levi Baruch",NA
+"0956797614567341","R_Code/(3) - R Code -  Figure 4 - Effective power for replication with 2.5 sample size.R","code","shared",NA,"2026-03-31T15:27:01","Levi Baruch",NA
+"0956797614567341","R_Code/(4) - R Code - Figure 5 - d33 and confidence intervals as sample size is increased.R","code","shared",NA,"2026-03-31T15:27:02","Levi Baruch",NA
+"0956797614567341","R_Code/(5) - R Code - Figure S1 - Probability that replications is significantly smaller than original study.R","code","shared",NA,"2026-03-31T15:27:02","Levi Baruch",NA
+"0956797614567341","R_Code/Supplement - Small Telescopes  2014 12 16.pdf","supplemental","shared",NA,"2026-03-31T15:28:21","Levi Baruch",NA
+"0956797614567341","R_Code/(6) Table and Figures 1-5 in Small Telescopes -  2014 12 15_Figure 3.csv","output","shared",NA,"2026-03-31T15:28:55","Levi Baruch",NA
+"0956797614567341","R_Code/(6) Table and Figures 1-5 in Small Telescopes -  2014 12 15_Figure 4.csv","data","shared","combined","2026-03-31T15:29:28","Levi Baruch","tabular"
+"0956797614567341","R_Code/(6) Table and Figures 1-5 in Small Telescopes -  2014 12 15_Figure 5.csv","output","shared",NA,"2026-03-31T15:29:31","Levi Baruch",NA
+"0956797614567341","R_Code/(6) Table and Figures 1-5 in Small Telescopes -  2014 12 15_Figures 1&2.csv","output","shared",NA,"2026-03-31T15:29:45","Levi Baruch",NA
+"0956797614567341","R_Code/(6) Table and Figures 1-5 in Small Telescopes -  2014 12 15_Suppl 2.Weather in Champagin 81.csv","output","shared",NA,"2026-03-31T15:30:05","Levi Baruch",NA
+"0956797614567341","R_Code/(6) Table and Figures 1-5 in Small Telescopes -  2014 12 15_Table 1.csv","output","shared",NA,"2026-03-31T15:30:10","Levi Baruch",NA

@@ -1,0 +1,4 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
+"0956797617753393","Misleading_Health_Consumers_Through_Violations/diabetes_myths_250_public.csv","data","shared","combined","tabular","2026-04-08T13:38:36","Levi Baruch"
+"0956797617753393","Misleading_Health_Consumers_Through_Violations/Interventions.docx","supplemental","shared",NA,NA,"2026-04-08T13:39:41","Levi Baruch"
+"0956797617753393","Misleading_Health_Consumers_Through_Violations/myths_report_public.Rmd","code","shared",NA,NA,"2026-04-08T13:39:42","Levi Baruch"

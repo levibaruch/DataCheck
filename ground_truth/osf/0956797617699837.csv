@@ -1,0 +1,8 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
+"0956797617699837","Inhibition_of_lateral_prefrontal_cortex/Materials/exampleEmotionalStimuli/03F_FE_O_cropped.bmp","asset","shared",NA,NA,"2026-04-02T17:01:03","Levi Baruch"
+"0956797617699837","Inhibition_of_lateral_prefrontal_cortex/Materials/exampleEmotionalStimuli/03F_HA_O_cropped.bmp","asset","shared",NA,NA,"2026-04-02T17:01:03","Levi Baruch"
+"0956797617699837","Inhibition_of_lateral_prefrontal_cortex/Materials/README.pdf","readme","shared",NA,NA,"2026-04-02T17:01:05","Levi Baruch"
+"0956797617699837","Inhibition_of_lateral_prefrontal_cortex/Materials/scripts/affColor.py","software","shared",NA,NA,"2026-04-02T17:01:15","Levi Baruch"
+"0956797617699837","Inhibition_of_lateral_prefrontal_cortex/Materials/scripts/generateAffColorTrialList.py","software","shared",NA,NA,"2026-04-02T17:01:17","Levi Baruch"
+"0956797617699837","Inhibition_of_lateral_prefrontal_cortex/Materials/scripts/importTrials.py","software","shared",NA,NA,"2026-04-02T17:01:18","Levi Baruch"
+"0956797617699837","Inhibition_of_lateral_prefrontal_cortex/Materials/scripts/loadFiles.py","software","shared",NA,NA,"2026-04-02T17:01:20","Levi Baruch"

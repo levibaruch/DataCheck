@@ -1,0 +1,7 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
+"0956797621997350","Sex_drugs_and_genes_Illuminating/BG2019_data_phenotypic_analyses_OSF.sav","data","shared","combined","tabular","2026-04-02T16:50:43","Levi Baruch"
+"0956797621997350","Sex_drugs_and_genes_Illuminating/Comparing effect sizes across studies R.R","code","shared",NA,NA,"2026-04-02T16:50:51","Levi Baruch"
+"0956797621997350","Sex_drugs_and_genes_Illuminating/Datafile_sex_drugs_twins_plus_sibs_age.dat","data","shared","combined","tabular","2026-04-02T16:51:10","Levi Baruch"
+"0956797621997350","Sex_drugs_and_genes_Illuminating/Instruments_EnglishAndFinnish_OSF.docx","supplemental","shared",NA,NA,"2026-04-02T16:51:11","Levi Baruch"
+"0956797621997350","Sex_drugs_and_genes_Illuminating/Script Saturated cross-twin cross trait Openmx siblings_v2.FINAL_OSF.R","code","shared",NA,NA,"2026-04-02T16:51:15","Levi Baruch"
+"0956797621997350","Sex_drugs_and_genes_Illuminating/Script Trivariate non-sex specific plus siblings_age.FINAL_OSF.R","code","shared",NA,NA,"2026-04-02T16:51:16","Levi Baruch"

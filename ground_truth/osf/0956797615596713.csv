@@ -1,0 +1,6 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
+"0956797615596713","Income_Inequality_Explains_Why_Economic/Data/Oishi & Kesebir - Data for Figure 4.sav","output","shared",NA,NA,"2026-04-09T09:56:09","Levi Baruch"
+"0956797615596713","Income_Inequality_Explains_Why_Economic/Data/Oishi & Kesebir - Study 1 - Level 1 data.sav","data","ex1","combined","tabular","2026-04-09T09:56:15","Levi Baruch"
+"0956797615596713","Income_Inequality_Explains_Why_Economic/Data/Oishi & Kesebir - Study 1 - Level 2 data.sav","data","ex1","combined","tabular","2026-04-09T09:56:17","Levi Baruch"
+"0956797615596713","Income_Inequality_Explains_Why_Economic/Data/Oishi & Kesebir - Study 2 (Latinobarometer) - Level 1 data.sav","data","ex2","combined","tabular","2026-04-09T09:56:19","Levi Baruch"
+"0956797615596713","Income_Inequality_Explains_Why_Economic/Data/Oishi & Kesebir - Study 2 (Latinobarometer) - Level 2 data.sav","data","ex2","combined","tabular","2026-04-09T09:56:20","Levi Baruch"

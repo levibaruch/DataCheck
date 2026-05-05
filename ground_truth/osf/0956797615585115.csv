@@ -1,0 +1,6 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
+"0956797615585115","Non-naive_participants_can_reduce_effect/Method/NN Wave 2.pdf","supplemental","shared",NA,NA,"2026-04-08T10:51:39","Levi Baruch"
+"0956797615585115","Non-naive_participants_can_reduce_effect/01_Data/Wave1and2merged with CASENUM WorkerID removed LONG_CAT.sav","data","shared","combined","tabular","2026-04-08T10:52:27","Levi Baruch"
+"0956797615585115","Non-naive_participants_can_reduce_effect/01_Data/Wave1and2merged with CASENUM WorkerID removed LONG_CONT_ANCHOR.sav","data","shared","combined","tabular","2026-04-08T10:52:28","Levi Baruch"
+"0956797615585115","Non-naive_participants_can_reduce_effect/01_Data/Wave1and2merged with CASENUM WorkerID removed LONG_CONT.sav","data","shared","combined","tabular","2026-04-08T10:52:28","Levi Baruch"
+"0956797615585115","Non-naive_participants_can_reduce_effect/01_Data/Wave1and2merged with CASENUM WorkerID removed.sav","data","shared","combined","tabular","2026-04-08T10:52:28","Levi Baruch"

@@ -1,0 +1,5 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797614567511","Inequality_and_Status_Seeking_Searching/Regression_residuals_for_input_into/open_access_residuals_Sheet1.csv","output","shared",NA,"2026-03-31T10:18:03","Levi Baruch",NA
+"0956797614567511","Inequality_and_Status_Seeking_Searching/Search_term_ratings/RatingData_Sheet1.csv","data","shared","combined","2026-03-31T10:18:10","Levi Baruch","tabular"
+"0956797614567511","Inequality_and_Status_Seeking_Searching/US_Census_data_used_in/Inequality_Control_Data_Inequality_Control_Data.csv","data","shared","combined","2026-03-31T10:18:12","Levi Baruch","tabular"
+"0956797614567511","Inequality_and_Status_Seeking_Searching/Methods/LW&GDAB_Methods.pdf","supplemental","shared",NA,"2026-03-31T10:18:23","Levi Baruch",NA

@@ -1,6 +1,6 @@
 # run_validation_gui.R
 # Launch the validation GUI for ground-truth labelling.
-# Run from data_check/:  Rscript runners/run_validation_gui.R
+# Run from :  Rscript runners/run_validation_gui.R
 #                        — or —
 #                        source("runners/run_validation_gui.R")
 

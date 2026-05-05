@@ -1,0 +1,5 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797616669086","Haines_et_al_2016_Data/HainesEtAl_data.csv","data","shared","combined","2026-03-31T16:05:33","Levi Baruch","tabular"
+"0956797616669086","Haines_et_al_2016_Data/HainesEtAl_data.sav","data","shared","combined","2026-03-31T16:05:36","Levi Baruch","tabular"
+"0956797616669086","Haines_et_al_2016_Data/HainesEtAl_Variable_Codebook.csv","codebook","shared",NA,"2026-03-31T16:05:40","Levi Baruch",NA
+"0956797616669086","Haines_et_al_2016_Data/readme.txt","readme","shared",NA,"2026-03-31T16:05:43","Levi Baruch",NA

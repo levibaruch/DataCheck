@@ -1,0 +1,8 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
+"0956797621991137","How_do_voices_become_familiar/Codebook.txt","codebook","shared",NA,NA,"2026-04-02T16:49:54","Levi Baruch"
+"0956797621991137","How_do_voices_become_familiar/ExplicitRecognition_dPrime_(n=50)_Sheet1.csv","data","shared","combined","tabular","2026-04-02T16:50:11","Levi Baruch"
+"0956797621991137","How_do_voices_become_familiar/ExplicitRecognition_PercentCorrect_(n=50)_Sheet1.csv","data","shared","combined","tabular","2026-04-02T16:50:11","Levi Baruch"
+"0956797621991137","How_do_voices_become_familiar/SpeechIntelligibility_FirstLast20_(n=50)_Sheet1.csv","data","shared","combined","tabular","2026-04-02T16:50:11","Levi Baruch"
+"0956797621991137","How_do_voices_become_familiar/SpeechIntelligibility_PercentCorrect_(n=50)_Sheet1.csv","data","shared","combined","tabular","2026-04-02T16:50:12","Levi Baruch"
+"0956797621991137","How_do_voices_become_familiar/Training_PercentCorrect_(n=50)_Sheet1.csv","data","shared","combined","tabular","2026-04-02T16:50:12","Levi Baruch"
+"0956797621991137","How_do_voices_become_familiar/z-scores_(n=50)_Sheet1.csv","data","shared","combined","tabular","2026-04-02T16:50:39","Levi Baruch"

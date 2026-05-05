@@ -1,0 +1,6 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797618772822","The_Napoleon_Complex_-_Knapen/Combined Dataset Study 1 and 2 - Knapen, Blaker, & Van Vugt 2018 - Napoleon Complex.sav","data","shared","combined","2026-03-30T14:49:50","Levi Baruch","tabular"
+"0956797618772822","The_Napoleon_Complex_-_Knapen/Pilot Study - Knapen, Blaker, & Van Vugt 2018 - Napoleon Complex.sav","data","pilot1","combined","2026-03-30T14:49:54","Levi Baruch","tabular"
+"0956797618772822","The_Napoleon_Complex_-_Knapen/Study 1 - Knapen, Blaker, Van Vugt 2018 - Napoleon Complex.sav","data","ex1","combined","2026-03-30T14:49:55","Levi Baruch","tabular"
+"0956797618772822","The_Napoleon_Complex_-_Knapen/Study 2 - Knapen, Blaker, Van Vugt 2018 - Napoleon Complex.sav","data","ex2","combined","2026-03-30T14:49:57","Levi Baruch","tabular"
+"0956797618772822","The_Napoleon_Complex_-_Knapen/Syntax all studies - Knapen, Blaker, & Van Vugt 2018 - Napoleon Complex.sps","code","shared",NA,"2026-03-30T14:49:59","Levi Baruch",NA

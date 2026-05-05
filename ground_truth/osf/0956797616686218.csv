@@ -1,0 +1,22 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797616686218","Study_5_Pre-Registration_and_All/MaterialsOSF.pdf","supplemental","shared",NA,"2026-03-31T19:12:00","Levi Baruch",NA
+"0956797616686218","Study_5_Pre-Registration_and_All/Study_1/Study1_Codebook _Sheet1.csv","codebook","ex1",NA,"2026-03-31T19:12:11","Levi Baruch",NA
+"0956797616686218","Study_5_Pre-Registration_and_All/Study_1/Study1_PsychScienceDataExcel.csv","data","ex1","combined","2026-03-31T19:12:12","Levi Baruch","tabular"
+"0956797616686218","Study_5_Pre-Registration_and_All/Study_1/Study1_PsychSciencefSPSSfile.sav","data","ex1","combined","2026-03-31T19:12:13","Levi Baruch","tabular"
+"0956797616686218","Study_5_Pre-Registration_and_All/Study_1/SyntaxStudy1forSPSSwithmediation.sps","code","ex1",NA,"2026-03-31T19:12:15","Levi Baruch",NA
+"0956797616686218","Study_5_Pre-Registration_and_All/Study_2/Study2_Codebook_Sheet1.csv","codebook","ex2",NA,"2026-03-31T19:12:19","Levi Baruch",NA
+"0956797616686218","Study_5_Pre-Registration_and_All/Study_2/Study2_PsychScienceDataExcel.csv","data","ex2","combined","2026-03-31T19:12:21","Levi Baruch","tabular"
+"0956797616686218","Study_5_Pre-Registration_and_All/Study_2/Study2_PsychSciencefSPSSfile.sav","data","ex2","combined","2026-03-31T19:12:22","Levi Baruch","tabular"
+"0956797616686218","Study_5_Pre-Registration_and_All/Study_2/SyntaxStudy2forSPSSwithmediation.sps","code","ex2",NA,"2026-03-31T19:12:23","Levi Baruch",NA
+"0956797616686218","Study_5_Pre-Registration_and_All/Study_3/Study3_codebook_Sheet1.csv","codebook","ex3",NA,"2026-03-31T19:12:25","Levi Baruch",NA
+"0956797616686218","Study_5_Pre-Registration_and_All/Study_3/Study3_PsychScienceDataExcel.csv","data","ex3","combined","2026-03-31T19:12:26","Levi Baruch","tabular"
+"0956797616686218","Study_5_Pre-Registration_and_All/Study_3/Study3_PsychScienceDataSPSS.sav","data","ex3","combined","2026-03-31T19:12:26","Levi Baruch","tabular"
+"0956797616686218","Study_5_Pre-Registration_and_All/Study_3/SyntaxStudy3forSPSSwithmediation.sps","code","ex3",NA,"2026-03-31T19:12:29","Levi Baruch",NA
+"0956797616686218","Study_5_Pre-Registration_and_All/Study_4/Study4_codebook_Sheet1.csv","codebook","ex4",NA,"2026-03-31T19:12:30","Levi Baruch",NA
+"0956797616686218","Study_5_Pre-Registration_and_All/Study_4/Study4_PsychScienceDataExcel.csv","data","ex4","combined","2026-03-31T19:12:32","Levi Baruch","tabular"
+"0956797616686218","Study_5_Pre-Registration_and_All/Study_4/Study4_PsychScienceDataSPSS.sav","data","ex4","combined","2026-03-31T19:12:32","Levi Baruch","tabular"
+"0956797616686218","Study_5_Pre-Registration_and_All/Study_4/SyntaxStudy4forSPSSwithmediation.sps","code","ex4",NA,"2026-03-31T19:12:34","Levi Baruch",NA
+"0956797616686218","Study_5_Pre-Registration_and_All/Study_5/Study5_Codebook_Sheet1.csv","codebook","ex5",NA,"2026-03-31T19:12:35","Levi Baruch",NA
+"0956797616686218","Study_5_Pre-Registration_and_All/Study_5/Study5_PsychScienceDataExcel.csv","data","ex5","combined","2026-03-31T19:12:35","Levi Baruch","tabular"
+"0956797616686218","Study_5_Pre-Registration_and_All/Study_5/Study5_PsychScienceDataSPSS.sav","data","ex5","combined","2026-03-31T19:12:36","Levi Baruch","tabular"
+"0956797616686218","Study_5_Pre-Registration_and_All/Study_5/SyntaxStudy5forSPSSwithmediation.sps","code","ex5",NA,"2026-03-31T19:12:37","Levi Baruch",NA

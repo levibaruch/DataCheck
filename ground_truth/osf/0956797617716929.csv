@@ -1,0 +1,7 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797617716929","Facial_Width-to-Height_Ratio_Does_Not/faceplusplus_works_on_Mac/faceplusplus.csv","data","shared","combined","2026-04-01T13:21:31","Levi Baruch","tabular"
+"0956797617716929","Facial_Width-to-Height_Ratio_Does_Not/manual_fwhr/manual_fwhr.csv","data","shared","combined","2026-04-01T13:21:38","Levi Baruch","tabular"
+"0956797617716929","Facial_Width-to-Height_Ratio_Does_Not/traits/traits.csv","data","shared","combined","2026-04-01T13:21:38","Levi Baruch","tabular"
+"0956797617716929","Facial_Width-to-Height_Ratio_Does_Not/codebook/faceplusplus_codebook.csv","codebook","shared",NA,"2026-04-01T13:21:44","Levi Baruch",NA
+"0956797617716929","Facial_Width-to-Height_Ratio_Does_Not/codebook/manual_fwhr_codebook.csv","codebook","shared",NA,"2026-04-01T13:21:45","Levi Baruch",NA
+"0956797617716929","Facial_Width-to-Height_Ratio_Does_Not/codebook/traits_codebook.csv","codebook","shared",NA,"2026-04-01T13:21:46","Levi Baruch",NA

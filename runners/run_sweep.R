@@ -234,9 +234,9 @@ main <- function() {
   cat("   repeats     :", args$repeats, "\n")
   cat("   sweep_dir   :", args$sweep_dir, "\n\n")
 
-  source("data_check/pipeline/helper.R")
-  source("data_check/pipeline/0_index.R")
-  source("data_check/pipeline/2_codebook_label.R")
+  source("pipeline/helper.R")
+  source("pipeline/0_index.R")
+  source("pipeline/2_codebook_label.R")
 
   CAPTURE_THINKING <- TRUE         # TRUE = write one row per LLM call to thinking_traces.csv
 

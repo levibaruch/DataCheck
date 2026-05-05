@@ -1,0 +1,18 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797616661199","Datasets_for_Instantaneous_Conventions_Misyak/Codebook_trial-types.csv","codebook","shared",NA,"2026-03-31T10:55:06","Levi Baruch",NA
+"0956797616661199","Datasets_for_Instantaneous_Conventions_Misyak/Codebook_variables.csv","codebook","shared",NA,"2026-03-31T10:55:11","Levi Baruch",NA
+"0956797616661199","Datasets_for_Instantaneous_Conventions_Misyak/Experiment_1/Misyak_Noguchi_Chater_processed_data_expt1_indiv receivers proportion.csv","data","ex1","combined","2026-03-31T10:55:14","Levi Baruch","tabular"
+"0956797616661199","Datasets_for_Instantaneous_Conventions_Misyak/Experiment_1/Misyak_Noguchi_Chater_processed_data_expt1_indiv senders proportion.csv","data","ex1","combined","2026-03-31T10:55:18","Levi Baruch","tabular"
+"0956797616661199","Datasets_for_Instantaneous_Conventions_Misyak/Experiment_1/Misyak_Noguchi_Chater_processed_data_expt1_individual receivers data.csv","data","ex1","combined","2026-03-31T10:55:41","Levi Baruch","tabular"
+"0956797616661199","Datasets_for_Instantaneous_Conventions_Misyak/Experiment_1/Misyak_Noguchi_Chater_processed_data_expt1_individual senders data.csv","data","ex1","combined","2026-03-31T10:55:43","Levi Baruch","tabular"
+"0956797616661199","Datasets_for_Instantaneous_Conventions_Misyak/Experiment_1/Misyak_Noguchi_Chater_processed_data_expt1_processed data.csv","data","ex1","combined","2026-03-31T10:55:44","Levi Baruch","tabular"
+"0956797616661199","Datasets_for_Instantaneous_Conventions_Misyak/Experiment_1/Misyak_Noguchi_Chater_raw_data_expt1.csv","data","ex1","combined","2026-03-31T10:55:46","Levi Baruch","tabular"
+"0956797616661199","Datasets_for_Instantaneous_Conventions_Misyak/Experiment_2/Misyak_Noguchi_Chater_processed_data_expt2_indiv receivers proportion.csv","data","ex2","combined","2026-03-31T10:55:47","Levi Baruch","tabular"
+"0956797616661199","Datasets_for_Instantaneous_Conventions_Misyak/Experiment_2/Misyak_Noguchi_Chater_processed_data_expt2_indiv senders proportion.csv","data","ex2","combined","2026-03-31T10:55:48","Levi Baruch","tabular"
+"0956797616661199","Datasets_for_Instantaneous_Conventions_Misyak/Experiment_2/Misyak_Noguchi_Chater_processed_data_expt2_individual receivers data.csv","data","ex2","combined","2026-03-31T10:55:48","Levi Baruch","tabular"
+"0956797616661199","Datasets_for_Instantaneous_Conventions_Misyak/Experiment_2/Misyak_Noguchi_Chater_processed_data_expt2_individual senders data.csv","data","ex2","combined","2026-03-31T10:55:48","Levi Baruch","tabular"
+"0956797616661199","Datasets_for_Instantaneous_Conventions_Misyak/Experiment_2/Misyak_Noguchi_Chater_processed_data_expt2_processed data.csv","data","ex2","combined","2026-03-31T10:55:49","Levi Baruch","tabular"
+"0956797616661199","Datasets_for_Instantaneous_Conventions_Misyak/Experiment_2/Misyak_Noguchi_Chater_raw_data_expt2/MNC_raw_expt2_Receivers_practice_trials.csv","data","ex2","combined","2026-03-31T10:55:50","Levi Baruch","tabular"
+"0956797616661199","Datasets_for_Instantaneous_Conventions_Misyak/Experiment_2/Misyak_Noguchi_Chater_raw_data_expt2/MNC_raw_expt2_Receivers.csv","data","ex2","combined","2026-03-31T10:55:50","Levi Baruch","tabular"
+"0956797616661199","Datasets_for_Instantaneous_Conventions_Misyak/Experiment_2/Misyak_Noguchi_Chater_raw_data_expt2/MNC_raw_expt2_Senders_practice_trials.csv","data","ex2","combined","2026-03-31T10:55:51","Levi Baruch","tabular"
+"0956797616661199","Datasets_for_Instantaneous_Conventions_Misyak/Experiment_2/Misyak_Noguchi_Chater_raw_data_expt2/MNC_raw_expt2_Senders.csv","data","ex2","combined","2026-03-31T10:55:52","Levi Baruch","tabular"

@@ -1,0 +1,7 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797616658450","Data_and_methods/Study_1_data_and_methods/Study 1 open methods.R","code","ex1",NA,"2026-03-31T15:56:54","Levi Baruch",NA
+"0956797616658450","Data_and_methods/Study_1_data_and_methods/Study1dat codebook_Sheet1.csv","codebook","ex1",NA,"2026-03-31T15:56:56","Levi Baruch",NA
+"0956797616658450","Data_and_methods/Study_1_data_and_methods/Study1dat.csv","data","ex1","combined","2026-03-31T15:56:57","Levi Baruch","tabular"
+"0956797616658450","Data_and_methods/Study_2_data_and_methods/Study 2 open methods.R","code","ex2",NA,"2026-03-31T15:56:58","Levi Baruch",NA
+"0956797616658450","Data_and_methods/Study_2_data_and_methods/Study2dat codebook_Sheet1.csv","codebook","ex2",NA,"2026-03-31T15:57:00","Levi Baruch",NA
+"0956797616658450","Data_and_methods/Study_2_data_and_methods/Study2dat.csv","data","ex2","combined","2026-03-31T15:57:01","Levi Baruch","tabular"

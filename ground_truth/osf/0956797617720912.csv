@@ -1,0 +1,33 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797617720912","9ny42/Study_11_Materials/Study 11 Materials_2.28.17.docx","supplemental","ex11",NA,"2026-03-30T14:42:13","Levi Baruch",NA
+"0956797617720912","jrmk4/Studies_1-10_Data_and_Codebooks/Study 1 codebook_2.28.17.docx","codebook","ex1",NA,"2026-03-30T14:42:16","Levi Baruch",NA
+"0956797617720912","jrmk4/Studies_1-10_Data_and_Codebooks/Study 1_22817.csv","data","ex1","combined","2026-03-30T14:42:18","Levi Baruch","tabular"
+"0956797617720912","jrmk4/Studies_1-10_Data_and_Codebooks/Study 10 codebook_2.28.17.docx","codebook","ex10",NA,"2026-03-30T14:42:30","Levi Baruch",NA
+"0956797617720912","jrmk4/Studies_1-10_Data_and_Codebooks/Study 10_22817.csv","data","ex10","combined","2026-03-30T14:42:32","Levi Baruch","tabular"
+"0956797617720912","jrmk4/Studies_1-10_Data_and_Codebooks/Study 2 codebook_2.28.17.docx","codebook","ex2",NA,"2026-03-30T14:42:34","Levi Baruch",NA
+"0956797617720912","jrmk4/Studies_1-10_Data_and_Codebooks/Study 2_22817.csv","data","ex2","combined","2026-03-30T14:42:35","Levi Baruch","tabular"
+"0956797617720912","jrmk4/Studies_1-10_Data_and_Codebooks/Study 3 codebook_2.28.17.docx","codebook","ex3",NA,"2026-03-30T14:42:35","Levi Baruch",NA
+"0956797617720912","jrmk4/Studies_1-10_Data_and_Codebooks/Study 3_22817.csv","data","ex3","combined","2026-03-30T14:42:36","Levi Baruch","tabular"
+"0956797617720912","jrmk4/Studies_1-10_Data_and_Codebooks/Study 4 codebook_2.28.17.docx","codebook","ex4",NA,"2026-03-30T14:42:36","Levi Baruch",NA
+"0956797617720912","jrmk4/Studies_1-10_Data_and_Codebooks/Study 4_22817.csv","data","ex4","combined","2026-03-30T14:42:37","Levi Baruch","tabular"
+"0956797617720912","jrmk4/Studies_1-10_Data_and_Codebooks/Study 5 codebook_2.28.17.docx","codebook","ex5",NA,"2026-03-30T14:42:38","Levi Baruch",NA
+"0956797617720912","jrmk4/Studies_1-10_Data_and_Codebooks/Study 5_22817.csv","data","ex5","combined","2026-03-30T14:42:38","Levi Baruch","tabular"
+"0956797617720912","jrmk4/Studies_1-10_Data_and_Codebooks/Study 6 codebook_2.28.17.docx","codebook","ex6",NA,"2026-03-30T14:42:40","Levi Baruch",NA
+"0956797617720912","jrmk4/Studies_1-10_Data_and_Codebooks/Study 6_22817.csv","data","ex6","combined","2026-03-30T14:42:52","Levi Baruch","tabular"
+"0956797617720912","jrmk4/Studies_1-10_Data_and_Codebooks/Study 7 codebook_2.28.17.docx","codebook","ex7",NA,"2026-03-30T14:42:53","Levi Baruch",NA
+"0956797617720912","jrmk4/Studies_1-10_Data_and_Codebooks/Study 7_22817.csv","data","ex7","combined","2026-03-30T14:42:55","Levi Baruch","tabular"
+"0956797617720912","jrmk4/Studies_1-10_Data_and_Codebooks/Study 8 codebook_2.28.17.docx","codebook","ex8",NA,"2026-03-30T14:42:56","Levi Baruch",NA
+"0956797617720912","jrmk4/Studies_1-10_Data_and_Codebooks/Study 8_22817.csv","data","ex8","combined","2026-03-30T14:42:57","Levi Baruch","tabular"
+"0956797617720912","jrmk4/Studies_1-10_Data_and_Codebooks/Study 9 codebook_2.28.17.docx","codebook","ex9",NA,"2026-03-30T14:42:57","Levi Baruch",NA
+"0956797617720912","jrmk4/Studies_1-10_Data_and_Codebooks/Study 9_22817.csv","data","ex9","combined","2026-03-30T14:42:59","Levi Baruch","tabular"
+"0956797617720912","rjrke/Studies_1-10_Materials/Study 1 Materials_2.28.17.docx","supplemental","ex1",NA,"2026-03-30T14:43:00","Levi Baruch",NA
+"0956797617720912","rjrke/Studies_1-10_Materials/Study 10 Materials_2.28.17.docx","supplemental","ex10",NA,"2026-03-30T14:43:01","Levi Baruch",NA
+"0956797617720912","rjrke/Studies_1-10_Materials/Study 2 Materials_2.28.17.docx","supplemental","ex2",NA,"2026-03-30T14:43:02","Levi Baruch",NA
+"0956797617720912","rjrke/Studies_1-10_Materials/Study 3 Materials_2.28.17.docx","supplemental","ex3",NA,"2026-03-30T14:43:02","Levi Baruch",NA
+"0956797617720912","rjrke/Studies_1-10_Materials/Study 4 Materials_2.28.17.docx","supplemental","ex4",NA,"2026-03-30T14:43:03","Levi Baruch",NA
+"0956797617720912","rjrke/Studies_1-10_Materials/Study 6 Materials_2.28.17.docx","supplemental","ex6",NA,"2026-03-30T14:43:03","Levi Baruch",NA
+"0956797617720912","rjrke/Studies_1-10_Materials/Study 7 Materials_2.28.17.docx","supplemental","ex7",NA,"2026-03-30T14:43:09","Levi Baruch",NA
+"0956797617720912","rjrke/Studies_1-10_Materials/Study 8 Materials_2.28.17.docx","supplemental","ex8",NA,"2026-03-30T14:43:10","Levi Baruch",NA
+"0956797617720912","rjrke/Studies_1-10_Materials/Study 9 Materials_2.28.17.docx","supplemental","ex9",NA,"2026-03-30T14:43:10","Levi Baruch",NA
+"0956797617720912","Study_11_Data_and_Codebook/Study 11 codebook _2.28.17.docx","codebook","ex11",NA,"2026-03-30T14:43:13","Levi Baruch",NA
+"0956797617720912","Study_11_Data_and_Codebook/Study 11_22817.csv","data","ex11","combined","2026-03-30T14:43:15","Levi Baruch","tabular"

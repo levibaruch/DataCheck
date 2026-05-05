@@ -1,0 +1,5 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
+"0956797617730595","HELP-SEEKING_DURING_ONLINE_LEARNING/Codebook/Codebook.docx","codebook","shared",NA,NA,"2026-04-07T15:23:50","Levi Baruch"
+"0956797617730595","HELP-SEEKING_DURING_ONLINE_LEARNING/Data/Study_1/Study1_Final.csv","data","ex1","combined","tabular","2026-04-07T15:23:52","Levi Baruch"
+"0956797617730595","HELP-SEEKING_DURING_ONLINE_LEARNING/Data/Study_2/Study2_Final.csv","data","ex2","combined","tabular","2026-04-07T15:23:52","Levi Baruch"
+"0956797617730595","HELP-SEEKING_DURING_ONLINE_LEARNING/Materials/Stimulus materials_Final.pdf","supplemental","shared",NA,NA,"2026-04-07T15:23:54","Levi Baruch"

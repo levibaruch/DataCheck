@@ -1,0 +1,7 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
+"0956797614557697","Action-specific_disruption_of_perceptual_confidence/Analysis_scripts/tms_analysis.R","code","shared",NA,NA,"2026-04-02T15:50:48","Levi Baruch"
+"0956797614557697","Action-specific_disruption_of_perceptual_confidence/Data/allData_contrast_M1.txt","data","ex1","combined","tabular","2026-04-02T15:56:45","Levi Baruch"
+"0956797614557697","Action-specific_disruption_of_perceptual_confidence/Data/allData_contrast_PMC.txt","data","ex1","combined","tabular","2026-04-02T15:56:45","Levi Baruch"
+"0956797614557697","Action-specific_disruption_of_perceptual_confidence/Data/allData_orientation.txt","data","ex2","combined","tabular","2026-04-02T15:57:12","Levi Baruch"
+"0956797614557697","Action-specific_disruption_of_perceptual_confidence/Data/Mratio_all.txt","data","shared","combined","tabular","2026-04-02T15:50:51","Levi Baruch"
+"0956797614557697","Action-specific_disruption_of_perceptual_confidence/Data/Mratio_contrast_M1.txt","data","shared","combined","tabular","2026-04-02T15:50:54","Levi Baruch"

@@ -1,0 +1,5 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797614543022","kj3r7/the_explorative_sampler_model_-/SAS_code_for_model_predictions_for_the_perceived_control_prediction_task.docx","code","shared",NA,"2026-03-30T14:28:01","Levi Baruch",NA
+"0956797614543022","kj3r7/the_explorative_sampler_model_-/SAS_code_for_model_predictions_whole_range_of_reward_frequencies.docx","code","shared",NA,"2026-03-30T14:28:03","Levi Baruch",NA
+"0956797614543022","model_predictions_and_experimental_results/LH_model_predictions_and_experimental_results_ExperimentalResults.csv","data","shared","combined","2026-03-30T14:28:05","Levi Baruch","tabular"
+"0956797614543022","model_predictions_and_experimental_results/LH_model_predictions_and_experimental_results_Model Predictions.csv","output","shared",NA,"2026-03-30T14:28:59","Levi Baruch",NA

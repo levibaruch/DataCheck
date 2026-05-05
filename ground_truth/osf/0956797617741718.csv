@@ -1,0 +1,5 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
+"0956797617741718","Siegel_Wormwood_Barrett_amp_Quigley/Siegel, Wormwood, Quigley, & Barrett 2017 Study 2 Data_CODEBOOK_STUDY2.csv","codebook","ex2",NA,NA,"2026-04-07T15:42:48","Levi Baruch"
+"0956797617741718","Siegel_Wormwood_Barrett_amp_Quigley/Siegel, Wormwood, Quigley, & Barrett 2017 Study 2 Data_DATA.csv","data","ex2","combined","tabular","2026-04-07T15:42:49","Levi Baruch"
+"0956797617741718","Siegel_Wormwood_Barrett_amp_Quigley/Siegel, Wormwood, Quigley, & Barrett, 2017 Study 1 Data_CODEBOOK_STUDY_1.csv","codebook","ex1",NA,NA,"2026-04-07T15:42:50","Levi Baruch"
+"0956797617741718","Siegel_Wormwood_Barrett_amp_Quigley/Siegel, Wormwood, Quigley, & Barrett, 2017 Study 1 Data_DATA.csv","data","ex1","combined","tabular","2026-04-07T15:42:50","Levi Baruch"

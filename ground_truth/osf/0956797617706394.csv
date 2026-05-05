@@ -1,0 +1,7 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797617706394","Associative_learning_of_social_value/Exp1_2_rating_scores.sav","data","ex1","combined","2026-04-01T10:47:31","Levi Baruch","tabular"
+"0956797617706394","Associative_learning_of_social_value/Exp1_Blocking_Memory.sav","data","ex1","combined","2026-04-01T10:47:32","Levi Baruch","tabular"
+"0956797617706394","Associative_learning_of_social_value/Exp2_BrokenBlocking_Memory.sav","data","ex2","combined","2026-04-01T10:47:33","Levi Baruch","tabular"
+"0956797617706394","Associative_learning_of_social_value/Experiment1MoneyTrusted.sav","data","ex1","combined","2026-04-01T10:47:35","Levi Baruch","tabular"
+"0956797617706394","Associative_learning_of_social_value/Experiment2MoneyTrusted.sav","data","ex2","combined","2026-04-01T10:47:36","Levi Baruch","tabular"
+"0956797617706394","Associative_learning_of_social_value/GuideToDataFiles.rtf","supplemental","shared",NA,"2026-04-01T10:47:37","Levi Baruch",NA

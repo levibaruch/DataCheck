@@ -1,0 +1,7 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
+"0956797616644081","Supplementary_Material_for_Bayesian_Evidence/Online Supplementary Material.pdf","supplemental","shared",NA,NA,"2026-04-07T14:56:11","Levi Baruch"
+"0956797616644081","Supplementary_Material_for_Bayesian_Evidence/readme.txt","readme","shared",NA,NA,"2026-04-07T14:56:24","Levi Baruch"
+"0956797616644081","Supplementary_Material_for_Bayesian_Evidence/ScheibehenneJamilWagenmagers.preprint.pdf","supplemental","shared",NA,NA,"2026-04-07T14:56:25","Levi Baruch"
+"0956797616644081","Supplementary_Material_for_Bayesian_Evidence/towelData.csv","data","shared","combined","tabular","2026-04-07T14:56:27","Levi Baruch"
+"0956797616644081","Supplementary_Material_for_Bayesian_Evidence/towelReuse.jasp","output","shared",NA,NA,"2026-04-07T14:56:28","Levi Baruch"
+"0956797616644081","Supplementary_Material_for_Bayesian_Evidence/towelReuseDataAnalysis.r","code","shared",NA,NA,"2026-04-07T14:56:29","Levi Baruch"

@@ -7,23 +7,23 @@
 #
 # Input:  paper_id (character, or NA to pick randomly)
 # Output: list with pipeline results (see return value at bottom of function)
-#         data_check/structure/<paper_id>_structure.csv   (one row per file)
-#         data_check/structure/<paper_id>_columns.csv     (one row per column)
+#         structure/<paper_id>_structure.csv   (one row per file)
+#         structure/<paper_id>_columns.csv     (one row per column)
 # ─────────────────────────────────────────────────────────────────────────────
 
 library(metacheck)
-source("data_check/pipeline/helper.R")
-source("data_check/pipeline/prompts.R")
+source("pipeline/helper.R")
+source("pipeline/prompts.R")
 
 llm_use(TRUE)
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 
 
-if (!exists("DATA_DIR"))         DATA_DIR         <- "./data_check/data"
-if (!exists("OUTPUT_DIR"))       OUTPUT_DIR       <- "./data_check/outputs"
-if (!exists("PSYCHDS_OUT_DIR"))  PSYCHDS_OUT_DIR  <- "./data_check/psychds"
-if (!exists("GROUND_TRUTH_DIR")) GROUND_TRUTH_DIR <- "./data_check/ground_truth"
+if (!exists("DATA_DIR"))         DATA_DIR         <- "./data"
+if (!exists("OUTPUT_DIR"))       OUTPUT_DIR       <- "./outputs"
+if (!exists("PSYCHDS_OUT_DIR"))  PSYCHDS_OUT_DIR  <- "./psychds"
+if (!exists("GROUND_TRUTH_DIR")) GROUND_TRUTH_DIR <- "./ground_truth"
 ARCHIVE_EXTS    <- c("zip", "gz", "tar", "tgz", "bz2", "xz", "rar")
 
 
@@ -36,7 +36,7 @@ if (!exists("LLM_THINK_LEVEL"))   LLM_THINK_LEVEL   <- "low"
 if (!exists("LLM_BATCH_SIZE"))    LLM_BATCH_SIZE    <- 30
 if (!exists("LLM_RETRY_LIMIT"))   LLM_RETRY_LIMIT   <- 4L
 if (!exists("LLM_MODEL"))         LLM_MODEL         <- "ollama/gpt-oss:20b-cloud"
-if (!exists("LLM_ERROR_LOG"))     LLM_ERROR_LOG     <- "./data_check/logs/llm_batch_errors.log"
+if (!exists("LLM_ERROR_LOG"))     LLM_ERROR_LOG     <- "./logs/llm_batch_errors.log"
 if (!exists("LLM_SENTINEL_VAL"))  LLM_SENTINEL_VAL  <- "llm_error"
 if (!exists("CAPTURE_THINKING"))  CAPTURE_THINKING  <- FALSE
 if (!exists("THINKING_LOG_PATH")) THINKING_LOG_PATH <- NULL
@@ -1056,7 +1056,7 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
 
       # Save all detected patterns + LLM classification for validation (false pos/neg detection)
       tryCatch({
-        regex_db_path <- "data_check/docs/detected_granularity_patterns.csv"
+        regex_db_path <- "docs/detected_granularity_patterns.csv"
         dir.create(dirname(regex_db_path), showWarnings = FALSE, recursive = TRUE)
 
         # For each LLM result, find the matching query and save pattern + classification

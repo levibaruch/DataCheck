@@ -1,0 +1,8 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
+"0956797618756862","A_Cognitive-Ecological_Model_of_Intergroup/data/Exp1.dat","data","ex1","combined","tabular","2026-04-07T16:19:09","Levi Baruch"
+"0956797618756862","A_Cognitive-Ecological_Model_of_Intergroup/data/Exp2.dat","data","ex2","combined","tabular","2026-04-07T16:19:10","Levi Baruch"
+"0956797618756862","A_Cognitive-Ecological_Model_of_Intergroup/data/Exp3.dat","data","ex3","combined","tabular","2026-04-07T16:19:11","Levi Baruch"
+"0956797618756862","A_Cognitive-Ecological_Model_of_Intergroup/data/variables.txt","codebook","shared",NA,NA,"2026-04-07T16:19:13","Levi Baruch"
+"0956797618756862","A_Cognitive-Ecological_Model_of_Intergroup/Supplemental Materials.docx","supplemental","shared",NA,NA,"2026-04-07T16:19:18","Levi Baruch"
+"0956797618756862","A_Cognitive-Ecological_Model_of_Intergroup/Supplemental_Materials/alien1.jpg","asset","shared",NA,NA,"2026-04-07T16:19:19","Levi Baruch"
+"0956797618756862","A_Cognitive-Ecological_Model_of_Intergroup/Supplemental_Materials/alien2.jpg","asset","shared",NA,NA,"2026-04-07T16:19:19","Levi Baruch"

@@ -1,0 +1,7 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797615583804","An_Enhanced_Default_Approach_Bias/Harrison_AllRawData.mat","data","shared","combined","2026-03-31T19:00:09","Levi Baruch","raw"
+"0956797615583804","An_Enhanced_Default_Approach_Bias/Task_Instructions_and_Sample_Trials/BlockInstructions_Threat.png","supplemental","shared",NA,"2026-03-31T19:00:10","Levi Baruch",NA
+"0956797615583804","An_Enhanced_Default_Approach_Bias/Task_Instructions_and_Sample_Trials/BlockInstructions_Trust.png","supplemental","shared",NA,"2026-03-31T19:00:10","Levi Baruch",NA
+"0956797615583804","An_Enhanced_Default_Approach_Bias/Task_Instructions_and_Sample_Trials/SampleTrial_Threat_Occluded.png","asset","shared",NA,"2026-03-31T19:00:10","Levi Baruch",NA
+"0956797615583804","An_Enhanced_Default_Approach_Bias/Task_Instructions_and_Sample_Trials/SampleTrial_Trust_Occluded.png","asset","shared",NA,"2026-03-31T19:00:10","Levi Baruch",NA
+"0956797615583804","An_Enhanced_Default_Approach_Bias/Task_Instructions_and_Sample_Trials/TaskIntroduction.png","supplemental","shared",NA,"2026-03-31T19:00:11","Levi Baruch",NA

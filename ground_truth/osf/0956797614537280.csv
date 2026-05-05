@@ -1,0 +1,4 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
+"0956797614537280","Study_1/Study_1a.sav","data","ex1a","combined","tabular","2026-04-02T11:51:56","Levi Baruch"
+"0956797614537280","Study_1/Study_1b.sav","data","ex1b","combined","tabular","2026-04-02T11:52:03","Levi Baruch"
+"0956797614537280","y4c82/Materials/Studies_1a_and_1b_materials.pdf","supplemental","shared",NA,NA,"2026-04-02T11:52:04","Levi Baruch"

@@ -22,16 +22,16 @@
 
 # Set flag so report_sweep.R's !interactive() guard does not trigger main()
 REPORT_SWEEP_SOURCED_AS_LIB <- TRUE
-source("data_check/reports/report_sweep.R")
-source("data_check/pipeline/helper.R")
-source("data_check/pipeline/0_index.R")
+source("reports/report_sweep.R")
+source("pipeline/helper.R")
+source("pipeline/0_index.R")
 
 # ── Argument parsing ──────────────────────────────────────────────────────────
 
 parse_grand_args <- function() {
   args      <- commandArgs(trailingOnly = TRUE)
-  sweep_dir <- "./data_check/sweep_results"
-  out_csv   <- "./data_check/results/sweep_grand_report.csv"
+  sweep_dir <- "./sweep_results"
+  out_csv   <- "./results/sweep_grand_report.csv"
 
   i <- 1L
   while (i <= length(args)) {

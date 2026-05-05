@@ -1,0 +1,23 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797615583038","Effects_of_Violent_Video_Game/Confederate_videos/Female_confederate_video.mov","asset","shared",NA,"2026-03-31T10:25:53","Levi Baruch",NA
+"0956797615583038","Effects_of_Violent_Video_Game/Confederate_videos/Male_confederate_video.mov","asset","shared",NA,"2026-03-31T10:25:58","Levi Baruch",NA
+"0956797615583038","Effects_of_Violent_Video_Game/Data_files/Bayesian_models_data.txt","data","shared","combined","2026-03-31T10:26:05","Levi Baruch","tabular"
+"0956797615583038","Effects_of_Violent_Video_Game/Data_files/CRTT_raw_data.txt","data","shared","combined","2026-03-31T10:26:11","Levi Baruch","tabular"
+"0956797615583038","Effects_of_Violent_Video_Game/Data_files/Data_read_me.pdf","readme","shared",NA,"2026-03-31T10:26:18","Levi Baruch",NA
+"0956797615583038","Effects_of_Violent_Video_Game/Data_files/Dataset_all_raw_data.txt","data","shared","combined","2026-03-31T10:26:21","Levi Baruch","tabular"
+"0956797615583038","Effects_of_Violent_Video_Game/Data_files/Dataset_compiled_variables.txt","data","shared","combined","2026-03-31T10:26:27","Levi Baruch","tabular"
+"0956797615583038","Effects_of_Violent_Video_Game/Data_files/R_Bayesian_model_comparisons_code_OSF.R","code","shared",NA,"2026-03-31T10:26:28","Levi Baruch",NA
+"0956797615583038","Effects_of_Violent_Video_Game/Data_files/SAS_Analysis_code_OSF.sas","code","shared",NA,"2026-03-31T10:26:28","Levi Baruch",NA
+"0956797615583038","Effects_of_Violent_Video_Game/Data_files/Variable_codebook_Sheet1.csv","codebook","shared",NA,"2026-03-31T10:26:30","Levi Baruch",NA
+"0956797615583038","Effects_of_Violent_Video_Game/Experimenter_script/Study_Script.docx","supplemental","shared",NA,"2026-03-31T10:26:32","Levi Baruch",NA
+"0956797615583038","Effects_of_Violent_Video_Game/Informed_consent/Informed_consent_approved_1_22_14.pdf","supplemental","shared",NA,"2026-03-31T10:26:34","Levi Baruch",NA
+"0956797615583038","Effects_of_Violent_Video_Game/Manuscript/Psych_Science_in_press_3_24_15.pdf","supplemental","shared",NA,"2026-03-31T10:26:37","Levi Baruch",NA
+"0956797615583038","Effects_of_Violent_Video_Game/Measures/Aggressive_affect.doc","supplemental","shared",NA,"2026-03-31T10:26:41","Levi Baruch",NA
+"0956797615583038","Effects_of_Violent_Video_Game/Measures/Aggressive_Cognition_baseline_items.doc","supplemental","shared",NA,"2026-03-31T10:26:45","Levi Baruch",NA
+"0956797615583038","Effects_of_Violent_Video_Game/Measures/Aggressive_Cognition_post_game_play.doc","supplemental","shared",NA,"2026-03-31T10:26:48","Levi Baruch",NA
+"0956797615583038","Effects_of_Violent_Video_Game/Measures/Autism_Traits.doc","supplemental","shared",NA,"2026-03-31T10:26:48","Levi Baruch",NA
+"0956797615583038","Effects_of_Violent_Video_Game/Measures/Demographic_information.doc","supplemental","shared",NA,"2026-03-31T10:26:48","Levi Baruch",NA
+"0956797615583038","Effects_of_Violent_Video_Game/Measures/Post_game_survey_questions.docx","supplemental","shared",NA,"2026-03-31T10:26:49","Levi Baruch",NA
+"0956797615583038","Effects_of_Violent_Video_Game/Video_game_files/Nonviolent_Hard.wad","asset","shared",NA,"2026-03-31T10:27:42","Levi Baruch",NA
+"0956797615583038","Effects_of_Violent_Video_Game/Video_game_files/Notes.txt","supplemental","shared",NA,"2026-03-31T10:27:37","Levi Baruch",NA
+"0956797615583038","Effects_of_Violent_Video_Game/Video_game_files/Violent_Hard.wad","asset","shared",NA,"2026-03-31T10:27:43","Levi Baruch",NA

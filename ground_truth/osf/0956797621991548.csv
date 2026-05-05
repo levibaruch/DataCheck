@@ -1,0 +1,4 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
+"0956797621991548","Exploring_the_Facets_of_Emotional/Summary_Encoding.csv","data","shared","combined","tabular","2026-04-02T18:37:23","Levi Baruch"
+"0956797621991548","Exploring_the_Facets_of_Emotional/Summary_README.csv","readme","shared",NA,NA,"2026-04-02T18:37:25","Levi Baruch"
+"0956797621991548","Exploring_the_Facets_of_Emotional/Summary_Retrieval.csv","data","shared","combined","tabular","2026-04-02T18:37:26","Levi Baruch"

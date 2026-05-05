@@ -1,0 +1,16 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797617705399","Black_and_White_Lies_Race/Black & White Lies Codebooks & Data_Study 1a codebook.csv","codebook","ex1a",NA,"2026-04-01T10:43:10","Levi Baruch",NA
+"0956797617705399","Black_and_White_Lies_Race/Black & White Lies Codebooks & Data_Study 1a data for analyses.csv","data","ex1a","combined","2026-04-01T10:43:11","Levi Baruch","tabular"
+"0956797617705399","Black_and_White_Lies_Race/Black & White Lies Codebooks & Data_Study 1b codebook.csv","codebook","ex1b",NA,"2026-04-01T10:43:12","Levi Baruch",NA
+"0956797617705399","Black_and_White_Lies_Race/Black & White Lies Codebooks & Data_Study 1b data for analyses.csv","data","ex1b","combined","2026-04-01T10:43:13","Levi Baruch","tabular"
+"0956797617705399","Black_and_White_Lies_Race/Black & White Lies Codebooks & Data_Study 1c codebook.csv","codebook","ex1c",NA,"2026-04-01T10:43:13","Levi Baruch",NA
+"0956797617705399","Black_and_White_Lies_Race/Black & White Lies Codebooks & Data_Study 1c data for analyses.csv","data","ex1c","combined","2026-04-01T10:43:14","Levi Baruch","tabular"
+"0956797617705399","Black_and_White_Lies_Race/Black & White Lies Codebooks & Data_Study 2 part 1 codebook.csv","codebook","ex2",NA,"2026-04-01T10:43:15","Levi Baruch",NA
+"0956797617705399","Black_and_White_Lies_Race/Black & White Lies Codebooks & Data_Study 2 part 1 data for exclu.csv","data","ex2","combined","2026-04-01T10:43:20","Levi Baruch","tabular"
+"0956797617705399","Black_and_White_Lies_Race/Black & White Lies Codebooks & Data_Study 2 part 2 codebook.csv","codebook","ex2",NA,"2026-04-01T10:43:22","Levi Baruch",NA
+"0956797617705399","Black_and_White_Lies_Race/Black & White Lies Codebooks & Data_Study 2 part2 data for analyses.csv","data","ex2","combined","2026-04-01T10:43:23","Levi Baruch","tabular"
+"0956797617705399","Black_and_White_Lies_Race/Black & White Lies Codebooks & Data_Study 3 codebook.csv","codebook","ex3",NA,"2026-04-01T10:43:24","Levi Baruch",NA
+"0956797617705399","Black_and_White_Lies_Race/Black & White Lies Codebooks & Data_Study 3 data for analyses.csv","data","ex3","combined","2026-04-01T10:43:24","Levi Baruch","tabular"
+"0956797617705399","Black_and_White_Lies_Race/Black & White Lies Codebooks & Data_Study 4 codebook.csv","codebook","ex4",NA,"2026-04-01T10:43:25","Levi Baruch",NA
+"0956797617705399","Black_and_White_Lies_Race/Black & White Lies Codebooks & Data_Study 4 data for analyses.csv","data","ex4","combined","2026-04-01T10:43:25","Levi Baruch","tabular"
+"0956797617705399","Black_and_White_Lies_Race/Black & White Lies Codebooks & Data_ Index.csv","supplemental","shared",NA,"2026-04-01T10:43:29","Levi Baruch",NA

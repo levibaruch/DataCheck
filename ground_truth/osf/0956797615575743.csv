@@ -1,0 +1,8 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797615575743","Its_all_in_the_family/BehavioralData_OSF.csv","data","shared","combined","2026-03-31T15:32:35","Levi Baruch","tabular"
+"0956797615575743","Its_all_in_the_family/N400Data_300600.csv","data","shared","combined","2026-03-31T15:32:36","Levi Baruch","tabular"
+"0956797615575743","Its_all_in_the_family/P600Data_8001400.csv","data","shared","combined","2026-03-31T15:32:36","Levi Baruch","tabular"
+"0956797615575743","Its_all_in_the_family/Stim_OSF_list1.csv","supplemental","shared",NA,"2026-03-31T15:35:46","Levi Baruch",NA
+"0956797615575743","Its_all_in_the_family/Stim_OSF_list2.csv","supplemental","shared",NA,"2026-03-31T15:35:46","Levi Baruch",NA
+"0956797615575743","Its_all_in_the_family/Stim_OSF_list3.csv","supplemental","shared",NA,"2026-03-31T15:35:46","Levi Baruch",NA
+"0956797615575743","Its_all_in_the_family/Stim_OSF_list4.csv","supplemental","shared",NA,"2026-03-31T15:35:46","Levi Baruch",NA

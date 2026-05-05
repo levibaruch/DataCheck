@@ -1,0 +1,18 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797615572906","The_sound_of_intellect_Speech/Analyses/Study 1 (Audio vs. Transcript) Syntax.sps","code","ex1",NA,"2026-03-31T18:52:27","Levi Baruch",NA
+"0956797615572906","The_sound_of_intellect_Speech/Analyses/Study 2 (Audio vs. Writing) Syntax.sps","code","ex2",NA,"2026-03-31T18:52:28","Levi Baruch",NA
+"0956797615572906","The_sound_of_intellect_Speech/Analyses/Study 3A (Giving Voice to Text) Syntax.sps","code","ex3a",NA,"2026-03-31T18:52:29","Levi Baruch",NA
+"0956797615572906","The_sound_of_intellect_Speech/Analyses/Study 3B (Giving Voice to Text) Syntax.sps","code","ex3b",NA,"2026-03-31T18:52:29","Levi Baruch",NA
+"0956797615572906","The_sound_of_intellect_Speech/Analyses/Study 4 (Recruiters) Syntax.sps","code","ex4",NA,"2026-03-31T18:52:31","Levi Baruch",NA
+"0956797615572906","The_sound_of_intellect_Speech/Data/Job candidate predictions_Chicago job candidates (n=40).csv","data","ex1","combined","2026-03-31T18:53:23","Levi Baruch","tabular"
+"0956797615572906","The_sound_of_intellect_Speech/Data/Job candidate predictions_MA Job Candidates (n=16).csv","data","ex1","combined","2026-03-31T18:53:24","Levi Baruch","tabular"
+"0956797615572906","The_sound_of_intellect_Speech/Data/Job candidate predictions_MBA Job Canddiates (n=18).csv","data","ex1","combined","2026-03-31T18:53:27","Levi Baruch","tabular"
+"0956797615572906","The_sound_of_intellect_Speech/Data/Study 2 data.sav","data","ex2","combined","2026-03-31T18:53:28","Levi Baruch","tabular"
+"0956797615572906","The_sound_of_intellect_Speech/Data/Study 3A data.sav","data","ex3a","combined","2026-03-31T18:53:28","Levi Baruch","tabular"
+"0956797615572906","The_sound_of_intellect_Speech/Data/Study 3B data.sav","data","ex3b","combined","2026-03-31T18:53:29","Levi Baruch","tabular"
+"0956797615572906","The_sound_of_intellect_Speech/Data/Study 4 data.sav","data","ex4","combined","2026-03-31T18:53:30","Levi Baruch","tabular"
+"0956797615572906","The_sound_of_intellect_Speech/Data/Study1 data.sav","data","ex1","combined","2026-03-31T18:53:31","Levi Baruch","tabular"
+"0956797615572906","The_sound_of_intellect_Speech/Surveys/Job Candidate Survey.docx","supplemental","ex1",NA,"2026-03-31T18:54:39","Levi Baruch",NA
+"0956797615572906","The_sound_of_intellect_Speech/Surveys/Observer Survey_audio.docx","supplemental","shared",NA,"2026-03-31T18:54:41","Levi Baruch",NA
+"0956797615572906","The_sound_of_intellect_Speech/Text/Schroeder & Epley The Sound of Intellect.docx","supplemental","shared",NA,"2026-03-31T18:54:44","Levi Baruch",NA
+"0956797615572906","The_sound_of_intellect_Speech/Text/SchroederEpleySOM.docx","supplemental","shared",NA,"2026-03-31T18:55:08","Levi Baruch",NA

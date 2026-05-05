@@ -1,0 +1,7 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
+"0956797617724426","Fixed_or_Random_A_Resolution/online_supplementary_material_R_and/analysis.R","code","shared",NA,NA,"2026-04-07T10:05:42","Levi Baruch"
+"0956797617724426","Fixed_or_Random_A_Resolution/online_supplementary_material_R_and/bridge_sampling_functions.R","code","shared",NA,NA,"2026-04-07T10:05:54","Levi Baruch"
+"0956797617724426","Fixed_or_Random_A_Resolution/online_supplementary_material_R_and/Figure1.eps","output","shared",NA,NA,"2026-04-07T10:05:58","Levi Baruch"
+"0956797617724426","Fixed_or_Random_A_Resolution/online_supplementary_material_R_and/Figure1.jpeg","output","shared",NA,NA,"2026-04-07T10:06:00","Levi Baruch"
+"0956797617724426","Fixed_or_Random_A_Resolution/online_supplementary_material_R_and/towelData.csv","data","shared","combined","tabular","2026-04-07T10:08:24","Levi Baruch"
+"0956797617724426","Fixed_or_Random_A_Resolution/online_supplementary_material_R_and/z_analyses_alternative_priors_between-study__heterogeneity/PowerPosePriorOnTau/analysis.R","code","shared",NA,NA,"2026-04-07T10:08:27","Levi Baruch"

@@ -1,0 +1,6 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"09567976211005465","Acute_psychosocial_stress_increases_cognitive/Experimental_data/code_book_osf.txt","codebook","shared",NA,"2026-03-30T15:37:56","Levi Baruch",NA
+"09567976211005465","Acute_psychosocial_stress_increases_cognitive/Experimental_data/Link_to_DST.txt","supplemental","shared",NA,"2026-03-30T15:39:07","Levi Baruch",NA
+"09567976211005465","Acute_psychosocial_stress_increases_cognitive/Experimental_data/DST_data_osf.csv","data","shared","combined","2026-03-30T15:39:10","Levi Baruch","tabular"
+"09567976211005465","Acute_psychosocial_stress_increases_cognitive/Experimental_data/DST_data_osf2.csv","data","shared","combined","2026-03-30T15:39:11","Levi Baruch","tabular"
+"09567976211005465","Acute_psychosocial_stress_increases_cognitive/Experimental_data/DST_demographics_osf.csv","data","shared","combined","2026-03-30T15:39:14","Levi Baruch","tabular"

@@ -1,0 +1,7 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
+"0956797619830329","Code_Time_Stamped_November_2018/1_CleanData.R","code","shared",NA,NA,"2026-04-07T16:29:28","Levi Baruch"
+"0956797619830329","Code_Time_Stamped_November_2018/2_DataInfo.R","code","shared",NA,NA,"2026-04-07T16:29:28","Levi Baruch"
+"0956797619830329","Code_Time_Stamped_November_2018/3_RunSCA_nonSEM.R","code","shared",NA,NA,"2026-04-07T16:29:28","Levi Baruch"
+"0956797619830329","Code_Time_Stamped_November_2018/3b_DataTable.R","code","shared",NA,NA,"2026-04-07T16:29:29","Levi Baruch"
+"0956797619830329","Code_Time_Stamped_November_2018/4_PlotSCA_nonSEM.R","code","shared",NA,NA,"2026-04-07T16:29:29","Levi Baruch"
+"0956797619830329","Code_Time_Stamped_November_2018/5_SCAUnstandardised.R","code","shared",NA,NA,"2026-04-07T16:29:29","Levi Baruch"

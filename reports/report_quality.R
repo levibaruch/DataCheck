@@ -20,9 +20,9 @@
 parse_args <- function() {
   argv <- commandArgs(trailingOnly = TRUE)
   result <- list(
-    bulk              = "./data_check/results/bulk_summary.csv",
-    codebook          = "./data_check/results/codebook_summary.csv",
-    outputs_dir       = "./data_check/outputs",
+    bulk              = "./results/bulk_summary.csv",
+    codebook          = "./results/codebook_summary.csv",
+    outputs_dir       = "./outputs",
     unknown_threshold = 30L,
     top_n             = 10L,
     sections          = "all"
@@ -339,7 +339,7 @@ section_timing <- function(bulk_df, top_n) {
 # ---------------------------------------------------------------------------
 
 write_md_report <- function(md_sections) {
-  out_path <- sprintf("./data_check/results/quality_report_%s.md", format(Sys.Date(), "%Y-%m-%d"))
+  out_path <- sprintf("./results/quality_report_%s.md", format(Sys.Date(), "%Y-%m-%d"))
   date_str <- format(Sys.Date(), "%Y-%m-%d")
 
   header <- c(

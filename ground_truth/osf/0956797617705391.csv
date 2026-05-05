@@ -1,0 +1,7 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797617705391","MAE_and_visual_acuity/Experiment_1_-_between-subjects_design/MAE_VA_Exp1.xlsx","data","ex1",NA,"2026-04-01T10:41:24","Levi Baruch","tabular"
+"0956797617705391","MAE_and_visual_acuity/Experiment_1_-_between-subjects_design/MAE_VA_Exp1A.csv","data","ex1a","combined","2026-04-01T10:41:35","Levi Baruch","tabular"
+"0956797617705391","MAE_and_visual_acuity/Experiment_1_-_between-subjects_design/MAE_VA_Exp1B.csv","data","ex1b","combined","2026-04-01T10:41:38","Levi Baruch","tabular"
+"0956797617705391","MAE_and_visual_acuity/Experiment_1_-_between-subjects_design/MAE_VA_Exp1THres_Exp1A.csv","data","ex1","combined","2026-04-01T10:42:26","Levi Baruch","tabular"
+"0956797617705391","MAE_and_visual_acuity/Experiment_1_-_between-subjects_design/MAE_VA_Exp1THres_Exp1B.csv","data","ex1","combined","2026-04-01T10:42:26","Levi Baruch","tabular"
+"0956797617705391","MAE_and_visual_acuity/Experiment_2_-_within-subjects_design/MAE_VA_Exp2.csv","data","ex2","combined","2026-04-01T10:42:27","Levi Baruch","tabular"

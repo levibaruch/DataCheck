@@ -1,0 +1,4 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797616663878","Creating_body_shapes_from_verbal/Data/GeneratedBodies-Ratings.txt","data","shared","combined","2026-03-30T14:23:24","Levi Baruch","tabular"
+"0956797616663878","Creating_body_shapes_from_verbal/Data/ID_Pairs.txt","data","shared","combined","2026-03-30T14:26:41","Levi Baruch","tabular"
+"0956797616663878","Creating_body_shapes_from_verbal/Data/PhotoBodies-Ratings.txt","data","shared","combined","2026-03-30T14:26:42","Levi Baruch","tabular"

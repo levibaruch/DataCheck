@@ -1,0 +1,41 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797618774252","Getting_Started_with_the_EAR/Android EAR App Manual 2022.pdf","supplemental","shared",NA,"2026-03-30T14:51:47","Levi Baruch",NA
+"0956797618774252","Getting_Started_with_the_EAR/Bystander button.pdf","supplemental","shared",NA,"2026-03-30T14:52:04","Levi Baruch",NA
+"0956797618774252","Getting_Started_with_the_EAR/CALM EAR Coding System.pdf","supplemental","shared",NA,"2026-03-30T14:52:10","Levi Baruch",NA
+"0956797618774252","Getting_Started_with_the_EAR/Conducting EAR Research.pdf","supplemental","shared",NA,"2026-03-30T14:53:30","Levi Baruch",NA
+"0956797618774252","Getting_Started_with_the_EAR/DSE_EAR_Coding_Categories_Sheet1.csv","codebook","shared",NA,"2026-03-30T14:53:33","Levi Baruch",NA
+"0956797618774252","Getting_Started_with_the_EAR/EAR Breast Cancer Coding System.pdf","supplemental","shared",NA,"2026-03-30T14:53:36","Levi Baruch",NA
+"0956797618774252","Getting_Started_with_the_EAR/EAR Evaluation Questionnaire.docx","supplemental","shared",NA,"2026-03-30T14:53:37","Levi Baruch",NA
+"0956797618774252","Getting_Started_with_the_EAR/EAR_Aging_Study_Polisinelli_Moseley_Coding_System_Sheet1.csv","codebook","shared",NA,"2026-03-30T14:53:38","Levi Baruch",NA
+"0956797618774252","Getting_Started_with_the_EAR/EAR-Relevant Consent Form sections.pdf","supplemental","shared",NA,"2026-03-30T14:53:41","Levi Baruch",NA
+"0956797618774252","Getting_Started_with_the_EAR/Introducing the EAR to participants during consent process.docx","supplemental","shared",NA,"2026-03-30T14:53:41","Levi Baruch",NA
+"0956797618774252","Getting_Started_with_the_EAR/Mehl Robbins PSM 2012 Naturalistic Observation of Health Relevant Social Processes.pdf","supplemental","shared",NA,"2026-03-30T14:53:43","Levi Baruch",NA
+"0956797618774252","Getting_Started_with_the_EAR/Sample coding sheet_coding.csv","codebook","shared",NA,"2026-03-30T14:53:46","Levi Baruch",NA
+"0956797618774252","Getting_Started_with_the_EAR/Sample DSMB text (for NIH grants).pdf","supplemental","shared",NA,"2026-03-30T14:54:01","Levi Baruch",NA
+"0956797618774252","Getting_Started_with_the_EAR/Sample EAR Event Diary.docx","supplemental","shared",NA,"2026-03-30T14:54:03","Levi Baruch",NA
+"0956797618774252","Getting_Started_with_the_EAR/Sample Informed Consent for a Study Including EAR.docx","supplemental","shared",NA,"2026-03-30T14:54:04","Levi Baruch",NA
+"0956797618774252","Getting_Started_with_the_EAR/Sample Privacy and Confidentiality Procedures.pdf","supplemental","shared",NA,"2026-03-30T14:54:06","Levi Baruch",NA
+"0956797618774252","Getting_Started_with_the_EAR/Syntax_for_scoring_EAR_evaluation_questionnaire.sps","code","shared",NA,"2026-03-30T14:54:10","Levi Baruch",NA
+"0956797618774252","Getting_Started_with_the_EAR/warning sign.jpg","asset","shared",NA,"2026-03-30T14:54:15","Levi Baruch",NA
+"0956797618774252","Getting_Started_with_the_EAR/Working with Coded EAR data.pdf","supplemental","shared",NA,"2026-03-30T14:54:20","Levi Baruch",NA
+"0956797618774252","hp2wx/Daily_conversations_and_well-being_A/Data/Data_merged_nomissings_mod.csv","data","shared","combined","2026-03-30T14:54:22","Levi Baruch","tabular"
+"0956797618774252","hp2wx/Daily_conversations_and_well-being_A/Data/Data_merged_nomissings_mod2b_agesex.csv","data","shared","combined","2026-03-30T14:54:23","Levi Baruch","tabular"
+"0956797618774252","hp2wx/Daily_conversations_and_well-being_A/Data/Data_merged_nomissings_mod2b.csv","data","shared","combined","2026-03-30T14:54:24","Levi Baruch","tabular"
+"0956797618774252","hp2wx/Daily_conversations_and_well-being_A/Data/Data_Study1.csv","data","ex1","combined","2026-03-30T14:54:37","Levi Baruch","tabular"
+"0956797618774252","hp2wx/Daily_conversations_and_well-being_A/Data/Data_Study2ab.csv","data","ex2ab","combined","2026-03-30T14:54:43","Levi Baruch","tabular"
+"0956797618774252","hp2wx/Daily_conversations_and_well-being_A/Data/Data_Study3.csv","data","ex3","combined","2026-03-30T14:54:47","Levi Baruch","tabular"
+"0956797618774252","hp2wx/Daily_conversations_and_well-being_A/Data/Data_Study4.csv","data","ex4","combined","2026-03-30T14:54:52","Levi Baruch","tabular"
+"0956797618774252","hp2wx/Daily_conversations_and_well-being_A/R-code/PooledAnalyses_inclData2a.R","code","ex2a",NA,"2026-03-30T14:55:00","Levi Baruch",NA
+"0956797618774252","hp2wx/Daily_conversations_and_well-being_A/R-code/PooledAnalyses_inclData2b.R","code","ex2b",NA,"2026-03-30T14:55:04","Levi Baruch",NA
+"0956797618774252","hp2wx/Daily_conversations_and_well-being_A/Supplemental_Material/Results_OverviewSamples_20180126_Demographics.csv","output","shared",NA,"2026-03-30T14:55:27","Levi Baruch",NA
+"0956797618774252","hp2wx/Daily_conversations_and_well-being_A/Supplemental_Material/Results_OverviewSamples_20180126_Forest Plots.csv","output","shared",NA,"2026-03-30T14:55:27","Levi Baruch",NA
+"0956797618774252","hp2wx/Daily_conversations_and_well-being_A/Supplemental_Material/Results_OverviewSamples_20180126_Model Results.csv","output","shared",NA,"2026-03-30T14:55:28","Levi Baruch",NA
+"0956797618774252","hp2wx/Daily_conversations_and_well-being_A/Supplemental_Material/Results_OverviewSamples_20180126_Moderation - Model Fit.csv","output","shared",NA,"2026-03-30T14:55:28","Levi Baruch",NA
+"0956797618774252","hp2wx/Daily_conversations_and_well-being_A/Supplemental_Material/Results_OverviewSamples_20180126_Moderation - Results.csv","output","shared",NA,"2026-03-30T14:55:29","Levi Baruch",NA
+"0956797618774252","hp2wx/Daily_conversations_and_well-being_A/Supplemental_Material/Results_OverviewSamples_20180126_Power Posthoc.csv","output","shared",NA,"2026-03-30T14:55:29","Levi Baruch",NA
+"0956797618774252","hp2wx/Daily_conversations_and_well-being_A/Supplemental_Material/Results_OverviewSamples_20180126_Scatterplots.csv","output","shared",NA,"2026-03-30T14:55:30","Levi Baruch",NA
+"0956797618774252","hp2wx/Daily_conversations_and_well-being_A/Supplemental_Material/Supplemental Material_Figure_S1.docx","supplemental","shared",NA,"2026-03-30T14:55:31","Levi Baruch",NA
+"0956797618774252","hp2wx/Daily_conversations_and_well-being_A/Supplemental_Material/Supplemental Material_Figure_S2.docx","supplemental","shared",NA,"2026-03-30T14:55:31","Levi Baruch",NA
+"0956797618774252","hp2wx/Daily_conversations_and_well-being_A/Supplemental_Material/Supplemental Material_Table_S1.docx","supplemental","shared",NA,"2026-03-30T14:55:32","Levi Baruch",NA
+"0956797618774252","hp2wx/Daily_conversations_and_well-being_A/Supplemental_Material/Supplemental Material_Table_S2.docx","supplemental","shared",NA,"2026-03-30T14:55:32","Levi Baruch",NA
+"0956797618774252","hp2wx/Daily_conversations_and_well-being_A/Supplemental_Material/Supplemental Material_Table_S3.docx","supplemental","shared",NA,"2026-03-30T14:55:33","Levi Baruch",NA

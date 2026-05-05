@@ -1,0 +1,5 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797614553946","Assessing_the_Robustness_of_Power/data_Ranehill_et_al_2014.dta","data","shared","combined","2026-03-31T10:16:37","Levi Baruch","tabular"
+"0956797614553946","Assessing_the_Robustness_of_Power/Ranehill_et_al_Supplemental_Material_not_for_review.docx","supplemental","shared",NA,"2026-03-31T10:16:46","Levi Baruch",NA
+"0956797614553946","Assessing_the_Robustness_of_Power/Statistical_analysis_Ranehill_et_al_2014.do","code","shared",NA,"2026-03-31T10:16:48","Levi Baruch",NA
+"0956797614553946","Assessing_the_Robustness_of_Power/Variable_list_Ranehill_et_al_2014_Sheet1.csv","codebook","shared",NA,"2026-03-31T10:16:49","Levi Baruch",NA

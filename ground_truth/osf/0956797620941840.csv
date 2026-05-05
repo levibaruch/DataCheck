@@ -1,0 +1,8 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
+"0956797620941840","847df/Crowds_and_Cognitive_Diversity/CreateCrowdsStudy1.R","code","ex1",NA,NA,"2026-04-08T14:40:31","Levi Baruch"
+"0956797620941840","847df/Crowds_and_Cognitive_Diversity/CreateCrowdsStudy2.R","code","ex2",NA,NA,"2026-04-08T14:40:31","Levi Baruch"
+"0956797620941840","847df/Crowds_and_Cognitive_Diversity/CreateCrowdsStudy3.R","code","ex3",NA,NA,"2026-04-08T14:40:31","Levi Baruch"
+"0956797620941840","847df/Crowds_and_Cognitive_Diversity/DataStudy1_Tabelle1.csv","data","ex1","combined","tabular","2026-04-08T14:40:38","Levi Baruch"
+"0956797620941840","847df/Crowds_and_Cognitive_Diversity/DataStudy2_Tabelle1.csv","data","ex1","combined","tabular","2026-04-08T14:40:39","Levi Baruch"
+"0956797620941840","847df/Crowds_and_Cognitive_Diversity/DataStudy3_Sheet1.csv","data","ex1","combined","tabular","2026-04-08T14:40:39","Levi Baruch"
+"0956797620941840","847df/Crowds_and_Cognitive_Diversity/VariableExplanation.txt","codebook","shared",NA,NA,"2026-04-08T14:40:45","Levi Baruch"

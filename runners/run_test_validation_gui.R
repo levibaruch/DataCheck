@@ -5,9 +5,9 @@
 #   - writes ground truth to     tests/ground_truth/<paper_id>.csv
 #   - shows only the papers listed in tests/test_papers.csv
 #
-# Usage (from repo root):    Rscript data_check/runners/run_test_validation_gui.R
-# Usage (from data_check/):  Rscript runners/run_test_validation_gui.R
-# Usage (interactive):       source("data_check/runners/run_test_validation_gui.R")
+# Usage (from repo root):    Rscript runners/run_test_validation_gui.R
+# Usage (from ):  Rscript runners/run_test_validation_gui.R
+# Usage (interactive):       source("runners/run_test_validation_gui.R")
 # ─────────────────────────────────────────────────────────────────────────────
 
 dc_root <- normalizePath(

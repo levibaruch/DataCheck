@@ -1,0 +1,17 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797616665813","When_the_spirit_is_willing/Codebook.docx","codebook","shared",NA,"2026-03-31T19:05:00","Levi Baruch",NA
+"0956797616665813","When_the_spirit_is_willing/Data for all Experiments-OSF_Exp1.csv","data","ex1","combined","2026-03-31T19:05:04","Levi Baruch","tabular"
+"0956797616665813","When_the_spirit_is_willing/Data for all Experiments-OSF_Exp2.csv","data","ex2","combined","2026-03-31T19:05:04","Levi Baruch","tabular"
+"0956797616665813","When_the_spirit_is_willing/Data for all Experiments-OSF_Exp3.csv","data","ex3","combined","2026-03-31T19:05:05","Levi Baruch","tabular"
+"0956797616665813","When_the_spirit_is_willing/Data for all Experiments-OSF_Exp4.csv","data","ex4","combined","2026-03-31T19:05:05","Levi Baruch","tabular"
+"0956797616665813","When_the_spirit_is_willing/Stimuli for all Experiments/Exp1-F.pptx","asset","ex1",NA,"2026-03-31T19:05:21","Levi Baruch",NA
+"0956797616665813","When_the_spirit_is_willing/Stimuli for all Experiments/Exp1-M.pptx","asset","ex1",NA,"2026-03-31T19:05:21","Levi Baruch",NA
+"0956797616665813","When_the_spirit_is_willing/Stimuli for all Experiments/Exp2-F-1.pptx","asset","ex2",NA,"2026-03-31T19:05:21","Levi Baruch",NA
+"0956797616665813","When_the_spirit_is_willing/Stimuli for all Experiments/Exp2-F-2.pptx","asset","ex2",NA,"2026-03-31T19:05:21","Levi Baruch",NA
+"0956797616665813","When_the_spirit_is_willing/Stimuli for all Experiments/Exp2-M-1.pptx","asset","ex2",NA,"2026-03-31T19:05:22","Levi Baruch",NA
+"0956797616665813","When_the_spirit_is_willing/Stimuli for all Experiments/Exp2-M-2.pptx","asset","ex2",NA,"2026-03-31T19:05:22","Levi Baruch",NA
+"0956797616665813","When_the_spirit_is_willing/Stimuli for all Experiments/Exp3-Final Slides.pptx","asset","ex3",NA,"2026-03-31T19:05:22","Levi Baruch",NA
+"0956797616665813","When_the_spirit_is_willing/Stimuli for all Experiments/Exp4-F-1.pptx","asset","ex4",NA,"2026-03-31T19:05:23","Levi Baruch",NA
+"0956797616665813","When_the_spirit_is_willing/Stimuli for all Experiments/Exp4-F-2.pptx","asset","ex4",NA,"2026-03-31T19:05:24","Levi Baruch",NA
+"0956797616665813","When_the_spirit_is_willing/Stimuli for all Experiments/Exp4-M-1.pptx","asset","ex4",NA,"2026-03-31T19:05:24","Levi Baruch",NA
+"0956797616665813","When_the_spirit_is_willing/Stimuli for all Experiments/Exp4-M-2.pptx","asset","ex4",NA,"2026-03-31T19:05:24","Levi Baruch",NA

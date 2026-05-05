@@ -1,0 +1,5 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797614533802","Dataset_for_SSU_2014/Dataset_for_SSU_2014/SSU.2014_Raw_Data_for_Collaborative_Commentary_(1)  Fig1.csv","data","shared","combined","2026-03-30T12:10:07","Levi Baruch","tabular"
+"0956797614533802","Dataset_for_SSU_2014/Dataset_for_SSU_2014/SSU.2014_Raw_Data_for_Collaborative_Commentary_(2) Fig1 Data.csv","data","shared","combined","2026-03-30T12:10:08","Levi Baruch","tabular"
+"0956797614533802","Dataset_for_SSU_2014/Dataset_for_SSU_2014/SSU.2014_Raw_Data_for_Collaborative_Commentary_(3) Name Frequency.csv","data","shared","combined","2026-03-30T12:10:10","Levi Baruch","tabular"
+"0956797614533802","Dataset_for_SSU_2014/Dataset_for_SSU_2014/SSU.2014_Raw_Data_for_Collaborative_Commentary_(4) Xing Bias.csv","data","shared","combined","2026-03-30T12:10:11","Levi Baruch","tabular"

@@ -9,12 +9,12 @@
 # Section 1 — think sweep  (fixed temp)
 # Section 2 — temperature sweep  (fixed think=low)
 #
-# Usage:  source("data_check/runners/test_thinking_trace.R")
+# Usage:  source("runners/test_thinking_trace.R")
 # ─────────────────────────────────────────────────────────────────────────────
 
 library(metacheck)
-source("data_check/pipeline/helper.R")
-source("data_check/pipeline/prompts.R")
+source("pipeline/helper.R")
+source("pipeline/prompts.R")
 
 llm_use(TRUE)
 llm_max_calls(200)

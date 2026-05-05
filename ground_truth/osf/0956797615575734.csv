@@ -1,0 +1,5 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
+"0956797615575734","Suppressing_Unwanted_Autobiographical_Memories_Reduces/Data/15'MemorySuppressionAutomatic_AnalysesSyntax.sps","code","shared",NA,NA,"2026-04-02T16:24:45","Levi Baruch"
+"0956797615575734","Suppressing_Unwanted_Autobiographical_Memories_Reduces/Data/15'MemorySuppressionAutomatic_Data.sav","data","shared","combined","tabular","2026-04-02T16:24:47","Levi Baruch"
+"0956797615575734","Suppressing_Unwanted_Autobiographical_Memories_Reduces/Data/Note_aIAT data exclusion.docx","supplemental","shared",NA,NA,"2026-04-02T16:24:50","Levi Baruch"
+"0956797615575734","Suppressing_Unwanted_Autobiographical_Memories_Reduces/OpenMaterials/15'MemorySuppressionAutomatic_OpenMaterials.docx","supplemental","shared",NA,NA,"2026-04-02T16:25:04","Levi Baruch"

@@ -1,0 +1,4 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797615620784","Wearing_a_Bicycle_Helmet_Can/GambleWalkerPsychologicalScienceAnalysis.r","code","shared",NA,"2026-03-30T13:15:15","Levi Baruch",NA
+"0956797615620784","Wearing_a_Bicycle_Helmet_Can/GambleWalkerPsychologicalScienceData.csv","data","shared","combined","2026-03-30T13:15:18","Levi Baruch","tabular"
+"0956797615620784","Wearing_a_Bicycle_Helmet_Can/GambleWalkerPsychologicalScienceKey.rtf","codebook","shared",NA,"2026-03-30T13:15:19","Levi Baruch",NA

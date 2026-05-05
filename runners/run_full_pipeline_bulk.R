@@ -6,9 +6,9 @@
 # stage 1.  Each stage resumes independently on restart.
 # ─────────────────────────────────────────────────────────────────────────────
 
-source("data_check/pipeline/0_index.R")
-source("data_check/pipeline/2_codebook_label.R")
-source("data_check/pipeline/3_psychds_convert.R")
+source("pipeline/0_index.R")
+source("pipeline/2_codebook_label.R")
+source("pipeline/3_psychds_convert.R")
 
 # ── Config (mirrors run_0_index_bulk.R) ───────────────────────────────────────
 
@@ -27,17 +27,17 @@ FROM_LOCAL     <- TRUE
 RESUME         <- TRUE
 
 PRIORITISE_GT  <- TRUE
-GT_DIR         <- "./data_check/ground_truth"
+GT_DIR         <- "./ground_truth"
 
 LLM_BATCH_SIZE         <- 20L
 MAX_COL_TYPE_LLM_CALLS <- 5L
 MAX_DATA_FILES         <- 30L
 MAX_CODEBOOK_FILES     <- 10L
 
-INDEX_CSV    <- "./data_check/results/bulk_summary.csv"
-CODEBOOK_CSV <- "./data_check/results/codebook_summary.csv"
+INDEX_CSV    <- "./results/bulk_summary.csv"
+CODEBOOK_CSV <- "./results/codebook_summary.csv"
 PSYCHDS_CSV  <- file.path(PSYCHDS_OUT_DIR, "conversion_summary.csv")
-TRACKER_CSV  <- "./data_check/results/pipeline_tracker.csv"
+TRACKER_CSV  <- "./results/pipeline_tracker.csv"
 
 MAX_DATA_MB  <- 10000   # psychds stage: skip if data folder exceeds this
 

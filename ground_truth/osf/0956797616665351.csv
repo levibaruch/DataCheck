@@ -1,0 +1,3 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
+"0956797616665351","Powell_et_al_2016_Bayesian/powell_2016_PsySci_data_for_osf_expt 1.csv","data","ex1","combined","2026-03-31T10:56:04","Levi Baruch","tabular"
+"0956797616665351","Powell_et_al_2016_Bayesian/powell_2016_PsySci_data_for_osf_expt 2.csv","data","ex2","combined","2026-03-31T10:56:05","Levi Baruch","tabular"
