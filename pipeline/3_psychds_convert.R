@@ -1,6 +1,6 @@
 # 3_psychds_convert.R
 # ─────────────────────────────────────────────────────────────────────────────
-# Convert metacheck-datacheck pipeline outputs into PsychDS-compliant dataset
+# Convert DataCheck pipeline outputs into PsychDS-compliant dataset
 # directories under psychds/<paper_id>/.
 #
 # Entry point:  convert_psychds(paper_id)  →  list of per-study result rows
@@ -46,8 +46,9 @@ ERR_NO_DATA_FILES   <- "no_data_files"
 # File-type → PsychDS subdirectory mapping
 TYPE_TO_SUBDIR <- list(
   code        = "analysis",
-  software    = "materials",
-  codebook    = "documentation",
+  software    = "software",
+  output      = "outputs",
+  codebook    = "codebooks",
   supplemental = "documentation",
   other       = "documentation",
   asset       = "materials"
@@ -366,9 +367,9 @@ build_property_values <- function(cols_df, labels_df, coverage_df) {
     if (!is.na(row$label_status) && identical(row$label_status, "labelled") &&
         !is.na(row$label) && nzchar(row$label)) {
       pv[["description"]]                    <- row$label
-      pv[["metacheck:label_source"]]         <- row$label_source
-      pv[["metacheck:label_method"]]         <- row$label_method
-      pv[["metacheck:codebook_variable"]]    <- row$codebook_variable
+      pv[["datacheck:label_source"]]         <- row$label_source
+      pv[["datacheck:label_method"]]         <- row$label_method
+      pv[["datacheck:codebook_variable"]]    <- row$codebook_variable
     }
 
     # ── US3: statistics block (T019) ─────────────────────────────────────
@@ -384,7 +385,7 @@ build_property_values <- function(cols_df, labels_df, coverage_df) {
       names(stat_block) <- stat_fields
       stat_block <- Filter(Negate(is.null), stat_block)
       if (length(stat_block) > 0)
-        pv[["metacheck:statistics"]] <- stat_block
+        pv[["datacheck:statistics"]] <- stat_block
     }
 
     # ── US3: valuePattern (T021) ─────────────────────────────────────────
@@ -399,14 +400,14 @@ build_property_values <- function(cols_df, labels_df, coverage_df) {
     # ── US3: col_header_group (T023) ─────────────────────────────────────
     if ("col_header_group" %in% names(row) &&
         !is.na(row$col_header_group) && nzchar(row$col_header_group))
-      pv[["metacheck:col_header_group"]] <- row$col_header_group
+      pv[["datacheck:col_header_group"]] <- row$col_header_group
 
     # ── Always-present fields ─────────────────────────────────────────────
-    if (!is.na(col_type)) pv[["metacheck:col_type"]] <- col_type
+    if (!is.na(col_type)) pv[["datacheck:col_type"]] <- col_type
     if ("source_file" %in% names(row) && !is.na(row$source_file))
-      pv[["metacheck:source_file"]] <- row$source_file
+      pv[["datacheck:source_file"]] <- row$source_file
     if ("sample_values" %in% names(row) && !is.na(row$sample_values))
-      pv[["metacheck:sample_values"]] <- row$sample_values
+      pv[["datacheck:sample_values"]] <- row$sample_values
 
     Filter(Negate(is.null), pv)
   })
@@ -422,12 +423,12 @@ build_property_values <- function(cols_df, labels_df, coverage_df) {
         pv <- list(
           `@type`                  = "PropertyValue",
           name                     = r$codebook_variable,
-          `metacheck:match_status` = "unmatched_in_data"
+          `datacheck:match_status` = "unmatched_in_data"
         )
         if (!is.na(r$label) && nzchar(r$label))
           pv[["description"]] <- r$label
         if ("codebook_source" %in% names(r) && !is.na(r$codebook_source))
-          pv[["metacheck:source_file"]] <- r$codebook_source
+          pv[["datacheck:source_file"]] <- r$codebook_source
         Filter(Negate(is.null), pv)
       })
       pv_list <- c(pv_list, extra)
@@ -485,7 +486,7 @@ build_dataset_description <- function(paper_id, study_group, property_values,
 
   desc <- list(
     `@context` = list("https://schema.org/",
-                      list(metacheck = "https://metacheck.io/ns/")),
+                      list(datacheck = "https://github.com/levibaruch/DataCheck/ns/")),
     `@type`           = "Dataset",
     name              = schema_name,
     description       = schema_desc,
@@ -509,20 +510,20 @@ build_dataset_description <- function(paper_id, study_group, property_values,
   }
 
   # Provenance fields
-  desc[["metacheck:paper_id"]]          <- paper_id
-  desc[["metacheck:study_group"]]       <- study_group
-  desc[["metacheck:pipeline_version"]]  <- PIPELINE_VERSION
-  desc[["metacheck:conversion_date"]]   <- format(Sys.Date(), "%Y-%m-%d")
-  desc[["metacheck:pipeline_status"]]   <- Filter(Negate(is.null), pipeline_status)
-  desc[["metacheck:source_repository"]] <- list(
+  desc[["datacheck:paper_id"]]          <- paper_id
+  desc[["datacheck:study_group"]]       <- study_group
+  desc[["datacheck:pipeline_version"]]  <- PIPELINE_VERSION
+  desc[["datacheck:conversion_date"]]   <- format(Sys.Date(), "%Y-%m-%d")
+  desc[["datacheck:pipeline_status"]]   <- Filter(Negate(is.null), pipeline_status)
+  desc[["datacheck:source_repository"]] <- list(
     platform      = source,
     download_path = file.path("data", source, sanitize_id(paper_id))
   )
 
   # Multi-study shared resources
   if (!is.null(shared_files) && length(shared_files) > 0) {
-    desc[["metacheck:shared_resources"]] <- "../shared/"
-    desc[["metacheck:shared_files"]]     <- as.list(shared_files)
+    desc[["datacheck:shared_resources"]] <- "../shared/"
+    desc[["datacheck:shared_files"]]     <- as.list(shared_files)
   }
 
   Filter(Negate(is.null), desc)
@@ -536,20 +537,20 @@ build_sidecar <- function(rel_path, format, size_bytes, data_granularity, method
   stem      <- tools::file_path_sans_ext(csv_name)
   list(
     `@context` = list("https://schema.org/",
-                      list(metacheck = "https://metacheck.io/ns/")),
+                      list(datacheck = "https://github.com/levibaruch/DataCheck/ns/")),
     `@type`          = "Dataset",
     name             = paste0(basename(rel_path), " — ", paper_id),
     description      = paste0("Data file '", basename(rel_path),
                                "' from repository ", paper_id,
                                " (converted: ", stem, ")"),
     variableMeasured = file_pvs,
-    `metacheck:original_file`  = Filter(Negate(is.null), list(
+    `datacheck:original_file`  = Filter(Negate(is.null), list(
       rel_path         = rel_path,
       format           = format,
       size_bytes       = as.integer(size_bytes),
       data_granularity = data_granularity
     )),
-    `metacheck:conversion` = Filter(Negate(is.null), list(
+    `datacheck:conversion` = Filter(Negate(is.null), list(
       method                 = method,
       encoding_normalized    = TRUE,
       rows_written           = NULL,   # filled in by caller
@@ -607,7 +608,7 @@ build_provenance <- function(file_records) {
 #
 # Calls extract_plain_text() from helper.R. Only supported extensions
 # (.pdf / .docx / .rtf) proceed — all others receive attempted = FALSE.
-write_doc_txt <- function(src_path, study_root) {
+write_doc_txt <- function(src_path, study_root, subdir) {
   ext <- tolower(tools::file_ext(src_path))
   if (!ext %in% c("pdf", "docx", "rtf"))
     return(list(attempted = FALSE, skipped = TRUE,
@@ -624,13 +625,13 @@ write_doc_txt <- function(src_path, study_root) {
                 skip_reason = "no_extractable_text", txt_psychds_path = NULL))
   }
 
-  txt_dir  <- file.path(study_root, "documentation", "txt")
+  txt_dir  <- file.path(study_root, subdir, "txt")
   base_nm  <- tools::file_path_sans_ext(basename(src_path))
   txt_file <- file.path(txt_dir, paste0(base_nm, ".txt"))
   dir.create(txt_dir, recursive = TRUE, showWarnings = FALSE)
   writeLines(text, txt_file, useBytes = FALSE)
 
-  rel_path <- file.path("documentation", "txt", paste0(base_nm, ".txt"))
+  rel_path <- file.path(subdir, "txt", paste0(base_nm, ".txt"))
   list(attempted = TRUE, skipped = FALSE,
        skip_reason = NULL, txt_psychds_path = rel_path)
 }
@@ -746,9 +747,9 @@ convert_study <- function(paper_id, study_group, files_df, cols_df, labels_df,
     if (!is.na(size_mb) && size_mb > DATA_SIZE_LIMIT_MB) {
       # Oversized: skip conversion, write skip-sidecar in raw/
       skip_sidecar <- list(
-        `metacheck:conversion_skipped` = TRUE,
-        `metacheck:skip_reason`        = "file_size_exceeds_limit",
-        `metacheck:file_size_mb`       = round(size_mb, 1)
+        `datacheck:conversion_skipped` = TRUE,
+        `datacheck:skip_reason`        = "file_size_exceeds_limit",
+        `datacheck:file_size_mb`       = round(size_mb, 1)
       )
       sidecar_nm   <- sub("\\.csv$", ".json",
                           paste0(tools::file_path_sans_ext(filename), ".json"))
@@ -814,12 +815,12 @@ convert_study <- function(paper_id, study_group, files_df, cols_df, labels_df,
                                if (is_raw) "individual" else "combined",
                                sh$method, file_cols, file_lbls,
                                paper_id, csv_name)
-      sidecar[["metacheck:conversion"]][["rows_written"]]    <- write_res$rows_written
-      sidecar[["metacheck:conversion"]][["columns_written"]] <- write_res$columns_written
+      sidecar[["datacheck:conversion"]][["rows_written"]]    <- write_res$rows_written
+      sidecar[["datacheck:conversion"]][["columns_written"]] <- write_res$columns_written
       if (isTRUE(write_res$row_id_renamed))
-        sidecar[["metacheck:conversion"]][["row_id_renamed"]] <- TRUE
+        sidecar[["datacheck:conversion"]][["row_id_renamed"]] <- TRUE
       if (!is.null(read_result$haven_labels) && length(read_result$haven_labels) > 0)
-        sidecar[["metacheck:value_labels"]] <- read_result$haven_labels
+        sidecar[["datacheck:value_labels"]] <- read_result$haven_labels
       write_json(sidecar, sidecar_dest)
 
       file_records <- c(file_records, list(c(
@@ -850,7 +851,9 @@ convert_study <- function(paper_id, study_group, files_df, cols_df, labels_df,
       tolower(row$filename), perl = FALSE)
     if ((file_type == "codebook" || (file_type == "supplemental" && is_narrative)) &&
         tolower(tools::file_ext(row$filename)) %in% c("pdf", "docx", "rtf")) {
-      txt_info <- write_doc_txt(row$path, out_dir)
+      txt_subdir <- TYPE_TO_SUBDIR[[file_type]]
+      if (is.null(txt_subdir)) txt_subdir <- "documentation"
+      txt_info <- write_doc_txt(row$path, out_dir, txt_subdir)
     }
 
     file_records <- c(file_records, list(Filter(Negate(is.null), list(
