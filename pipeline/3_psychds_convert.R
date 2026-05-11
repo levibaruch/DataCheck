@@ -484,30 +484,28 @@ build_dataset_description <- function(paper_id, study_group, property_values,
   )
 
   desc <- list(
-    `@context` = list(
-      schema    = "https://schema.org/",
-      metacheck = "https://metacheck.io/ns/"
-    ),
-    `@type`                     = "schema:Dataset",
-    `schema:name`               = schema_name,
-    `schema:description`        = schema_desc,
-    `schema:variableMeasured`   = property_values,
-    `schema:schemaVersion`      = "Psych-DS 0.1.0"
+    `@context` = list("https://schema.org/",
+                      list(metacheck = "https://metacheck.io/ns/")),
+    `@type`           = "Dataset",
+    name              = schema_name,
+    description       = schema_desc,
+    variableMeasured  = property_values,
+    schemaVersion     = "Psych-DS 0.1.0"
   )
 
   # Recommended fields from GROBID XML
   if (!is.null(xml_meta)) {
     if (!is.null(xml_meta$authors) && length(xml_meta$authors) > 0) {
-      desc[["schema:author"]] <- lapply(xml_meta$authors, function(nm) {
-        list(`@type` = "schema:Person", `schema:name` = nm)
+      desc[["author"]] <- lapply(xml_meta$authors, function(nm) {
+        list(`@type` = "Person", name = nm)
       })
     }
     if (!is.null(xml_meta$doi) && nzchar(xml_meta$doi))
-      desc[["schema:identifier"]] <- paste0("https://doi.org/", xml_meta$doi)
+      desc[["identifier"]] <- paste0("https://doi.org/", xml_meta$doi)
     if (!is.null(xml_meta$date) && nzchar(xml_meta$date))
-      desc[["schema:datePublished"]] <- xml_meta$date
+      desc[["datePublished"]] <- xml_meta$date
     if (!is.null(xml_meta$keywords) && length(xml_meta$keywords) > 0)
-      desc[["schema:keywords"]] <- xml_meta$keywords
+      desc[["keywords"]] <- xml_meta$keywords
   }
 
   # Provenance fields
@@ -533,10 +531,18 @@ build_dataset_description <- function(paper_id, study_group, property_values,
 # ── Internal: build_sidecar ───────────────────────────────────────────────────
 
 build_sidecar <- function(rel_path, format, size_bytes, data_granularity, method,
-                          file_cols_df, labels_df) {
-  file_pvs <- build_property_values(file_cols_df, labels_df, NULL)
+                          file_cols_df, labels_df, paper_id, csv_name) {
+  file_pvs  <- build_property_values(file_cols_df, labels_df, NULL)
+  stem      <- tools::file_path_sans_ext(csv_name)
   list(
-    `schema:variableMeasured`  = file_pvs,
+    `@context` = list("https://schema.org/",
+                      list(metacheck = "https://metacheck.io/ns/")),
+    `@type`          = "Dataset",
+    name             = paste0(basename(rel_path), " — ", paper_id),
+    description      = paste0("Data file '", basename(rel_path),
+                               "' from repository ", paper_id,
+                               " (converted: ", stem, ")"),
+    variableMeasured = file_pvs,
     `metacheck:original_file`  = Filter(Negate(is.null), list(
       rel_path         = rel_path,
       format           = format,
@@ -806,7 +812,8 @@ convert_study <- function(paper_id, study_group, files_df, cols_df, labels_df,
 
       sidecar <- build_sidecar(rel_path, ext, size_bytes,
                                if (is_raw) "individual" else "combined",
-                               sh$method, file_cols, file_lbls)
+                               sh$method, file_cols, file_lbls,
+                               paper_id, csv_name)
       sidecar[["metacheck:conversion"]][["rows_written"]]    <- write_res$rows_written
       sidecar[["metacheck:conversion"]][["columns_written"]] <- write_res$columns_written
       if (isTRUE(write_res$row_id_renamed))
@@ -864,8 +871,14 @@ convert_study <- function(paper_id, study_group, files_df, cols_df, labels_df,
   }
 
   # ── Build variableMeasured and dataset_description.json ───────────────────
-  study_cols <- if (!is.null(cols_df)) cols_df else NULL
-  study_lbls <- if (!is.null(labels_df)) labels_df else NULL
+  # Restrict cols/labels to files that are actually classified as data after
+  # ground-truth overrides — avoids columns from reclassified files appearing
+  # in variableMeasured without a corresponding CSV in data/.
+  active_rel_paths <- data_files$rel_path
+  study_cols <- if (!is.null(cols_df) && "source_file" %in% names(cols_df))
+    cols_df[cols_df$source_file %in% active_rel_paths, ] else cols_df
+  study_lbls <- if (!is.null(labels_df) && "source_file" %in% names(labels_df))
+    labels_df[labels_df$source_file %in% active_rel_paths, ] else labels_df
   study_cov  <- if (!is.null(coverage_df)) coverage_df else NULL
 
   property_values <- build_property_values(study_cols, study_lbls, study_cov)
