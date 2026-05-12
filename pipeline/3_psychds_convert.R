@@ -491,7 +491,7 @@ build_dataset_description <- function(paper_id, study_group, property_values,
     name              = schema_name,
     description       = schema_desc,
     variableMeasured  = property_values,
-    schemaVersion     = "Psych-DS 0.1.0"
+    schemaVersion     = "Psych-DS 1.5.1"
   )
 
   # Recommended fields from GROBID XML
@@ -783,7 +783,7 @@ convert_study <- function(paper_id, study_group, files_df, cols_df, labels_df,
       base_kw  <- sanitise_keyword_value(filename)
       if (!nzchar(base_kw)) base_kw <- paste0("file", i)
 
-      version_prefix <- if (is_raw) "version-raw_" else ""
+      version_prefix <- if (is_raw) "granularity-individual_" else ""
       sheet_suffix   <- if (!is.null(sh$sheet_name) && nzchar(sh$sheet_name)) {
         paste0("_sheet-", sanitise_keyword_value(sh$sheet_name))
       } else ""

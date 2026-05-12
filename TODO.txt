@@ -1,6 +1,139 @@
 TODO — metacheck-datacheck pipeline
 
 ────────────────────────────────────────────────────────────────────────────────
+[IMPROVEMENT] Map 'other' file type to other/ folder in PsychDS output, not documentation/
+  Files classified as 'other' (lock files, OS metadata, github configs etc.) have no
+  research relevance and should not be placed in documentation/. Create a separate
+  other/ directory in the PsychDS output tree for these files.
+  Location: pipeline/3_psychds_convert.R, Table 10 mapping
+  Status: PENDING
+
+────────────────────────────────────────────────────────────────────────────────
+[IMPROVEMENT] Replace crude trailing-s stemmer with SnowballC Porter stemmer
+  Variable name normalization currently strips a trailing 's' from words of ≥7
+  characters. This produces incorrect stems for non-plural words ending in 's'
+  (e.g. "continuous" → "continuou"). Replace with SnowballC::wordStem() using
+  the Porter algorithm for correct plural normalization.
+  Package: SnowballC (already on CRAN, base R compatible)
+  Location: normalize_varname() in pipeline/helper.R
+  Status: PENDING
+
+────────────────────────────────────────────────────────────────────────────────
+[FEATURE] Add deterministic ordinal detection rule to col_type cascade
+  The rule cascade currently has no rule for `ordinal`. Integer columns with a small
+  number of unique values (e.g. 3–7, typical of Likert scales) fall through to the LLM.
+  A heuristic rule — e.g. numeric integer column with U(c) in [3, 7] — would catch the
+  common case without an LLM call. Needs threshold tuning against labelled ground truth.
+  Status: PENDING
+
+────────────────────────────────────────────────────────────────────────────────
+[REFACTOR] Remove haven extractor from PsychDS conversion; move to codebook parser
+  The PsychDS sidecar currently writes datacheck:value_labels via haven extraction
+  directly during schema conversion. This is the wrong stage. Once the codebook parser
+  correctly handles .sav/.dta files (see haven bug below), all variable labels — including
+  haven-extracted value labels — should flow through the normal codebook matching pipeline
+  and appear in labels.csv / codebook_coverage.csv like any other source. The sidecar
+  field datacheck:value_labels should then be populated from that unified output, not from
+  a separate haven call inside 3_psychds_convert.R.
+  Action: remove the standalone haven extraction block from 3_psychds_convert.R once the
+  codebook parser fix (option B in the haven bug entry below) is implemented.
+  Status: PENDING — blocked on haven codebook parser fix
+
+────────────────────────────────────────────────────────────────────────────────
+[BUG/FEATURE] Haven embedded-label extraction is unreachable — fix or repurpose
+  Secondary issue: even if it were reachable, haven extraction sets parse_method =
+  "structured", making it indistinguishable from CSV/Excel header detection in the
+  output. Should set parse_method = "haven" for traceability if option B is pursued.
+  Root cause: .sav files are always classified as `data` (251 across the corpus, 0 as
+  `codebook`), so they never reach parse_codebook() where the haven path lives. The
+  haven extractor itself works correctly (tested manually — rich labels extracted).
+  One option:
+    B) Extract embedded labels from .sav DATA files directly in 0_index.R and inject
+       them into the codebook matching stage as an additional label source — this is
+       the actually useful behaviour since SPSS files carry their own variable labels.
+  Option B is the right fix and would recover labels for 251 files at zero LLM cost.
+  Status: DONE — implemented in 2_codebook_label.R (step 2b). Haven labels extracted
+  via n_max=0 read (metadata only), injected first into codebook_vars_df so they take
+  priority over file-based codebook on collision. parse_method="haven" for traceability.
+  Tested: 1ZSABC 0→22/27 labelled; YY769U 0→298/444 labelled.
+
+────────────────────────────────────────────────────────────────────────────────
+[IMPROVEMENT] Codebook size limit: partial extraction instead of full skip
+  Files exceeding MAX_CB_MB = 100 MB are currently skipped entirely. For large PDFs
+  and DOCX files this is wasteful — the variable definitions are usually in the first
+  few pages. Instead: read only the first N lines / pages up to a size cap and attempt
+  extraction on that subset, rather than discarding the file. Similarly, parsing
+  failures currently log a warning and move on with no trace in the output CSVs.
+  Failed files should write a sentinel row to codebook_coverage.csv with
+  parse_method = "failed" so the failure is visible in downstream quality reporting
+  rather than silently absent.
+  Status: PENDING
+
+────────────────────────────────────────────────────────────────────────────────
+[BUG] Codebook LLM second pass: no retry or failure trace
+  `match_column_labels()` in `helper.R:1319` runs an LLM call to fuzzy-match
+  unlabelled columns against unmatched codebook variables. Three failure modes
+  are silently swallowed:
+    1. LLM call error → tryCatch returns `list(answer = "[]")` and the whole
+       pass is skipped with only a warning(), no trace in any output CSV.
+    2. JSON parse failure → tryCatch returns an empty data.frame; all proposed
+       matches are lost, no log entry.
+    3. Invalid pair (column or codebook variable not in the submitted candidate
+       set) → silently dropped; no count of rejected pairs is recorded.
+  Fix:
+    - On LLM error or parse failure, retry up to LLM_RETRY_LIMIT times before
+      giving up (consistent with the retry loop in `llm_batch()`).
+    - After all retries exhausted, write a row to `logs/llm_batch_errors.log`
+      with batch_label = "codebook_match", paper_id, attempt count, and the
+      error message.
+    - Log the pair-validation summary at DEBUG level: N proposed, N valid, N
+      applied — makes silent rejections visible without being noisy.
+  Files: `pipeline/helper.R` (match_column_labels, ~line 1319).
+  Status: PENDING
+
+────────────────────────────────────────────────────────────────────────────────
+[BUG] PsychDS: multiple readme files silently overwrite each other
+  `place_non_data_file()` renames every readme to `README.<ext>` in the study
+  root. When a paper has more than one readme file, each overwrites the previous
+  — only the last one processed survives. Options:
+    A) Keep only the largest/most informative readme; place extras in documentation/
+    B) Rename extras to README_2.<ext>, README_3.<ext>, etc.
+    C) Concatenate plain-text readmes into a single README.txt
+  File: `pipeline/3_psychds_convert.R` (`place_non_data_file`, readme branch).
+  Status: PENDING
+
+────────────────────────────────────────────────────────────────────────────────
+[BUG] col_type LLM fallback: retry on invalid response instead of remapping to `text`
+  When the LLM returns a col_type outside the valid set or returns `unknown` for a
+  character column, the pipeline currently silently remaps to `text`. Should instead
+  retry the call (up to R attempts), consistent with closed-set enforcement in file
+  classification. Only fall back to `text` after all retries are exhausted.
+  Status: PENDING
+
+────────────────────────────────────────────────────────────────────────────────
+[CLEANUP] Merge col_type rules 7 and 8 into one rule
+  Rules 7 (numeric with fractional value) and 8 (numeric with >20 unique values)
+  both assign `continuous` and can be collapsed into a single check: any numeric
+  column → `continuous`. Simplifies the cascade in helper.R.
+  Status: PENDING
+
+────────────────────────────────────────────────────────────────────────────────
+[CLEANUP] Remove col_type Batch 1 (numeric-ambiguous LLM routing) permanently
+  Integer columns with 3–20 unique values are currently assigned `continuous`
+  directly by rule (Batch 1 is disabled). Remove the dead Batch 1 code path
+  from helper.R / 0_index.R entirely — it will never be re-enabled.
+  Status: PENDING
+
+────────────────────────────────────────────────────────────────────────────────
+[CLEANUP] Remove participant aggregate detection system
+  The participant aggregate (subdirectory-name matching via is_participant_id)
+  never triggered across 224 annotated papers — folder_heuristic and
+  folder_name_heuristic are absent from granularity_source in the 2026-05-07
+  report. Remove from 0_index.R and drop the corresponding paragraph from
+  docs/thesis_method_classification.md before submission.
+  Status: PENDING
+
+────────────────────────────────────────────────────────────────────────────────
 [USER] Individual-level file combiner
   Individual-granularity data files (one CSV per participant) are currently
   skipped during column extraction (as of today). A combiner script is needed
