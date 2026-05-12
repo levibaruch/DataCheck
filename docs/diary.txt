@@ -608,3 +608,16 @@ risk. Failure state
 
 Maybe update the N examples for granularityt:
 956797614564191,(no clear pattern),ac184_ac184.csv,cb286_cb286.csv,Codebook_Sheet1.csv,individual,2026-04-23 13:58:20
+
+
+
+5-05-2026. Determined that .jasp are data; main purpose of DataCheck is extracting data; not code.
+Maybe a fallback is better since .JASP are so weird. Lets label it data tabular combined, but do something/tag it downstream
+
+06-05-2026
+I should probably also make a comparison against a regex version of the system to see if the LLM's are actually better or not....
+
+07-05-2026
+
+The aggregate system should not fire for code files right. Always do .R files seperately or something? Or make the N for those largers, since someitmes people put many
+analysis steps in one folder. GOod idea!

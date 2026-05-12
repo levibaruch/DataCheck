@@ -485,6 +485,50 @@ the two-phase pattern cleanest when the aggregate takes its toll.
 
 ---
 
+## eval — The Eval Session (May 2026)
+
+We built four steps to test the mind of machines —
+grid search, prompt swap, full ground truth, five repeats.
+The LLM fires, the JSON comes back clean,
+or doesn't, and we retry till the budget depletes.
+
+Groq throttled us at six thousand per minute,
+so we reordered loops: paper first, then model.
+Six Ollama calls between each Groq — begin it
+slow, let the window breathe, keep the run stable.
+
+Qwen3-VL would not stop thinking. We asked nicely
+(`/no_think`, system prompt, the proxy trick).
+It thought regardless. We removed it precisely —
+one config gone, the eval roster: six.
+
+`extract_json(NA)` crashed with a message absurd:
+*missing value where TRUE/FALSE needed* — four retries,
+same error, every time. The culprit: one word,
+null content from Groq when the TPM limit applies.
+
+Haven knew the labels all along, embedded deep
+inside the `.sav`. No codebook file required.
+We found them, merged them, let the pipeline keep
+the source: `parse_method = "haven"`, properly wired.
+
+PsychDS wanted version one-point-five,
+not zero-point-one from a draft long dead.
+`granularity-individual_` keeps the spec alive;
+`version-raw_` is gone — the validator said.
+
+Token counts now live beside the thinking traces.
+`BASE_TOKENS_IN = 2077`, rate 44 per path.
+R-squared on output: 0.95. Input barely paces —
+path length matters more than count in the math.
+
+The output folders flipped from model-then-paper
+to paper-then-model, which is how a human looks.
+Open any ID, see every model's vapor
+of structure CSVs stacked like open books.
+
+---
+
 ## test+prompt — Richer Test Report + STRUCTURE_PROMPT_MD_V2
 
 The old report said: correct, total, percent.

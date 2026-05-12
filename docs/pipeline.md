@@ -371,6 +371,15 @@ not exist, then removes it after the stage completes.
 | `0956797614559730` | Codebook: CSV codebook in same folder as data (misclassification risk) |
 | `0956797614547916` | Per-participant: 142 `.dat` files across 8 experiment groups |
 | `0956797614561045` | Large repo: 99 data files + 1 codebook (near `too_large` limit) |
+| `0956797615571018` | Software: E-Prime task files (`.ebs2/.es2/.wndpos`) + pilot1 study group |
+| `0956797614535937` | Software: Python online task scripts — code vs software boundary |
+| `0956797620965536` | Pilot: multi-pilot (pilot1+pilot2) + output plots not classified as asset |
+| `0956797617739368` | Output: 25 output files (`.pdf/.spv/R markdown`) across 4 clean experiments |
+| `0956797617746749` | Output: 41 outputs including CSV as output (p-curve results) — data boundary |
+| `0956797617706706` | Complex groups: pilot6a + ex4b–ex4g letter suffixes + sharedex4b edge case |
+| `0956797616685770` | Balanced: software (`.pyw`) + output (figures) + 7 experiment groups with letter suffixes |
+| `0956797615624491` | Haven simple: `.sav` only (43/43 embedded labels, no codebook file) — tests haven-only label path |
+| `0956797616669086` | Haven complex: `.sav` (48/48 embedded labels) + `Variable_Codebook.csv` — tests haven priority over file-based codebook |
 
 ### Adding new test papers
 
@@ -381,6 +390,6 @@ When a new edge case is found that a new implementation must handle:
 
 ### Update rules
 
-- When a new pipeline stage is added → verify it runs correctly against all 13 test papers before merging.
+- When a new pipeline stage is added → verify it runs correctly against all 22 test papers before merging.
 - When a new `col_type`, file `type`, or `group` is introduced → check the test log `file_types`, `data_groups`, `col_types` columns to confirm the new value appears where expected.
 - When a new test paper is added → add it to the catalogue table above.
