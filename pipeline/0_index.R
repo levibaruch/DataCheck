@@ -13,6 +13,8 @@
 
 library(metacheck)
 source("pipeline/helper.R")
+source("pipeline/ollama.R")
+source("pipeline/groq.R")
 source("pipeline/prompts.R")
 
 llm_use(TRUE)
@@ -84,16 +86,16 @@ BADGE_REPOS <- c("tvyxz", "osf.io/tvyxz/", "osf.io/tvyxz")
 
 # ── Pipeline function ─────────────────────────────────────────────────────────
 
-run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structure_prompt_version = "current") {
+run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structure_prompt_version = "md") {
 
   t_start <- proc.time()[["elapsed"]]
 
   # Select STRUCTURE_PROMPT body based on version (for AB testing)
   structure_body <- switch(structure_prompt_version,
-    "v0"      = STRUCTURE_PROMPT_v0,
-    "v1"      = STRUCTURE_PROMPT_v1,
-    "current" = STRUCTURE_PROMPT_MD_V2,
-    STRUCTURE_PROMPT_MD_V2  # MD DEFAULT
+    "md"        = STRUCTURE_PROMPT_MD,
+    "plaintext" = STRUCTURE_PROMPT_PLAIN,
+    "json"      = STRUCTURE_PROMPT_JSON,
+    STRUCTURE_PROMPT_MD  # DEFAULT
   )
   # ── 0. Resolve paper ────────────────────────────────────────────────────────
 
@@ -1139,8 +1141,6 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
 
   structure_out <- file.path(eff_dir, "structure.csv")
   cat(col_dim("── file types: data=participant data  code=scripts  codebk=codebook  asset=media  suppl=supplemental  softw=software  output=generated output  other=unclassified
-"))
-  cat(col_dim("── groups inferred from folder structure
 "))
   cat(col_cyan("\n── File inventory ──────────────────────────────\n"))
   local({

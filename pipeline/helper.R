@@ -526,8 +526,13 @@ llm_batch <- function(paths, system_prompt, user_prefix, key_col, extra_cols,
       llm_params      <- list(temperature = LLM_TEMPERATURE, think = LLM_THINK_LEVEL)
       do_capture      <- exists("CAPTURE_THINKING") && isTRUE(CAPTURE_THINKING) &&
                          exists("THINKING_LOG_PATH") && !is.null(THINKING_LOG_PATH)
-      raw             <- llm_ollama(system_prompt = system_prompt, text = chunk_input,
-                                    params = llm_params, capture_thinking = do_capture)
+      raw             <- if (grepl("^groq/", LLM_MODEL))
+                          llm_groq(system_prompt = system_prompt, text = chunk_input,
+                                   model = LLM_MODEL, params = llm_params,
+                                   capture_thinking = do_capture)
+                        else
+                          llm_ollama(system_prompt = system_prompt, text = chunk_input,
+                                     params = llm_params, capture_thinking = do_capture)
       last_raw        <- raw
 
       # Try to parse and validate the response.  tryCatch returns either the
@@ -669,13 +674,15 @@ llm_batch <- function(paths, system_prompt, user_prefix, key_col, extra_cols,
         )
 
         # ── CSV (one row per prompt call) ────────────────────────────────────
-        write.table(log_row,
-                    file      = THINKING_LOG_PATH,
-                    sep       = ",",
-                    col.names = !file.exists(THINKING_LOG_PATH),
-                    row.names = FALSE,
-                    append    = TRUE,
-                    qmethod   = "double")
+        suppressWarnings(
+          write.table(log_row,
+                      file      = THINKING_LOG_PATH,
+                      sep       = ",",
+                      col.names = !file.exists(THINKING_LOG_PATH),
+                      row.names = FALSE,
+                      append    = TRUE,
+                      qmethod   = "double")
+        )
 
         # ── Markdown (human-readable) ────────────────────────────────────────
         md_path  <- sub("\\.csv$", ".md", THINKING_LOG_PATH)
@@ -806,7 +813,11 @@ normalize_label <- function(x) {
   )
 }
 
-# Extract embedded variable labels from a Haven-labelled data.frame (SPSS/DTA).
+# Extract embedded variable labels from a haven-read data.frame (SPSS/Stata/SAS).
+# df   — data.frame read via haven::read_sav/read_dta/read_sas (n_max=0 is fine)
+# src  — basename of the source file, written to codebook_source in the result
+# Returns a data.frame with columns: codebook_variable, label, codebook_source, group
+# or NULL if no labelled columns found. Caller adds parse_method = "haven".
 .extract_haven_labels <- function(df, src) {
   labels <- vapply(names(df), function(col) {
     lbl <- attr(df[[col]], "label")

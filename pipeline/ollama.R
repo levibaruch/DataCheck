@@ -37,8 +37,9 @@ llm_ollama <- function(text, system_prompt,
     stop("Set llm_use(TRUE) to use LLM functions")
   }
 
-  if (!is.null(think) && !think %in% c("low", "medium", "high")) {
-    stop("`think` must be one of 'low', 'medium', 'high', or NULL")
+  if (!is.null(think) && !isTRUE(think) && !isFALSE(think) &&
+      !think %in% c("low", "medium", "high")) {
+    stop("`think` must be TRUE/FALSE or one of 'low', 'medium', 'high', or NULL")
   }
 
   # make a data frame if text is a vector
