@@ -20,14 +20,19 @@
 #   results/normal_report_<date>_group_conf.png       group confusion matrix heatmap
 #   results/normal_report_<date>_dg_conf.png          data_granularity confusion heatmap
 #   results/normal_report_<date>_df_conf.png           data_format confusion heatmap
+#   results/normal_report_<date>_corpus_repo_sizes.png ranked dot plot of files per paper
+#   results/normal_report_<date>_corpus_type_dist.png  ground truth file type distribution
+#   results/normal_report_<date>_corpus_data_dist.png       granularity + format heatmap (data files)
+#   results/normal_report_<date>_corpus_paper_prevalence.png % repos with each data subcategory
 #
 # Usage (interactive):  source("runners/report_normal.R")
 # Usage (CLI):          Rscript runners/report_normal.R
 # ─────────────────────────────────────────────────────────────────────────────
 
-OUTPUTS_DIR  <- "./outputs"
-GT_DIR       <- "./tests/ground_truth"
-REPORT_DIR   <- "./results"
+OUTPUTS_DIR      <- "./outputs"
+GT_DIR           <- "./tests/ground_truth"
+REPORT_DIR       <- "./results"
+SOURCE_CORPUS_DIR <- "/Volumes/Models/expanded_xml"   # path to MetaCheck XML corpus; set NA to skip
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -431,6 +436,17 @@ kappa_interp <- function(k) {
   return("almost perfect (0.80–1.00)")
 }
 
+# ── Corpus distribution stats ─────────────────────────────────────────────────
+
+corpus_repo_sizes  <- sort(table(acc$paper_id), decreasing = TRUE)
+corpus_type_counts      <- sort(table(acc$type_gt), decreasing = TRUE)
+small_papers            <- names(corpus_repo_sizes)[as.numeric(corpus_repo_sizes) <= 500]
+corpus_type_counts_sm   <- sort(table(acc$type_gt[acc$paper_id %in% small_papers]), decreasing = TRUE)
+
+data_only <- acc[!is.na(acc$type_gt) & acc$type_gt == "data", ]
+corpus_dg_counts  <- sort(table(data_only$data_granularity_gt), decreasing = TRUE)
+corpus_df_counts  <- sort(table(data_only$data_format_gt),      decreasing = TRUE)
+
 # ── Build report ──────────────────────────────────────────────────────────────
 
 lines <- character(0)
@@ -474,6 +490,53 @@ L("**File-pooled vs. paper-averaged:** all metrics appear in two forms throughou
 BR()
 L("- _File-pooled_: computed across all files at once. A paper with 2000 files contributes 2000 votes; a paper with 10 contributes 10. Reflects overall pipeline throughput.")
 L("- _Paper-averaged_: each metric is computed per paper, then averaged across papers. Every paper contributes equally regardless of size. This is the primary metric — it treats each study as one replication unit, consistent with how psychology research is aggregated.")
+BR()
+L("---")
+BR()
+
+# ── 0. Ground Truth Corpus ───────────────────────────────────────────────────
+
+L("## 0. Ground Truth Corpus")
+BR()
+L("_Distribution of the ", tn_total, " annotated files across ", n_papers, " papers._")
+BR()
+L("### Repository sizes")
+BR()
+L("![Files per paper](corpus_repo_sizes.png)")
+BR()
+{
+  large <- sort(as.numeric(corpus_repo_sizes)[as.numeric(corpus_repo_sizes) > 500], decreasing = TRUE)
+  if (length(large) > 0)
+    L("_", length(large), " paper(s) above 500 files excluded from plot: ", paste(large, collapse = ", "), "_")
+}
+BR()
+L("### File type distribution")
+BR()
+L("![type_gt distribution — all papers](corpus_type_dist.png)")
+BR()
+L("![type_gt distribution — papers ≤500 files](corpus_type_dist_sm.png)")
+BR()
+L("### Data granularity and format _(data files only)_")
+BR()
+L("![data granularity and format distribution](corpus_data_dist.png)")
+BR()
+L("### Repositories containing each data subcategory")
+BR()
+L("![paper-level subcategory prevalence](corpus_paper_prevalence.png)")
+BR()
+L("### LaTeX table source")
+BR()
+L("_Requires `values.tex` imported. Copy-paste into Overleaf._")
+BR()
+{
+  tbl_path <- "docs/corpus_tables.txt"
+  if (file.exists(tbl_path)) {
+    tbl_src <- paste(readLines(tbl_path, warn = FALSE), collapse = "\n")
+    L("```latex")
+    L(tbl_src)
+    L("```")
+  }
+}
 BR()
 L("---")
 BR()
@@ -1155,6 +1218,464 @@ writeLines(app, app_path)
 cat(sprintf("  [appendix] written to: %s\n", app_path))
 cat(sprintf("  [report] written to: %s\n", out_path))
 
+# ── LaTeX values export (for Overleaf \input{}) ───────────────────────────────
+
+kappa_label_tex <- function(k) {
+  if (is.na(k)) return("n/a")
+  if (k < 0)    return("poor ($< 0$)")
+  if (k < 0.20) return("slight ($< 0.20$)")
+  if (k < 0.40) return("fair (0.20--0.40)")
+  if (k < 0.60) return("moderate (0.40--0.60)")
+  if (k < 0.80) return("substantial (0.60--0.80)")
+  return("almost perfect (0.80--1.00)")
+}
+
+tex_cmd  <- function(name, value, label = NULL) {
+  cmd <- sprintf("\\newcommand{\\dc%s}{%s}", name, value)
+  if (!is.null(label)) cmd <- sprintf("%-60s %% %s", cmd, label)
+  cmd
+}
+pct_tex  <- function(x, digits = 1) if (is.na(x)) "n/a" else sprintf(paste0("%.", digits, "f\\%%"), x)
+num_tex  <- function(x, digits = 3) if (is.na(x)) "n/a" else sprintf(paste0("%.", digits, "f"), x)
+int_tex  <- function(x) if (is.na(x)) "n/a" else as.character(as.integer(round(x)))
+cls_name <- function(x) {
+  s <- gsub("[^A-Za-z0-9]", "", tools::toTitleCase(x))
+  for (p in list(c("0","Zero"),c("1","One"),c("2","Two"),c("3","Three"),c("4","Four"),
+                 c("5","Five"),c("6","Six"),c("7","Seven"),c("8","Eight"),c("9","Nine")))
+    s <- gsub(p[1], p[2], s, fixed = TRUE)
+  s
+}
+
+T <- function(...) tex_lines <<- c(tex_lines, ...)   # append lines
+S <- function(hdr) T("", paste0("% ── ", hdr, " ", strrep("─", max(0, 68 - nchar(hdr)))), "")
+
+tex_lines <- c(
+  "% Auto-generated by report_normal.R — do not edit by hand",
+  sprintf("%% Generated: %s", format(Sys.time(), "%Y-%m-%d %H:%M:%S"))
+)
+
+# ── 1. Corpus description ─────────────────────────────────────────────────────
+S("Corpus")
+
+n_papers_total <- length(unique(valid$paper_id))
+n_files_total  <- nrow(valid)
+
+# Files per paper
+files_per_paper <- table(valid$paper_id)
+fpp <- as.integer(files_per_paper)
+T(tex_cmd("NPapers",           int_tex(n_papers_total),     "Number of papers in corpus"),
+  tex_cmd("NFiles",            int_tex(n_files_total),      "Total annotated files"),
+  tex_cmd("FilesPerPaperMean", num_tex(mean(fpp), 1),       "Mean files per paper"),
+  tex_cmd("FilesPerPaperMed",  num_tex(median(fpp), 1),     "Median files per paper"),
+  tex_cmd("FilesPerPaperSD",   num_tex(sd(fpp), 1),         "SD files per paper"),
+  tex_cmd("FilesPerPaperMin",  int_tex(min(fpp)),            "Min files in a paper"),
+  tex_cmd("FilesPerPaperMax",  int_tex(max(fpp)),            "Max files in a paper"),
+  tex_cmd("FilesPerPaperQone",   num_tex(quantile(fpp, 0.25), 1), "Q1 files per paper"),
+  tex_cmd("FilesPerPaperQthree", num_tex(quantile(fpp, 0.75), 1), "Q3 files per paper"))
+
+# Ground-truth file type counts & fractions
+gt_type_tbl <- sort(table(valid$type_gt), decreasing = TRUE)
+for (nm in names(gt_type_tbl)) {
+  cn <- cls_name(nm)
+  n  <- as.integer(gt_type_tbl[nm])
+  T(tex_cmd(paste0("NFiles",   cn), int_tex(n),                          sprintf("N files of type '%s'", nm)),
+    tex_cmd(paste0("PctFiles", cn), pct_tex(100 * n / n_files_total),    sprintf("%% of all files that are '%s'", nm)))
+}
+
+# N papers per file type (how many papers have >= 1 file of that type)
+for (nm in names(gt_type_tbl)) {
+  cn <- cls_name(nm)
+  np <- length(unique(valid$paper_id[valid$type_gt == nm]))
+  T(tex_cmd(paste0("NPapers", cn), int_tex(np), sprintf("Papers containing >= 1 '%s' file", nm)))
+}
+
+# Number of classes observed
+T(tex_cmd("NClasses", int_tex(length(gt_type_tbl)), "Number of distinct file-type classes"))
+
+# Source corpus size ──────────────────────────────────────────────────────────
+src_n <- if (!is.na(SOURCE_CORPUS_DIR) && dir.exists(SOURCE_CORPUS_DIR)) {
+  length(list.files(SOURCE_CORPUS_DIR, pattern = "\\.xml$"))
+} else NA_integer_
+T(tex_cmd("SourceCorpusN", int_tex(src_n), "Total papers in source MetaCheck XML corpus"))
+
+# GT year distribution ────────────────────────────────────────────────────────
+# IDs encode year as digits 8-9 of the 16-digit string: 09567976YY...
+gt_ids_all   <- unique(valid$paper_id)
+gt_year_raw  <- as.integer(substr(gt_ids_all, 9, 10))
+# two-digit prefix maps: 13->2013 ... 24->2024; values >=13 assumed 20xx
+gt_year      <- ifelse(gt_year_raw >= 13, 2000L + gt_year_raw, 2000L + gt_year_raw)
+gt_year_tbl  <- sort(table(gt_year))
+
+gt_year_min  <- min(gt_year)
+gt_year_max  <- max(gt_year)
+early_mask   <- gt_year >= 2014 & gt_year <= 2017
+n_early      <- sum(early_mask)
+pct_early    <- 100 * n_early / length(gt_year)
+
+T(tex_cmd("GTYearMin",    int_tex(gt_year_min),  "Earliest publication year in GT corpus"),
+  tex_cmd("GTYearMax",    int_tex(gt_year_max),  "Latest publication year in GT corpus"),
+  tex_cmd("GTNEarly",     int_tex(n_early),      "GT papers from 2014-2017 (early open-data period)"),
+  tex_cmd("GTPctEarly",   pct_tex(pct_early),    "% GT papers from 2014-2017"))
+
+yr_words <- c("2013"="Thirteen","2014"="Fourteen","2015"="Fifteen","2016"="Sixteen",
+              "2017"="Seventeen","2018"="Eighteen","2019"="Nineteen","2020"="Twenty",
+              "2021"="TwentyOne","2022"="TwentyTwo","2023"="TwentyThree","2024"="TwentyFour")
+for (yr in as.integer(names(gt_year_tbl))) {
+  n_yr  <- as.integer(gt_year_tbl[as.character(yr)])
+  wrd   <- yr_words[as.character(yr)]
+  if (is.na(wrd)) next
+  T(tex_cmd(paste0("GTNYear",   wrd), int_tex(n_yr),
+            sprintf("GT papers from %d", yr)),
+    tex_cmd(paste0("GTPctYear", wrd), pct_tex(100 * n_yr / length(gt_year)),
+            sprintf("%% GT papers from %d", yr)))
+}
+
+# Corpus stats excluding large repos (> 500 files) ────────────────────────────
+small_fpp     <- fpp[fpp <= 500]
+sm_papers     <- names(files_per_paper)[files_per_paper <= 500]
+sm_valid      <- valid[valid$paper_id %in% sm_papers, ]
+sm_type_tbl   <- sort(table(sm_valid$type_gt), decreasing = TRUE)
+n_sm_papers   <- length(sm_papers)
+n_sm_files    <- nrow(sm_valid)
+T(tex_cmd("NPapersSm",           int_tex(n_sm_papers),         "Papers with <= 500 files (outlier-removed)"),
+  tex_cmd("NFilesSm",            int_tex(n_sm_files),          "Total files in outlier-removed corpus"),
+  tex_cmd("FilesPerPaperMeanSm", num_tex(mean(small_fpp), 1),  "Mean files per paper (outlier-removed)"),
+  tex_cmd("FilesPerPaperMedSm",  num_tex(median(small_fpp), 1),"Median files per paper (outlier-removed)"),
+  tex_cmd("FilesPerPaperSDSm",   num_tex(sd(small_fpp), 1),    "SD files per paper (outlier-removed)"))
+for (nm in names(sm_type_tbl)) {
+  cn <- cls_name(nm)
+  n  <- as.integer(sm_type_tbl[nm])
+  np <- length(unique(sm_valid$paper_id[sm_valid$type_gt == nm]))
+  T(tex_cmd(paste0("NFilesSm",   cn), int_tex(n),               sprintf("N files type '%s' (outlier-removed)", nm)),
+    tex_cmd(paste0("PctFilesSm", cn), pct_tex(100 * n / n_sm_files), sprintf("%% files type '%s' (outlier-removed)", nm)),
+    tex_cmd(paste0("NPapersSm",  cn), int_tex(np),              sprintf("Papers with >= 1 '%s' file (outlier-removed)", nm)))
+}
+
+# % papers containing >= 1 individual / combined data file ────────────────────
+dg_ann      <- acc[!is.na(acc$type_gt) & acc$type_gt == "data" & !is.na(acc$data_granularity_gt), ]
+n_dg_papers <- length(unique(dg_ann$paper_id))
+for (lvl in c("individual", "combined")) {
+  cn  <- cls_name(lvl)
+  np  <- length(unique(dg_ann$paper_id[dg_ann$data_granularity_gt == lvl]))
+  T(tex_cmd(paste0("NPapersHasDG", cn), int_tex(np),
+            sprintf("Papers with >= 1 %s data file", lvl)),
+    tex_cmd(paste0("PctPapersHasDG", cn), pct_tex(100 * np / n_dg_papers),
+            sprintf("%% of DG-annotated papers with >= 1 %s data file", lvl)))
+}
+
+# % papers containing >= 1 raw / tabular data file ────────────────────────────
+df_ann      <- acc[!is.na(acc$type_gt) & acc$type_gt == "data" & !is.na(acc$data_format_gt), ]
+n_df_papers <- length(unique(df_ann$paper_id))
+for (lvl in c("raw", "tabular")) {
+  cn  <- cls_name(lvl)
+  np  <- length(unique(df_ann$paper_id[df_ann$data_format_gt == lvl]))
+  T(tex_cmd(paste0("NPapersHasDF", cn), int_tex(np),
+            sprintf("Papers with >= 1 %s data file", lvl)),
+    tex_cmd(paste0("PctPapersHasDF", cn), pct_tex(100 * np / n_df_papers),
+            sprintf("%% of DF-annotated papers with >= 1 %s data file", lvl)))
+}
+
+# Data-subtype counts
+n_dg_files <- sum(!is.na(acc$data_granularity_gt))
+n_df_files <- sum(!is.na(acc$data_format_gt))
+T(tex_cmd("NDGFiles",     int_tex(n_dg_files),       "Files with data_granularity annotation"),
+  tex_cmd("NDFFiles",     int_tex(n_df_files),       "Files with data_format annotation"),
+  tex_cmd("NDGPapers",    int_tex(n_papers_dg),      "Papers with data_granularity annotation"),
+  tex_cmd("NDFPapers",    int_tex(n_papers_df),      "Papers with data_format annotation"),
+  tex_cmd("NGroupFiles",  int_tex(gn),               "Files with group annotation"),
+  tex_cmd("NGroupPapers", int_tex(n_papers_group),   "Papers with group annotation"))
+
+# DG class breakdown
+if (!is.null(cm_dg)) {
+  dg_ann <- acc[!is.na(acc$data_granularity_gt), ]
+  for (lvl in rownames(cm_dg)) {
+    cn  <- cls_name(lvl)
+    n   <- sum(cm_dg[lvl, ])
+    np  <- length(unique(dg_ann$paper_id[dg_ann$data_granularity_gt == lvl]))
+    npt <- length(unique(dg_ann$paper_id))
+    T(tex_cmd(paste0("NDG",       cn), int_tex(n),                    sprintf("N data files with granularity = '%s'", lvl)),
+      tex_cmd(paste0("PctDG",     cn), pct_tex(100 * n / sum(cm_dg)), sprintf("%% of granularity-annotated data files that are '%s'", lvl)),
+      tex_cmd(paste0("NPapersDG", cn), int_tex(np),                   sprintf("Papers containing >= 1 data file with granularity = '%s'", lvl)),
+      tex_cmd(paste0("PctPapersDG", cn), pct_tex(100 * np / npt),     sprintf("%% of DG-annotated papers with >= 1 '%s' data file", lvl)))
+  }
+}
+# DF class breakdown
+if (!is.null(cm_df)) {
+  df_ann <- acc[!is.na(acc$data_format_gt), ]
+  for (lvl in rownames(cm_df)) {
+    cn  <- cls_name(lvl)
+    n   <- sum(cm_df[lvl, ])
+    np  <- length(unique(df_ann$paper_id[df_ann$data_format_gt == lvl]))
+    npt <- length(unique(df_ann$paper_id))
+    T(tex_cmd(paste0("NDF",       cn), int_tex(n),                    sprintf("N data files with format = '%s'", lvl)),
+      tex_cmd(paste0("PctDF",     cn), pct_tex(100 * n / sum(cm_df)), sprintf("%% of format-annotated data files that are '%s'", lvl)),
+      tex_cmd(paste0("NPapersDF", cn), int_tex(np),                   sprintf("Papers containing >= 1 data file with format = '%s'", lvl)),
+      tex_cmd(paste0("PctPapersDF", cn), pct_tex(100 * np / npt),     sprintf("%% of DF-annotated papers with >= 1 '%s' data file", lvl)))
+  }
+}
+
+# ── 2. Primary metrics: paper-averaged ────────────────────────────────────────
+S("Paper-averaged (primary)")
+T(tex_cmd("PaKappa",      num_tex(pa_kappa),           "Paper-avg Cohen's kappa"),
+  tex_cmd("PaKappaLabel", kappa_label_tex(pa_kappa),   "Landis & Koch label for paper-avg kappa"),
+  tex_cmd("PaMacroF",     pct_tex(pa_macro_f1),        "Paper-avg macro F1"),
+  tex_cmd("PaMCC",        num_tex(pa_mcc),             "Paper-avg MCC"),
+  tex_cmd("PaAccuracy",   pct_tex(pa_accuracy),        "Paper-avg type accuracy"),
+  tex_cmd("PaGroupAcc",   pct_tex(pa_group_acc),       "Paper-avg group accuracy"),
+  tex_cmd("PaDGAcc",      pct_tex(pa_dg_acc),          "Paper-avg data_granularity accuracy"),
+  tex_cmd("PaDFAcc",      pct_tex(pa_df_acc),          "Paper-avg data_format accuracy"),
+  tex_cmd("NPapersGroup", int_tex(n_papers_group),     "Papers with group ground truth"),
+  tex_cmd("NPapersDG",    int_tex(n_papers_dg),        "Papers with data_granularity ground truth"),
+  tex_cmd("NPapersDF",    int_tex(n_papers_df),        "Papers with data_format ground truth"))
+
+# ── 3. File-pooled metrics ────────────────────────────────────────────────────
+S("File-pooled (secondary)")
+fp_overall_acc   <- sum(valid$type_gt == valid$type) / nrow(valid) * 100
+fp_correct       <- sum(valid$type_gt == valid$type)
+fp_group_correct <- sum(!is.na(grp_valid$group_gt) & grp_valid$group_gt == grp_valid$group)
+fp_dg_correct    <- if (!is.null(cm_dg)) sum(diag(cm_dg)) else NA_integer_
+fp_df_correct    <- if (!is.null(cm_df)) sum(diag(cm_df)) else NA_integer_
+T(tex_cmd("FpKappa",        num_tex(kappa),             "File-pooled Cohen's kappa"),
+  tex_cmd("FpKappaLabel",   kappa_label_tex(kappa),     "Landis & Koch label for file-pooled kappa"),
+  tex_cmd("FpMacroF",       pct_tex(macro_f1),          "File-pooled macro F1"),
+  tex_cmd("FpMicroF",       pct_tex(micro_f1),          "File-pooled micro F1 (= overall accuracy)"),
+  tex_cmd("FpMCC",          num_tex(mcc),               "File-pooled MCC"),
+  tex_cmd("FpAccuracy",     pct_tex(fp_overall_acc),    "File-pooled type accuracy"),
+  tex_cmd("FpNCorrect",     int_tex(fp_correct),        "N files classified correctly (type)"),
+  tex_cmd("FpNWrong",       int_tex(n_files_total - fp_correct), "N files misclassified (type)"),
+  tex_cmd("FpGroupAcc",     pct_tex(100 * fp_group_correct / max(1L, gn)), "File-pooled group accuracy"),
+  tex_cmd("FpGroupCorrect", int_tex(fp_group_correct),  "N files with correct group prediction"),
+  tex_cmd("FpDGAcc",        pct_tex(if (!is.null(cm_dg)) 100 * fp_dg_correct / sum(cm_dg) else NA_real_), "File-pooled data_granularity accuracy"),
+  tex_cmd("FpDGCorrect",    int_tex(fp_dg_correct),     "N data files with correct granularity prediction"),
+  tex_cmd("FpDFAcc",        pct_tex(if (!is.null(cm_df)) 100 * fp_df_correct / sum(cm_df) else NA_real_), "File-pooled data_format accuracy"),
+  tex_cmd("FpDFCorrect",    int_tex(fp_df_correct),     "N data files with correct format prediction"))
+
+# ── 4. Per-paper distribution stats ───────────────────────────────────────────
+S("Per-paper distribution stats")
+kap_vals  <- per_paper_full$kappa[!is.na(per_paper_full$kappa)]
+f1_vals   <- per_paper_full$macro_f1[!is.na(per_paper_full$macro_f1)]
+mcc_vals2 <- per_paper_full$mcc[!is.na(per_paper_full$mcc)]
+acc_vals  <- per_paper_full$type_acc[!is.na(per_paper_full$type_acc)]
+grp_acc_v <- per_paper_full$group_acc[!is.na(per_paper_full$group_acc)]
+dg_acc_v  <- per_paper_full$dg_acc[!is.na(per_paper_full$dg_acc)]
+df_acc_v  <- per_paper_full$df_acc[!is.na(per_paper_full$df_acc)]
+
+for (pair in list(
+  list("Kappa",    kap_vals,  "num_tex", "Cohen's kappa"),
+  list("MacroF",   f1_vals,   "pct_tex", "Macro F1"),
+  list("MCC",      mcc_vals2, "num_tex", "MCC"),
+  list("Acc",      acc_vals,  "pct_tex", "Type accuracy"),
+  list("GroupAcc", grp_acc_v, "pct_tex", "Group accuracy"),
+  list("DGAcc",    dg_acc_v,  "pct_tex", "Data granularity accuracy"),
+  list("DFAcc",    df_acc_v,  "pct_tex", "Data format accuracy")
+)) {
+  pfx <- pair[[1]]; vals <- pair[[2]]; fn <- pair[[3]]; lbl <- pair[[4]]
+  fmt <- if (fn == "pct_tex") pct_tex else num_tex
+  T(tex_cmd(paste0(pfx, "Mean"),   fmt(mean(vals,           na.rm = TRUE)), paste("Per-paper", lbl, "mean")),
+    tex_cmd(paste0(pfx, "Median"), fmt(median(vals,         na.rm = TRUE)), paste("Per-paper", lbl, "median")),
+    tex_cmd(paste0(pfx, "SD"),     fmt(sd(vals,             na.rm = TRUE)), paste("Per-paper", lbl, "SD")),
+    tex_cmd(paste0(pfx, "Min"),    fmt(min(vals,            na.rm = TRUE)), paste("Per-paper", lbl, "min")),
+    tex_cmd(paste0(pfx, "Max"),    fmt(max(vals,            na.rm = TRUE)), paste("Per-paper", lbl, "max")),
+    tex_cmd(paste0(pfx, "Qone"),   fmt(quantile(vals, 0.25, na.rm = TRUE)), paste("Per-paper", lbl, "Q1 (25th pct)")),
+    tex_cmd(paste0(pfx, "Qthree"), fmt(quantile(vals, 0.75, na.rm = TRUE)), paste("Per-paper", lbl, "Q3 (75th pct)")))
+}
+
+# ── 5. Accuracy buckets ───────────────────────────────────────────────────────
+S("Accuracy buckets across papers")
+breaks    <- c(0, 50, 70, 85, 95, 100)
+blabels   <- c("LtFifty", "FiftyToSeventy", "SeventyToEightyFive", "EightyFiveToNinetyFive", "NinetyFiveToHundred")
+bdescs    <- c("< 50%", "50-70%", "70-85%", "85-95%", "95-100%")
+bucket    <- cut(acc_vals, breaks = breaks, include.lowest = TRUE, right = TRUE, labels = bdescs)
+bcounts   <- table(factor(bucket, levels = bdescs))
+for (i in seq_along(blabels))
+  T(tex_cmd(paste0("BucketN",   blabels[i]), int_tex(as.integer(bcounts[[i]])),
+            sprintf("Papers with type accuracy %s", bdescs[i])),
+    tex_cmd(paste0("BucketPct", blabels[i]), pct_tex(100 * as.integer(bcounts[[i]]) / length(acc_vals)),
+            sprintf("%% of papers with type accuracy %s", bdescs[i])))
+T(tex_cmd("NBadPapers",  int_tex(sum(acc_vals < 50,  na.rm = TRUE)), "Papers with type accuracy < 50%"),
+  tex_cmd("NGoodPapers", int_tex(sum(acc_vals >= 95, na.rm = TRUE)), "Papers with type accuracy >= 95%"))
+
+# ── 6. Per-class metrics ──────────────────────────────────────────────────────
+S("Per-class F1 — paper-averaged")
+for (i in seq_len(nrow(pa_class_metrics))) {
+  cl <- pa_class_metrics$class[i]; cn <- cls_name(cl)
+  T(tex_cmd(paste0("PaFscore",   cn), pct_tex(pa_class_metrics$pa_f1[i]),    sprintf("Paper-avg F1 for class '%s'", cl)),
+    tex_cmd(paste0("PaFscoreSD", cn), pct_tex(pa_class_metrics$pa_f1_sd[i]), sprintf("SD of paper-level F1 for class '%s'", cl)))
+}
+
+S("Per-class metrics — file-pooled")
+for (i in seq_len(nrow(class_metrics))) {
+  cl <- class_metrics$class[i]; cn <- cls_name(cl); cm_i <- class_metrics[i, ]
+  T(tex_cmd(paste0("FpFscore",     cn), pct_tex(cm_i$f1),        sprintf("File-pooled F1 for '%s'", cl)),
+    tex_cmd(paste0("FpPrecision", cn), pct_tex(cm_i$precision), sprintf("File-pooled precision for '%s'", cl)),
+    tex_cmd(paste0("FpRecall",    cn), pct_tex(cm_i$recall),    sprintf("File-pooled recall for '%s'", cl)),
+    tex_cmd(paste0("FpFPR",       cn), pct_tex(cm_i$fpr),       sprintf("File-pooled FPR for '%s' (false alarm rate)", cl)),
+    tex_cmd(paste0("FpFNR",       cn), pct_tex(cm_i$fnr),       sprintf("File-pooled FNR for '%s' (miss rate)", cl)),
+    tex_cmd(paste0("TP",          cn), int_tex(cm_i$tp),        sprintf("True positives for '%s'", cl)),
+    tex_cmd(paste0("FP",          cn), int_tex(cm_i$fp),        sprintf("False positives for '%s' (predicted as '%s' but not)", cl, cl)),
+    tex_cmd(paste0("FN",          cn), int_tex(cm_i$fn),        sprintf("False negatives for '%s' (missed '%s' files)", cl, cl)))
+}
+
+# ── 7. DG and DF confusion cells ─────────────────────────────────────────────
+S("DG confusion cells")
+if (!is.null(cm_dg) && all(c("combined","individual") %in% rownames(cm_dg))) {
+  T(tex_cmd("DGCombinedPredCombined",   int_tex(cm_dg["combined",   "combined"]),   "GT=combined, pred=combined (correct)"),
+    tex_cmd("DGCombinedPredIndividual", int_tex(cm_dg["combined",   "individual"]), "GT=combined, pred=individual (FN for combined)"),
+    tex_cmd("DGIndividualPredCombined", int_tex(cm_dg["individual", "combined"]),   "GT=individual, pred=combined (FN for individual)"),
+    tex_cmd("DGIndividualPredIndiv",    int_tex(cm_dg["individual", "individual"]), "GT=individual, pred=individual (correct)"),
+    tex_cmd("DGPrecisionCombined",      pct_tex(100 * cm_dg["combined",   "combined"] /
+                                          max(1L, sum(cm_dg[, "combined"]))),    "Precision for combined granularity"),
+    tex_cmd("DGRecallCombined",         pct_tex(100 * cm_dg["combined",   "combined"] /
+                                          max(1L, sum(cm_dg["combined", ]))),    "Recall for combined granularity"),
+    tex_cmd("DGPrecisionIndividual",    pct_tex(100 * cm_dg["individual", "individual"] /
+                                          max(1L, sum(cm_dg[, "individual"]))), "Precision for individual granularity"),
+    tex_cmd("DGRecallIndividual",       pct_tex(100 * cm_dg["individual", "individual"] /
+                                          max(1L, sum(cm_dg["individual", ]))), "Recall for individual granularity"))
+}
+
+S("DF confusion cells")
+if (!is.null(cm_df) && all(c("raw","tabular") %in% rownames(cm_df))) {
+  T(tex_cmd("DFRawPredRaw",       int_tex(cm_df["raw",     "raw"]),     "GT=raw, pred=raw (correct)"),
+    tex_cmd("DFRawPredTabular",   int_tex(cm_df["raw",     "tabular"]), "GT=raw, pred=tabular (FN for raw)"),
+    tex_cmd("DFTabularPredRaw",   int_tex(cm_df["tabular", "raw"]),     "GT=tabular, pred=raw (FN for tabular)"),
+    tex_cmd("DFTabularPredTab",   int_tex(cm_df["tabular", "tabular"]), "GT=tabular, pred=tabular (correct)"),
+    tex_cmd("DFPrecisionRaw",     pct_tex(100 * cm_df["raw",     "raw"] /
+                                    max(1L, sum(cm_df[, "raw"]))),      "Precision for raw format"),
+    tex_cmd("DFRecallRaw",        pct_tex(100 * cm_df["raw",     "raw"] /
+                                    max(1L, sum(cm_df["raw", ]))),      "Recall for raw format"),
+    tex_cmd("DFPrecisionTabular", pct_tex(100 * cm_df["tabular", "tabular"] /
+                                    max(1L, sum(cm_df[, "tabular"]))),  "Precision for tabular format"),
+    tex_cmd("DFRecallTabular",    pct_tex(100 * cm_df["tabular", "tabular"] /
+                                    max(1L, sum(cm_df["tabular", ]))),  "Recall for tabular format"))
+}
+
+# ── 8. Downstream data FP/FN ─────────────────────────────────────────────────
+S("Downstream data FP/FN")
+data_fp_out <- valid[valid$type_gt != "data" & valid$type == "data", ]
+data_fn_out <- valid[valid$type_gt == "data" & valid$type != "data", ]
+T(tex_cmd("DataFPTotal", int_tex(nrow(data_fp_out)),  "Non-data files predicted as data (false positives)"),
+  tex_cmd("DataFNTotal", int_tex(nrow(data_fn_out)),  "Data files missed / not predicted as data (false negatives)"),
+  tex_cmd("DataFPRate",  pct_tex(100 * nrow(data_fp_out) /
+                           max(1L, sum(valid$type == "data"))),    "FP rate: FPs as % of all predicted-data files"),
+  tex_cmd("DataFNRate",  pct_tex(100 * nrow(data_fn_out) /
+                           max(1L, sum(valid$type_gt == "data"))), "FN rate: missed data files as % of all true data files"))
+
+# Per-source FP breakdown
+if (nrow(data_fp_out) > 0) {
+  fp_src_tbl <- sort(table(data_fp_out$type_gt), decreasing = TRUE)
+  for (nm in names(fp_src_tbl)) {
+    cn <- cls_name(nm)
+    T(tex_cmd(paste0("DataFPFrom",    cn), int_tex(as.integer(fp_src_tbl[nm])),
+              sprintf("N '%s' files wrongly predicted as data (FPs)", nm)),
+      tex_cmd(paste0("DataFPPctFrom", cn), pct_tex(100 * as.integer(fp_src_tbl[nm]) / nrow(data_fp_out)),
+              sprintf("%% of data FPs that are actually '%s'", nm)))
+  }
+}
+# Per-dest FN breakdown
+if (nrow(data_fn_out) > 0) {
+  fn_dest_tbl <- sort(table(data_fn_out$type), decreasing = TRUE)
+  for (nm in names(fn_dest_tbl)) {
+    cn <- cls_name(nm)
+    T(tex_cmd(paste0("DataFNTo",    cn), int_tex(as.integer(fn_dest_tbl[nm])),
+              sprintf("N data files misclassified as '%s' (FNs)", nm)),
+      tex_cmd(paste0("DataFNPctTo", cn), pct_tex(100 * as.integer(fn_dest_tbl[nm]) / nrow(data_fn_out)),
+              sprintf("%% of data FNs predicted as '%s'", nm)))
+  }
+}
+
+# ── 9. Top confusion pairs ────────────────────────────────────────────────────
+S("Top confusion pairs")
+wrong_all   <- valid[valid$type_gt != valid$type, ]
+total_wrong <- nrow(wrong_all)
+T(tex_cmd("NTotalErrors", int_tex(total_wrong),                          "Total misclassified files (type)"),
+  tex_cmd("ErrorRate",    pct_tex(100 * total_wrong / n_files_total),    "Overall error rate (type)"))
+
+pair_tbl    <- sort(table(paste0(wrong_all$type_gt, "To", wrong_all$type)), decreasing = TRUE)
+human_pairs <- gsub("([a-z])([A-Z])", "\\1 → \\2",
+                    gsub("To([A-Z])", " → \\1", names(pair_tbl)))
+for (i in seq_len(min(20L, length(pair_tbl)))) {
+  nm      <- names(pair_tbl)[i]
+  cnt     <- as.integer(pair_tbl[nm])
+  safe_nm <- gsub("[^A-Za-z0-9]", "", nm)
+  # Reconstruct readable label: "softwareTodata" → "software → data"
+  readable <- sub("^(.*?)To([A-Z].*)$", "\\1 → \\2", nm)
+  readable <- paste0(tolower(substring(readable, 1, 1)), substring(readable, 2))
+  T(tex_cmd(paste0("Pair",    safe_nm), int_tex(cnt),
+            sprintf("Confusion pair %s: count", readable)),
+    tex_cmd(paste0("PairPct", safe_nm), pct_tex(100 * cnt / max(1L, total_wrong)),
+            sprintf("Confusion pair %s: %% of all errors", readable)))
+}
+
+# ── 10. Type-source accuracy ──────────────────────────────────────────────────
+S("Accuracy by classification method (type_source)")
+if (exists("src_data_4d") && length(src_data_4d) > 0) {
+  for (src in names(src_data_4d)) {
+    sn  <- gsub("[^A-Za-z0-9]", "", tools::toTitleCase(src))
+    d   <- src_data_4d[[src]]
+    rows_src <- acc[!is.na(acc$type_source) & acc$type_source == src, ]
+    T(tex_cmd(paste0("Src", sn, "NFiles"),  int_tex(sum(!is.na(rows_src$type_gt) & !is.na(rows_src$type))),
+              sprintf("N files classified by method '%s'", src)),
+      tex_cmd(paste0("Src", sn, "NPapers"), int_tex(length(unique(rows_src$paper_id))),
+              sprintf("N papers using method '%s'", src)),
+      tex_cmd(paste0("Src", sn, "PaType"),  pct_tex(d["pa_type"]),
+              sprintf("Paper-avg type accuracy for method '%s'", src)),
+      tex_cmd(paste0("Src", sn, "FpType"),  pct_tex(d["fp_type"]),
+              sprintf("File-pooled type accuracy for method '%s'", src)),
+      tex_cmd(paste0("Src", sn, "PaGroup"), pct_tex(d["pa_grp"]),
+              sprintf("Paper-avg group accuracy for method '%s'", src)),
+      tex_cmd(paste0("Src", sn, "FpGroup"), pct_tex(d["fp_grp"]),
+              sprintf("File-pooled group accuracy for method '%s'", src)),
+      tex_cmd(paste0("Src", sn, "PaDG"),    pct_tex(d["pa_dg"]),
+              sprintf("Paper-avg data_granularity accuracy for method '%s'", src)),
+      tex_cmd(paste0("Src", sn, "FpDG"),    pct_tex(d["fp_dg"]),
+              sprintf("File-pooled data_granularity accuracy for method '%s'", src)))
+  }
+}
+
+# ── 11. Granularity-source accuracy ──────────────────────────────────────────
+S("Granularity accuracy by granularity_source")
+if ("granularity_source" %in% names(acc)) {
+  dg_all_gs <- acc[!is.na(acc$data_granularity_gt) & !is.na(acc$data_granularity) &
+                   !is.na(acc$granularity_source), ]
+  for (gs in sort(unique(dg_all_gs$granularity_source))) {
+    sn   <- gsub("[^A-Za-z0-9]", "", tools::toTitleCase(gs))
+    rows <- dg_all_gs[dg_all_gs$granularity_source == gs, ]
+    fp_a <- 100 * sum(rows$data_granularity_gt == rows$data_granularity) / nrow(rows)
+    pa_a <- mean(sapply(unique(rows$paper_id), function(p) {
+      r <- rows[rows$paper_id == p, ]
+      100 * sum(r$data_granularity_gt == r$data_granularity) / nrow(r)
+    }), na.rm = TRUE)
+    T(tex_cmd(paste0("GranSrc", sn, "NFiles"),  int_tex(nrow(rows)),
+              sprintf("N data files with granularity_source = '%s'", gs)),
+      tex_cmd(paste0("GranSrc", sn, "NPapers"), int_tex(length(unique(rows$paper_id))),
+              sprintf("N papers with granularity_source = '%s'", gs)),
+      tex_cmd(paste0("GranSrc", sn, "PaAcc"),   pct_tex(pa_a),
+              sprintf("Paper-avg granularity accuracy for source '%s'", gs)),
+      tex_cmd(paste0("GranSrc", sn, "FpAcc"),   pct_tex(fp_a),
+              sprintf("File-pooled granularity accuracy for source '%s'", gs)))
+  }
+}
+
+# ── 12. Extension error rates (top 20 by error count) ────────────────────────
+S("Extension error rates (top 20)")
+if (!is.null(ext_stats) && nrow(ext_stats) > 0) {
+  top_ext20 <- head(ext_stats[order(-ext_stats$n_errors), ], 20)
+  for (i in seq_len(nrow(top_ext20))) {
+    raw_ext <- top_ext20$ext[i]
+    en      <- cls_name(raw_ext)
+    T(tex_cmd(paste0("Ext", en, "NFiles"),    int_tex(top_ext20$n_files[i]),
+              sprintf("N annotated .%s files", raw_ext)),
+      tex_cmd(paste0("Ext", en, "NErrors"),   int_tex(top_ext20$n_errors[i]),
+              sprintf("N misclassified .%s files", raw_ext)),
+      tex_cmd(paste0("Ext", en, "ErrorRate"), pct_tex(top_ext20$error_rate[i]),
+              sprintf("Error rate for .%s files", raw_ext)))
+  }
+}
+
+tex_path <- file.path(run_dir, "values.tex")
+writeLines(tex_lines, tex_path)
+cat(sprintf("  [latex]  written to: %s\n", tex_path))
+
 # ── Visualisations ────────────────────────────────────────────────────────────
 
 # ── Plot 1: File-pooled per-class P/R/F1 bar ─────────────────────────────────
@@ -1515,3 +2036,102 @@ if (exists("fp_mat") && any(!is.na(fp_mat)) && ncol(fp_mat) >= 1) {
     "Type accuracy by file type × method (file-pooled)", png_tm_fp)
   cat(sprintf("  [plot]   written to: %s\n", png_tm_fp))
 }
+
+# ── Plot 18: corpus repo sizes (histogram, large repos annotated) ─────────────
+
+png_corpus_repo <- file.path(run_dir, "corpus_repo_sizes.png")
+png(png_corpus_repo, width = 700, height = 460, res = 100)
+old_par <- par(mar = c(5, 5, 4, 2))
+sizes     <- as.numeric(corpus_repo_sizes)
+threshold <- 500
+shown     <- sizes[sizes <= threshold]
+hist(shown, breaks = 20, col = "#4292c6", border = "white",
+     xlab = "Annotated files per paper", ylab = "Number of papers",
+     main = sprintf("Repository size distribution (n=%d)", length(shown)))
+par(old_par); invisible(dev.off())
+cat(sprintf("  [plot]   written to: %s\n", png_corpus_repo))
+
+# ── Plot 19: type_gt distribution ────────────────────────────────────────────
+
+png_corpus_type <- file.path(run_dir, "corpus_type_dist.png")
+png(png_corpus_type, width = 700, height = 420, res = 100)
+old_par <- par(mar = c(6, 4.5, 3, 1))
+barplot(as.numeric(corpus_type_counts),
+        names.arg = names(corpus_type_counts),
+        las = 2, col = "#4292c6", border = NA,
+        ylab = "Files", main = "File type distribution (all papers)")
+par(old_par); invisible(dev.off())
+cat(sprintf("  [plot]   written to: %s\n", png_corpus_type))
+
+# ── Plot 19b: type_gt distribution (papers ≤500 files) ───────────────────────
+
+png_corpus_type_sm <- file.path(run_dir, "corpus_type_dist_sm.png")
+png(png_corpus_type_sm, width = 700, height = 420, res = 100)
+old_par <- par(mar = c(6, 4.5, 3, 1))
+barplot(as.numeric(corpus_type_counts_sm),
+        names.arg = names(corpus_type_counts_sm),
+        las = 2, col = "#4292c6", border = NA,
+        ylab = "Files", main = "File type distribution (papers ≤500 files)")
+par(old_par); invisible(dev.off())
+cat(sprintf("  [plot]   written to: %s\n", png_corpus_type_sm))
+
+# ── Plot 20: granularity × format heatmap (data files only) ──────────────────
+
+png_corpus_data <- file.path(run_dir, "corpus_data_dist.png")
+ct_raw <- table(
+  dg = data_only$data_granularity_gt[!is.na(data_only$data_granularity_gt) & !is.na(data_only$data_format_gt)],
+  df = data_only$data_format_gt[     !is.na(data_only$data_granularity_gt) & !is.na(data_only$data_format_gt)]
+)
+dg_lvls <- rownames(ct_raw)
+df_lvls <- colnames(ct_raw)
+nr <- length(dg_lvls); nc <- length(df_lvls)
+png(png_corpus_data, width = 200 + nc * 140, height = 220 + nr * 90, res = 100)
+old_par <- par(mar = c(6, 9, 4, 2))
+col_ramp <- colorRampPalette(c("white", "#2171b5"))(100)
+image(seq_len(nc), seq_len(nr), t(ct_raw)[, nr:1],
+      col = col_ramp, axes = FALSE, xlab = "", ylab = "",
+      main = "Data file subcategorisations")
+axis(1, at = seq_len(nc), labels = df_lvls,      las = 1, cex.axis = 1.0)
+axis(2, at = seq_len(nr), labels = rev(dg_lvls), las = 1, cex.axis = 1.0)
+mtext("Format",      side = 1, line = 3,   cex = 0.9)
+mtext("Granularity", side = 2, line = 7.5, cex = 0.9)
+for (i in seq_len(nr))
+  for (j in seq_len(nc)) {
+    v <- ct_raw[i, j]
+    if (v > 0) text(j, nr + 1 - i, as.character(v), cex = 1.0,
+                    col = if (ct_raw[i, j] / max(ct_raw) > 0.6) "white" else "black")
+  }
+par(old_par); invisible(dev.off())
+cat(sprintf("  [plot]   written to: %s\n", png_corpus_data))
+
+# ── Plot 21: paper-level subcategory prevalence ───────────────────────────────
+
+png_corpus_prev <- file.path(run_dir, "corpus_paper_prevalence.png")
+all_pids   <- unique(acc$paper_id)
+n_all      <- length(all_pids)
+data_acc   <- acc[!is.na(acc$type_gt) & acc$type_gt == "data", ]
+
+pct_has <- function(col, val) {
+  pids_with <- unique(data_acc$paper_id[!is.na(data_acc[[col]]) & data_acc[[col]] == val])
+  100 * length(pids_with) / n_all
+}
+
+prev_vals <- c(
+  individual = pct_has("data_granularity_gt", "individual"),
+  combined   = pct_has("data_granularity_gt", "combined"),
+  raw        = pct_has("data_format_gt",       "raw"),
+  tabular    = pct_has("data_format_gt",       "tabular")
+)
+prev_cols <- c(individual = "#9ecae1", combined = "#2171b5",
+               raw        = "#fdae6b", tabular  = "#e6550d")
+
+png(png_corpus_prev, width = 600, height = 460, res = 100)
+old_par <- par(mar = c(5, 5, 3, 2))
+bp <- barplot(prev_vals, col = prev_cols[names(prev_vals)], border = NA,
+              ylim = c(0, 100), ylab = "Repositories (%)",
+              main = "Repositories containing each data subcategory",
+              names.arg = names(prev_vals), cex.names = 0.95)
+text(bp, prev_vals + 2.5, sprintf("%.0f%%", prev_vals), cex = 0.85, col = "grey30")
+abline(h = 50, col = "grey80", lty = 2)
+par(old_par); invisible(dev.off())
+cat(sprintf("  [plot]   written to: %s\n", png_corpus_prev))
