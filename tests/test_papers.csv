@@ -19,3 +19,5 @@
 "0956797617746749","osf","output: 41 outputs including CSV as output (p-curve results) — data boundary"
 "0956797617706706","osf","complex groups: pilot6a + ex4b-ex4g letter suffixes + sharedex4b edge case"
 "0956797616685770","osf","balanced: software (.pyw) + output (figures) + 7 experiment groups with letter suffixes"
+"0956797615624491","osf","haven-simple: .sav only (43/43 embedded labels, no codebook file) — tests haven-only label path"
+"0956797616669086","osf","haven-complex: .sav (48/48) + Variable_Codebook.csv — tests haven priority over file codebook"

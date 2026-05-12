@@ -70,6 +70,9 @@ llm_ollama <- function(text, system_prompt,
   # Note: Ollama's native /api/chat takes sampling params under `options`.
   # We pass params straight through — caller is responsible for using valid
   # Ollama option names (temperature, seed, top_p, top_k, num_predict, ...).
+  # Qwen3 ignores think=FALSE via the API param.
+  # Reliable no-think: prepend /no_think\n\n to the system message, then strip
+  # any <think>...</think> blocks that still leak through in the response.
   call_ollama <- function(user_text) {
     body <- list(
       model = ollama_model,
@@ -97,8 +100,10 @@ llm_ollama <- function(text, system_prompt,
     # message$content = final answer; message$thinking = reasoning trace.
     # Return a list so the caller can access both when capture_thinking=TRUE.
     list(
-      content  = parsed$message$content,
-      thinking = parsed$message$thinking   # NULL when model didn't think
+      content    = parsed$message$content,
+      thinking   = parsed$message$thinking,   # NULL when model didn't think
+      tokens_in  = parsed$prompt_eval_count %||% NA_integer_,
+      tokens_out = parsed$eval_count        %||% NA_integer_
     )
   }
 
@@ -110,6 +115,8 @@ llm_ollama <- function(text, system_prompt,
         raw    <- call_ollama(unique_text[i])
         result <- list(answer = trimws(raw$content))
         if (capture_thinking) result$thinking <- raw$thinking %||% ""
+        result$tokens_in  <- raw$tokens_in
+        result$tokens_out <- raw$tokens_out
         result
       },
       error = \(e) {

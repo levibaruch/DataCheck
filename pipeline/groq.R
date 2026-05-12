@@ -29,7 +29,7 @@ llm_groq <- function(text, system_prompt,
   ncalls      <- length(unique_text)
   if (ncalls == 0) stop("No calls to the LLM")
 
-  call_groq <- function(user_text) {
+  call_groq <- function(user_text, max_rate_retries = 6L) {
     body <- list(
       model    = groq_model,
       messages = list(
@@ -42,24 +42,49 @@ llm_groq <- function(text, system_prompt,
     if (!is.null(params$max_tokens))  body$max_tokens  <- params$max_tokens
     if (!is.null(params$top_p))       body$top_p       <- params$top_p
 
-    resp <- request("https://api.groq.com/openai/v1/chat/completions") |>
+    req <- request("https://api.groq.com/openai/v1/chat/completions") |>
       req_headers(Authorization = paste("Bearer", api_key),
                   `Content-Type` = "application/json") |>
       req_body_json(body) |>
       req_timeout(120) |>
-      req_error(is_error = \(r) FALSE) |>
-      req_perform()
+      req_error(is_error = \(r) FALSE)
 
-    if (resp_status(resp) >= 400) {
-      err_body <- tryCatch(resp_body_string(resp), error = \(e) "<unreadable>")
-      stop(sprintf("Groq HTTP %d: %s", resp_status(resp), err_body))
+    rate_attempt <- 0L
+    repeat {
+      resp <- req_perform(req)
+
+      if (resp_status(resp) == 429L) {
+        rate_attempt <- rate_attempt + 1L
+        err_body <- tryCatch(resp_body_string(resp), error = \(e) "")
+        # Parse suggested wait from "Please try again in Xs." in the error body
+        m <- regmatches(err_body,
+                        regexpr("[0-9]+(?:\\.[0-9]+)?(?=s\\.)", err_body, perl = TRUE))
+        wait_secs <- if (length(m) == 1L) ceiling(as.numeric(m)) + 2L else 35L
+        if (rate_attempt > max_rate_retries)
+          stop(sprintf("Groq 429 after %d waits: %s", max_rate_retries, err_body))
+        cat(sprintf("  [Groq 429] TPM limit — waiting %ds (attempt %d/%d)...\n",
+                    wait_secs, rate_attempt, max_rate_retries))
+        Sys.sleep(wait_secs)
+        next
+      }
+
+      if (resp_status(resp) >= 400L) {
+        err_body <- tryCatch(resp_body_string(resp), error = \(e) "<unreadable>")
+        stop(sprintf("Groq HTTP %d: %s", resp_status(resp), err_body))
+      }
+
+      parsed  <- resp_body_json(resp)
+      content <- parsed$choices[[1]]$message$content
+      if (is.null(content))
+        stop(sprintf("Groq returned null content (finish_reason=%s)",
+                     parsed$choices[[1]]$finish_reason %||% "unknown"))
+      return(list(
+        content    = content,
+        thinking   = NULL,
+        tokens_in  = parsed$usage$prompt_tokens     %||% NA_integer_,
+        tokens_out = parsed$usage$completion_tokens %||% NA_integer_
+      ))
     }
-
-    parsed <- resp_body_json(resp)
-    list(
-      content  = parsed$choices[[1]]$message$content,
-      thinking = NULL   # Groq/Llama produces no thinking trace
-    )
   }
 
   responses <- vector("list", ncalls)
@@ -70,6 +95,8 @@ llm_groq <- function(text, system_prompt,
         raw    <- call_groq(unique_text[i])
         result <- list(answer = trimws(raw$content))
         if (capture_thinking) result$thinking <- ""
+        result$tokens_in  <- raw$tokens_in
+        result$tokens_out <- raw$tokens_out
         result
       },
       error = \(e) {

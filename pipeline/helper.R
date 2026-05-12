@@ -399,6 +399,7 @@ classify_col_type_rules <- function(col_name, values) {
 
 # Strip markdown fences and stray backticks the LLM may add around values
 extract_json <- function(txt) {
+  if (length(txt) == 0 || is.na(txt)) return(NA_character_)
   txt <- trimws(txt)
   # Remove ```json ... ``` or ``` ... ``` wrappers
   txt <- gsub("^```(?:json)?\\s*|\\s*```$", "", txt, perl = TRUE)
@@ -406,7 +407,7 @@ extract_json <- function(txt) {
   # Extract only the outermost JSON array [...] — discard any prose the LLM
   # appended after the closing bracket (e.g. "(Note: paths truncated ...)")
   m <- regexpr("(?s)\\[.*\\]", txt, perl = TRUE)
-  if (m != -1) txt <- regmatches(txt, m)
+  if (!is.na(m) && m != -1) txt <- regmatches(txt, m)
   txt
 }
 
@@ -658,6 +659,9 @@ llm_batch <- function(paths, system_prompt, user_prefix, key_col, extra_cols,
         stage_lbl    <- if (!is.null(stage_name)) stage_name else "<unknown>"
         n_words      <- length(strsplit(trimws(thinking_txt), "\\s+")[[1L]])
 
+        tokens_in_total  <- sum(last_raw$tokens_in,  na.rm = TRUE)
+        tokens_out_total <- sum(last_raw$tokens_out, na.rm = TRUE)
+
         log_row <- data.frame(
           paper_id         = pid_lbl,
           stage_name       = stage_lbl,
@@ -670,6 +674,8 @@ llm_batch <- function(paths, system_prompt, user_prefix, key_col, extra_cols,
           model            = llm_model(),
           think_level      = LLM_THINK_LEVEL,
           temperature      = LLM_TEMPERATURE,
+          tokens_in        = if (tokens_in_total  > 0) tokens_in_total  else NA_integer_,
+          tokens_out       = if (tokens_out_total > 0) tokens_out_total else NA_integer_,
           stringsAsFactors = FALSE
         )
 

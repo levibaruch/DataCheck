@@ -6,6 +6,7 @@
 source("runners/eval/eval_helpers.R")
 source("pipeline/prompts.R")
 source("pipeline/0_index.R")
+SKIP_COLUMNS <<- TRUE   # eval only scores file-type classification; skip column extraction
 
 STEP1_RESULTS_PATH <- file.path(EVAL_RESULTS_DIR, "step1_results.csv")
 STEP2_OUT_DIR      <- file.path(EVAL_RESULTS_DIR, "outputs", "step2")
@@ -59,10 +60,11 @@ for (i in seq_len(nrow(best_configs))) {
 
     cat(sprintf("\n── %s | prompt=%s\n", mdl_label, p$label))
 
-    LLM_MODEL       <<- cfg$model
-    LLM_TEMPERATURE <<- as.numeric(cfg$temp)
-    LLM_THINK_LEVEL <<- if (cfg$think == "FALSE") FALSE else
-                        if (cfg$think == "TRUE")  TRUE  else cfg$think
+    LLM_MODEL        <<- cfg$model
+    LLM_TEMPERATURE  <<- as.numeric(cfg$temp)
+    LLM_THINK_LEVEL  <<- if (cfg$think == "FALSE") FALSE else
+                         if (cfg$think == "TRUE")  TRUE  else cfg$think
+    CAPTURE_THINKING <<- TRUE
     llm_model(LLM_MODEL)
 
     paper_results <- list()
@@ -70,7 +72,7 @@ for (i in seq_len(nrow(best_configs))) {
     for (j in seq_len(nrow(papers_df))) {
       pid <- papers_df$id[j]
       src <- papers_df$source[j] %||% "osf"
-      out_dir <- file.path(STEP2_OUT_DIR, cell_label, src, pid)
+      out_dir <- file.path(STEP2_OUT_DIR, src, pid, cell_label)
       dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
       cat(sprintf("  [%d/%d] %s ... ", j, nrow(papers_df), pid))
@@ -82,6 +84,7 @@ for (i in seq_len(nrow(best_configs))) {
         next
       }
 
+      THINKING_LOG_PATH <<- file.path(out_dir, "thinking_traces.csv")
       t0 <- proc.time()[["elapsed"]]
 
       result <- tryCatch(

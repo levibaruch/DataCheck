@@ -123,11 +123,34 @@ for (chk in CHECKS) {
     n_with_thinking <- if ("thinking" %in% names(traces))
       sum(nzchar(trimws(traces$thinking)), na.rm = TRUE) else 0
 
-    cat(sprintf("  Thinking traces: %d calls, %d with trace\n", n_traces, n_with_thinking))
+    total_in  <- if ("tokens_in"  %in% names(traces)) sum(traces$tokens_in,  na.rm = TRUE) else NA
+    total_out <- if ("tokens_out" %in% names(traces)) sum(traces$tokens_out, na.rm = TRUE) else NA
+    has_tokens <- !is.na(total_in) && total_in > 0
+
+    cat(sprintf("  Thinking traces: %d calls, %d with trace | tokens in=%s out=%s\n",
+                n_traces, n_with_thinking,
+                if (has_tokens) total_in  else "n/a",
+                if (has_tokens) total_out else "n/a"))
+
     L("### Thinking traces")
     BR()
-    L("**Calls:** ", n_traces, "  |  **With trace:** ", n_with_thinking)
+    L("**Calls:** ", n_traces, "  |  ",
+      "**With trace:** ", n_with_thinking, "  |  ",
+      "**Tokens in:** ", if (has_tokens) total_in  else "n/a", "  |  ",
+      "**Tokens out:** ", if (has_tokens) total_out else "n/a")
     BR()
+
+    if ("tokens_in" %in% names(traces) && has_tokens) {
+      L("| chunk | stage | paths | tokens_in | tokens_out | thinking_words |")
+      L("|---|---|---|---|---|---|")
+      for (j in seq_len(n_traces)) {
+        tr <- traces[j, ]
+        L("| ", tr$chunk, " | ", tr$stage_name, " | ", tr$n_paths,
+          " | ", tr$tokens_in %||% "—", " | ", tr$tokens_out %||% "—",
+          " | ", tr$n_thinking_words %||% "—", " |")
+      }
+      BR()
+    }
 
     if ("thinking" %in% names(traces) && n_with_thinking > 0) {
       for (j in seq_len(min(n_traces, 3))) {  # show up to 3 traces

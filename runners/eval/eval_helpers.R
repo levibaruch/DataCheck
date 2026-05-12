@@ -13,8 +13,7 @@ EVAL_MODELS <- list(
   list(model = "ollama/gpt-oss:20b-cloud",   think = "medium",   label = "gpt-oss-20b-medium"),
   list(model = "ollama/gpt-oss:120b-cloud",  think = "low",      label = "gpt-oss-120b-low"),
   list(model = "ollama/gpt-oss:120b-cloud",  think = "medium",   label = "gpt-oss-120b-medium"),
-  list(model = "ollama/qwen3-vl:235b-cloud", think = FALSE,      label = "qwen3-vl-235b-off"),
-  list(model = "ollama/qwen3-vl:235b-cloud", think = TRUE,       label = "qwen3-vl-235b-on")
+  list(model = "ollama/qwen3-vl:235b-cloud", think = TRUE,        label = "qwen3-vl-235b-on")
 )
 
 EVAL_TEMPS <- c(0, 0.3, 0.7)
@@ -93,7 +92,7 @@ eval_paper <- function(pid, output_dir, src = "osf") {
   retry_rate <- if ("type" %in% names(str))
     mean(str$type == SENTINEL_VAL, na.rm = TRUE) * 100 else NA_real_
 
-  list(
+  result <- list(
     paper_id   = pid,
     n_files    = nrow(valid),
     macro_f1   = s$macro_f1,
@@ -103,15 +102,20 @@ eval_paper <- function(pid, output_dir, src = "osf") {
     accuracy   = s$accuracy,
     retry_rate = retry_rate
   )
+  # Attach named per-class F1s so callers can optionally save them
+  if (!is.null(s$f1s)) attr(result, "f1s") <- s$f1s
+  result
 }
 
-# Aggregate per-paper metrics into a summary row
+# Aggregate per-paper metrics into a summary row.
+# If any paper_results carry an "f1s" attribute (named per-class F1 vector),
+# the mean per class is appended as per_class_f1_<type> columns.
 aggregate_metrics <- function(paper_results, model, think, temp,
                                prompt_format = NA, run_id = NA) {
   rows <- Filter(Negate(is.null), paper_results)
   if (length(rows) == 0) return(NULL)
   df <- do.call(rbind, lapply(rows, as.data.frame, stringsAsFactors = FALSE))
-  data.frame(
+  out <- data.frame(
     run_id        = run_id,
     model         = model,
     think         = as.character(think),
@@ -126,6 +130,21 @@ aggregate_metrics <- function(paper_results, model, think, temp,
     retry_rate    = mean(df$retry_rate, na.rm = TRUE),
     stringsAsFactors = FALSE
   )
+
+  # Collect per-class F1s from attrs and average across papers
+  all_f1s <- lapply(rows, function(r) attr(r, "f1s"))
+  all_f1s <- Filter(Negate(is.null), all_f1s)
+  if (length(all_f1s) > 0) {
+    all_types <- unique(unlist(lapply(all_f1s, names)))
+    for (tp in sort(all_types)) {
+      vals <- sapply(all_f1s, function(v) {
+        if (tp %in% names(v)) v[[tp]] else NA_real_
+      })
+      out[[paste0("per_class_f1_", tp)]] <- mean(vals, na.rm = TRUE)
+    }
+  }
+
+  out
 }
 
 # Return TRUE if this (model, think, temp, prompt_format) cell already has a
