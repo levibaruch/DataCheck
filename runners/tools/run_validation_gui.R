@@ -4,5 +4,5 @@
 #                        — or —
 #                        source("runners/run_validation_gui.R")
 
-app_dir <- file.path(dirname(sys.frame(1)$ofile), "..", "tools", "validation_gui")
+app_dir <- file.path(dirname(sys.frame(1)$ofile), "..", "..", "tests", "validation_gui")
 shiny::runApp(normalizePath(app_dir), launch.browser = FALSE)

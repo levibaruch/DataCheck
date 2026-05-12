@@ -1,8 +1,8 @@
 # app.R  —  Validation GUI
 # Human ground-truth labelling tool for pipeline structure.csv outputs.
 #
-# Launch from :  shiny::runApp("tools/validation_gui")
-# Launch from repo root:    shiny::runApp("tools/validation_gui")
+# Launch from :  shiny::runApp("tests/validation_gui")
+# Launch from repo root:    shiny::runApp("tests/validation_gui")
 
 library(shiny)
 library(bslib)
@@ -17,13 +17,13 @@ local({
     }
     options(
       dc_root      = root,
-      dc_gt_dir    = file.path(root, "ground_truth")
+      dc_gt_dir    = file.path(root, "tests", "ground_truth")
     )
   }
 })
 
-source(file.path(getOption("dc_root"), "tools", "validation_gui", "gt_store.R"))
-source(file.path(getOption("dc_root"), "tools", "validation_gui", "preview.R"))
+source(file.path(getOption("dc_root"), "tests", "validation_gui", "gt_store.R"))
+source(file.path(getOption("dc_root"), "tests", "validation_gui", "preview.R"))
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 

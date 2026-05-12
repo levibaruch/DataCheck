@@ -10,9 +10,7 @@
 # Usage (interactive):       source("runners/run_test_validation_gui.R")
 # ─────────────────────────────────────────────────────────────────────────────
 
-dc_root <- normalizePath(
-  if (basename(getwd()) == "data_check") "." else "data_check"
-)
+dc_root <- normalizePath(".")
 
 test_papers <- read.csv(
   file.path(dc_root, "tests", "test_papers.csv"),
@@ -27,4 +25,4 @@ options(
   dc_papers_filter = test_papers$id[test_papers$source == "osf"]
 )
 
-shiny::runApp(file.path(dc_root, "tools", "validation_gui"))
+shiny::runApp(file.path(dc_root, "tests", "validation_gui"))
