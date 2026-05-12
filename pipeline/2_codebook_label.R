@@ -80,9 +80,41 @@ run_codebook_label <- function(paper_id, output_dir = NULL) {
     codebook_rows <- codebook_rows[seq_len(MAX_CODEBOOK_FILES), , drop = FALSE]
   }
 
+  # ── 2b. Extract embedded labels from haven-format data files ─────────────────
+
+  .haven_exts <- c("sav", "dta", "sas7bdat")
+  .haven_rows <- structure_df[
+    !is.na(structure_df$type) & structure_df$type == "data" &
+    tolower(tools::file_ext(structure_df$path)) %in% .haven_exts,
+  , drop = FALSE]
+
+  .haven_vars_list <- lapply(.haven_rows$path, function(p) {
+    ext <- tolower(tools::file_ext(p))
+    df <- tryCatch(switch(ext,
+      sav      = as.data.frame(haven::read_sav(p,       n_max = 0L)),
+      dta      = as.data.frame(haven::read_dta(p,       n_max = 0L)),
+      sas7bdat = as.data.frame(haven::read_sas(p, NULL, n_max = 0L))
+    ), error = function(e) NULL)
+    if (is.null(df)) return(NULL)
+    res <- .extract_haven_labels(df, basename(p))
+    if (is.null(res)) return(NULL)
+    res$parse_method <- "haven"
+    res
+  })
+  haven_vars_df <- do.call(rbind, Filter(Negate(is.null), .haven_vars_list))
+  if (is.null(haven_vars_df))
+    haven_vars_df <- data.frame(
+      codebook_variable = character(0), label = character(0),
+      codebook_source   = character(0), group = character(0),
+      parse_method      = character(0), stringsAsFactors = FALSE
+    )
+  if (nrow(haven_vars_df) > 0)
+    cat(col_dim(sprintf("    haven: %d embedded label(s) from %d file(s)\n",
+                nrow(haven_vars_df), nrow(.haven_rows))))
+
   # ── 3. Parse codebooks or handle no_codebook case ────────────────────────────
 
-  if (nrow(codebook_rows) == 0) {
+  if (nrow(codebook_rows) == 0 && nrow(haven_vars_df) == 0) {
     cat(col_yellow("  codebook  "), "no codebook files — all columns unlabelled\n")
     labels_df <- data.frame(
       paper_id          = columns_df$paper_id,
@@ -99,8 +131,17 @@ run_codebook_label <- function(paper_id, output_dir = NULL) {
     codebook_vars_df <- data.frame(
       codebook_variable = character(0), label = character(0),
       codebook_source   = character(0), group = character(0),
-      stringsAsFactors  = FALSE
+      parse_method      = character(0), stringsAsFactors = FALSE
     )
+
+  } else if (nrow(codebook_rows) == 0) {
+    cat(col_yellow("  codebook  "), "no codebook files — using haven embedded labels only\n")
+    codebook_vars_df <- haven_vars_df
+
+    # ── 4. Match columns against codebook ────────────────────────────────────
+    labels_df <- match_column_labels(columns_df, codebook_vars_df,
+                                     column_match_prompt = COLUMN_MATCH_PROMPT,
+                                     label_merge_prompt  = LABEL_MERGE_PROMPT)
 
   } else {
     cat(col_yellow("  codebook  "), sprintf("parsing %d file(s)\n", nrow(codebook_rows)))
@@ -115,10 +156,20 @@ run_codebook_label <- function(paper_id, output_dir = NULL) {
       codebook_vars_df <- data.frame(
         codebook_variable = character(0), label = character(0),
         codebook_source   = character(0), group = character(0),
-        stringsAsFactors  = FALSE
+        parse_method      = character(0), stringsAsFactors = FALSE
       )
     } else {
       codebook_vars_df <- do.call(rbind, parsed_list)
+    }
+
+    # Merge haven labels (if any) before dedup — haven first so it wins on collision
+    if (nrow(haven_vars_df) > 0) {
+      if (!"parse_method" %in% names(codebook_vars_df))
+        codebook_vars_df$parse_method <- NA_character_
+      codebook_vars_df <- rbind(haven_vars_df, codebook_vars_df)
+    }
+
+    if (nrow(codebook_vars_df) > 0) {
       # Drop exact duplicates (same normalised variable name + label + group)
       dup_key <- paste(normalize_varname(codebook_vars_df$codebook_variable),
                        codebook_vars_df$label,
