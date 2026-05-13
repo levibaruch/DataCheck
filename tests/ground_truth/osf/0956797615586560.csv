@@ -1,40 +1,40 @@
-"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
-"0956797615586560","Social_Sampling_and_Attitudes_to/Old_-_dont_use/SC 1a.sav","data","ex1a","combined","2026-03-31T10:29:44","Levi Baruch","tabular"
-"0956797615586560","Social_Sampling_and_Attitudes_to/Old_-_dont_use/SC 1b.sav","data","ex1b","combined","2026-03-31T10:29:47","Levi Baruch","tabular"
-"0956797615586560","Social_Sampling_and_Attitudes_to/Old_-_dont_use/SC Codebook (all SPSS data sets)_SC1a key.csv","codebook","ex1a",NA,"2026-03-31T10:34:15","Levi Baruch",NA
-"0956797615586560","Social_Sampling_and_Attitudes_to/Old_-_dont_use/SC Codebook (all SPSS data sets)_SC1a Rep. Key (Footnote 1).csv","codebook","ex1b",NA,"2026-03-31T10:34:20","Levi Baruch",NA
-"0956797615586560","Social_Sampling_and_Attitudes_to/Old_-_dont_use/SC Codebook (all SPSS data sets)_SC1b key.csv","codebook","ex1b",NA,"2026-03-31T10:34:28","Levi Baruch",NA
-"0956797615586560","Social_Sampling_and_Attitudes_to/Old_-_dont_use/SC1a Materials.docx","supplemental","ex1a",NA,"2026-03-31T10:34:33","Levi Baruch",NA
-"0956797615586560","Social_Sampling_and_Attitudes_to/Old_-_dont_use/SC1b Materials.docx","supplemental","ex1b",NA,"2026-03-31T10:34:35","Levi Baruch",NA
-"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1a_Replication_Footnote_1/SC 1a Replication (Footnote 1).sav","data","ex1a","combined","2026-03-31T10:34:48","Levi Baruch","tabular"
-"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1a_Replication_Footnote_1/SC1a Replication (Footnote 1) Materials.docx","supplemental","ex1a",NA,"2026-03-31T10:34:52","Levi Baruch",NA
-"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1a/1a analyses exc. outliers.spv","output","ex1a",NA,"2026-03-31T10:35:19","Levi Baruch",NA
-"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1a/1a analyses inc. outliers.spv","output","ex1a",NA,"2026-03-31T10:35:16","Levi Baruch",NA
-"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1a/1a analyses syntax.sps","code","ex1a",NA,"2026-03-31T10:35:26","Levi Baruch",NA
-"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1a/1a processed ORIGINAL.sav","data","ex1a","combined","2026-03-31T10:35:54","Levi Baruch","tabular"
-"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1a/1a processed_1a qualtrics original.csv","data","ex1a","combined","2026-03-31T10:35:56","Levi Baruch","tabular"
-"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1a/1a processed_Sheet1.csv","data","ex1a","combined","2026-03-31T10:35:58","Levi Baruch","tabular"
-"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1a/1a processing notes.txt","supplemental","ex1a",NA,"2026-03-31T10:36:15","Levi Baruch",NA
-"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1a/1a processing syntax.sps","code","ex1a",NA,"2026-03-31T10:36:17","Levi Baruch",NA
-"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1a/1a qualtrics original_1a qualtrics original.csv","data","ex1a","combined","2026-03-31T10:36:28","Levi Baruch","tabular"
-"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1a/1a qualtrics survey copy.pdf","supplemental","ex1a",NA,"2026-03-31T10:36:29","Levi Baruch",NA
-"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1a/1a var deletions_Sheet1.csv","supplemental","ex1a",NA,"2026-03-31T10:36:35","Levi Baruch",NA
-"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1a/Gini Calculator 1a_Calculator.csv","other","ex1a",NA,"2026-03-31T10:37:22","Levi Baruch",NA
-"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1a/Gini Calculator 1a_Completed.csv","other","ex1a",NA,"2026-03-31T10:37:36","Levi Baruch",NA
-"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1a/Gini Calculator 1a_Dist. Transposer 1 - 200.csv","other","ex1a",NA,"2026-03-31T10:37:40","Levi Baruch",NA
-"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1a/Gini Calculator 1a_Sheet1.csv","data","ex1a",NA,"2026-03-31T10:37:45","Levi Baruch","tabular"
-"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1b/1b analyses exc. outliers.spv","output","ex1b",NA,"2026-03-31T10:38:35","Levi Baruch",NA
-"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1b/1b analyses inc. outliers.spv","output","ex1b",NA,"2026-03-31T10:38:36","Levi Baruch",NA
-"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1b/1b analyses syntax exc. outliers.sps","code","ex1b",NA,"2026-03-31T10:38:38","Levi Baruch",NA
-"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1b/1b analyses syntax.sps","code","ex1b",NA,"2026-03-31T10:38:39","Levi Baruch",NA
-"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1b/1b processed ORIGINAL.sav","data","ex1b","combined","2026-03-31T10:38:41","Levi Baruch","tabular"
-"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1b/1b PROCESSED_SC1b_corr.csv","data","ex1b","combined","2026-03-31T10:38:43","Levi Baruch","tabular"
-"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1b/1b processing notes.txt","supplemental","ex1b",NA,"2026-03-31T10:38:51","Levi Baruch",NA
-"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1b/1b processing.sps","code","ex1b",NA,"2026-03-31T10:39:17","Levi Baruch",NA
-"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1b/1b qualtrics original_SC1b_corr.csv","data","ex1b","combined","2026-03-31T10:40:44","Levi Baruch","tabular"
-"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1b/1b qualtrics survey copy.pdf","supplemental","ex1b",NA,"2026-03-31T10:40:46","Levi Baruch",NA
-"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1b/Gini Calculator 1b_Calculator (PD dists).csv","other","ex1b",NA,"2026-03-31T10:40:53","Levi Baruch",NA
-"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1b/Gini Calculator 1b_Calculator (SC dists).csv","other","ex1b",NA,"2026-03-31T10:40:55","Levi Baruch",NA
-"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1b/Gini Calculator 1b_Computed.csv","other","ex1b",NA,"2026-03-31T10:40:59","Levi Baruch",NA
-"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1b/Gini Calculator 1b_Sheet1.csv","other","ex1b",NA,"2026-03-31T10:41:10","Levi Baruch",NA
-"0956797615586560","Social_Sampling_and_Attitudes_to/Study_2_-_NZAVS/NZAVS-T1-(2009)-Syntax-Dawtry et al-(in-press).txt","supplemental","ex2",NA,"2026-03-31T10:41:26","Levi Baruch",NA
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
+"0956797615586560","Social_Sampling_and_Attitudes_to/Old_-_dont_use/SC 1a.sav","data","ex1a","combined","tabular","2026-03-31T10:29:44","Levi Baruch"
+"0956797615586560","Social_Sampling_and_Attitudes_to/Old_-_dont_use/SC 1b.sav","data","ex1b","combined","tabular","2026-03-31T10:29:47","Levi Baruch"
+"0956797615586560","Social_Sampling_and_Attitudes_to/Old_-_dont_use/SC Codebook (all SPSS data sets)_SC1a key.csv","codebook","ex1a",NA,NA,"2026-03-31T10:34:15","Levi Baruch"
+"0956797615586560","Social_Sampling_and_Attitudes_to/Old_-_dont_use/SC Codebook (all SPSS data sets)_SC1a Rep. Key (Footnote 1).csv","codebook","ex1b",NA,NA,"2026-03-31T10:34:20","Levi Baruch"
+"0956797615586560","Social_Sampling_and_Attitudes_to/Old_-_dont_use/SC Codebook (all SPSS data sets)_SC1b key.csv","codebook","ex1b",NA,NA,"2026-03-31T10:34:28","Levi Baruch"
+"0956797615586560","Social_Sampling_and_Attitudes_to/Old_-_dont_use/SC1a Materials.docx","supplemental","ex1a",NA,NA,"2026-03-31T10:34:33","Levi Baruch"
+"0956797615586560","Social_Sampling_and_Attitudes_to/Old_-_dont_use/SC1b Materials.docx","supplemental","ex1b",NA,NA,"2026-03-31T10:34:35","Levi Baruch"
+"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1a_Replication_Footnote_1/SC 1a Replication (Footnote 1).sav","data","ex1a","combined","tabular","2026-03-31T10:34:48","Levi Baruch"
+"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1a_Replication_Footnote_1/SC1a Replication (Footnote 1) Materials.docx","supplemental","ex1a",NA,NA,"2026-03-31T10:34:52","Levi Baruch"
+"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1a/1a analyses exc. outliers.spv","output","ex1a",NA,NA,"2026-03-31T10:35:19","Levi Baruch"
+"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1a/1a analyses inc. outliers.spv","output","ex1a",NA,NA,"2026-03-31T10:35:16","Levi Baruch"
+"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1a/1a analyses syntax.sps","code","ex1a",NA,NA,"2026-03-31T10:35:26","Levi Baruch"
+"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1a/1a processed ORIGINAL.sav","data","ex1a","combined","tabular","2026-03-31T10:35:54","Levi Baruch"
+"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1a/1a processed_1a qualtrics original.csv","data","ex1a","combined","tabular","2026-03-31T10:35:56","Levi Baruch"
+"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1a/1a processed_Sheet1.csv","data","ex1a","combined","tabular","2026-03-31T10:35:58","Levi Baruch"
+"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1a/1a processing notes.txt","supplemental","ex1a",NA,NA,"2026-03-31T10:36:15","Levi Baruch"
+"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1a/1a processing syntax.sps","code","ex1a",NA,NA,"2026-03-31T10:36:17","Levi Baruch"
+"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1a/1a qualtrics original_1a qualtrics original.csv","data","ex1a","combined","tabular","2026-03-31T10:36:28","Levi Baruch"
+"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1a/1a qualtrics survey copy.pdf","supplemental","ex1a",NA,NA,"2026-03-31T10:36:29","Levi Baruch"
+"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1a/1a var deletions_Sheet1.csv","supplemental","ex1a",NA,NA,"2026-03-31T10:36:35","Levi Baruch"
+"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1a/Gini Calculator 1a_Calculator.csv","other","ex1a",NA,NA,"2026-03-31T10:37:22","Levi Baruch"
+"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1a/Gini Calculator 1a_Completed.csv","other","ex1a",NA,NA,"2026-03-31T10:37:36","Levi Baruch"
+"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1a/Gini Calculator 1a_Dist. Transposer 1 - 200.csv","other","ex1a",NA,NA,"2026-03-31T10:37:40","Levi Baruch"
+"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1a/Gini Calculator 1a_Sheet1.csv","data","ex1a","combined","tabular","2026-05-13T11:15:37","Levi Baruch"
+"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1b/1b analyses exc. outliers.spv","output","ex1b",NA,NA,"2026-03-31T10:38:35","Levi Baruch"
+"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1b/1b analyses inc. outliers.spv","output","ex1b",NA,NA,"2026-03-31T10:38:36","Levi Baruch"
+"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1b/1b analyses syntax exc. outliers.sps","code","ex1b",NA,NA,"2026-03-31T10:38:38","Levi Baruch"
+"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1b/1b analyses syntax.sps","code","ex1b",NA,NA,"2026-03-31T10:38:39","Levi Baruch"
+"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1b/1b processed ORIGINAL.sav","data","ex1b","combined","tabular","2026-03-31T10:38:41","Levi Baruch"
+"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1b/1b PROCESSED_SC1b_corr.csv","data","ex1b","combined","tabular","2026-03-31T10:38:43","Levi Baruch"
+"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1b/1b processing notes.txt","supplemental","ex1b",NA,NA,"2026-03-31T10:38:51","Levi Baruch"
+"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1b/1b processing.sps","code","ex1b",NA,NA,"2026-03-31T10:39:17","Levi Baruch"
+"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1b/1b qualtrics original_SC1b_corr.csv","data","ex1b","combined","tabular","2026-03-31T10:40:44","Levi Baruch"
+"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1b/1b qualtrics survey copy.pdf","supplemental","ex1b",NA,NA,"2026-03-31T10:40:46","Levi Baruch"
+"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1b/Gini Calculator 1b_Calculator (PD dists).csv","other","ex1b",NA,NA,"2026-03-31T10:40:53","Levi Baruch"
+"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1b/Gini Calculator 1b_Calculator (SC dists).csv","other","ex1b",NA,NA,"2026-03-31T10:40:55","Levi Baruch"
+"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1b/Gini Calculator 1b_Computed.csv","other","ex1b",NA,NA,"2026-03-31T10:40:59","Levi Baruch"
+"0956797615586560","Social_Sampling_and_Attitudes_to/Study_1b/Gini Calculator 1b_Sheet1.csv","other","ex1b",NA,NA,"2026-03-31T10:41:10","Levi Baruch"
+"0956797615586560","Social_Sampling_and_Attitudes_to/Study_2_-_NZAVS/NZAVS-T1-(2009)-Syntax-Dawtry et al-(in-press).txt","supplemental","ex2",NA,NA,"2026-03-31T10:41:26","Levi Baruch"

@@ -1,0 +1,6 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
+"09567976231156793","Education_and_aging-associated_declines_in/dataset_edu_cogn.csv","data","shared","combined","tabular","2026-05-13T11:33:26","Levi Baruch"
+"09567976231156793","Education_and_aging-associated_declines_in/Edu_cog_project_Codes_and_outputs.pdf","output","shared",NA,NA,"2026-05-13T11:33:28","Levi Baruch"
+"09567976231156793","Education_and_aging-associated_declines_in/edu_cognition_codes_submission.Rmd","code","shared",NA,NA,"2026-05-13T11:33:32","Levi Baruch"
+"09567976231156793","Education_and_aging-associated_declines_in/read_me.txt","readme","shared",NA,NA,"2026-05-13T11:33:34","Levi Baruch"
+"09567976231156793","Education_and_aging-associated_declines_in/Variable_Key.pdf","codebook","shared",NA,NA,"2026-05-13T11:33:36","Levi Baruch"

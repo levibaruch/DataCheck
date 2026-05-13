@@ -1,6 +1,6 @@
 "paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
 "0956797614535937","Phonotactic_Nap/2AFC_analysis/analysis-gen.R","code","shared",NA,NA,"2026-03-31T10:12:15","Levi Baruch"
-"0956797614535937","Phonotactic_Nap/2AFC_Data/recgendata.csv","data","shared",NA,"tabular","2026-03-31T10:13:25","Levi Baruch"
+"0956797614535937","Phonotactic_Nap/2AFC_Data/recgendata.csv","data","shared","combined","tabular","2026-05-13T11:14:51","Levi Baruch"
 "0956797614535937","Phonotactic_Nap/Materials/online_materials/online_materials/README.txt","readme","shared",NA,NA,"2026-03-31T10:13:30","Levi Baruch"
 "0956797614535937","Phonotactic_Nap/Materials/online_materials/online_materials/testing/fas-sif/testing-fas-sif-1.py","software","shared",NA,NA,"2026-04-02T11:49:44","Levi Baruch"
 "0956797614535937","Phonotactic_Nap/Materials/online_materials/online_materials/testing/fas-sif/testing-fas-sif-2.py","software","shared",NA,NA,"2026-04-02T11:49:44","Levi Baruch"

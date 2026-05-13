@@ -1,0 +1,5 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
+"09567976211068880","I_Hear_My_Voice_Therefore/Experiment1.csv","data","ex1","combined","tabular","2026-05-13T11:31:23","Levi Baruch"
+"09567976211068880","I_Hear_My_Voice_Therefore/Experiment2.csv","data","ex2","combined","tabular","2026-05-13T11:31:24","Levi Baruch"
+"09567976211068880","I_Hear_My_Voice_Therefore/Follow-up_Exp1.csv","data","ex1","combined","tabular","2026-05-13T11:31:26","Levi Baruch"
+"09567976211068880","I_Hear_My_Voice_Therefore/README.txt","readme","shared",NA,NA,"2026-05-13T11:31:27","Levi Baruch"

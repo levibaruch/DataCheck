@@ -1,0 +1,7 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
+"0956797616687124","Datasets_for_Inferring_Perspective_versus/codingBook_exp1_to_exp5.html","codebook","shared",NA,NA,"2026-05-13T11:19:09","Levi Baruch"
+"0956797616687124","Datasets_for_Inferring_Perspective_versus/experiment1.csv","data","ex1","combined","tabular","2026-05-13T11:19:11","Levi Baruch"
+"0956797616687124","Datasets_for_Inferring_Perspective_versus/experiment2.csv","data","ex2","combined","tabular","2026-05-13T11:19:12","Levi Baruch"
+"0956797616687124","Datasets_for_Inferring_Perspective_versus/experiment3.csv","data","ex3","combined","tabular","2026-05-13T11:19:12","Levi Baruch"
+"0956797616687124","Datasets_for_Inferring_Perspective_versus/experiment4.csv","data","ex4","combined","tabular","2026-05-13T11:19:13","Levi Baruch"
+"0956797616687124","Datasets_for_Inferring_Perspective_versus/experiment5.csv","data","ex5","combined","tabular","2026-05-13T11:19:13","Levi Baruch"

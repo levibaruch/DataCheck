@@ -1,0 +1,4 @@
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
+"09567976231180588","Fade_in_fade_out_Do/abc_analyses.R","code","shared",NA,NA,"2026-05-13T11:33:03","Levi Baruch"
+"09567976231180588","Fade_in_fade_out_Do/deidentified_data.csv","data","shared","combined","tabular","2026-05-13T11:33:04","Levi Baruch"
+"09567976231180588","Fade_in_fade_out_Do/README_VariableLegend.csv","codebook","shared",NA,NA,"2026-05-13T11:33:05","Levi Baruch"
