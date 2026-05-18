@@ -1,8 +1,0 @@
-"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
-"0956797619890619","Implicit_gender_bias_in_linguistic/MalsburgPoppelsLevy2019PsychSci/MalsburgPoppelsLevy2019PsychSci/README.txt","readme","shared",NA,NA,"2026-04-08T14:10:57","Levi Baruch"
-"0956797619890619","Implicit_gender_bias_in_linguistic/MalsburgPoppelsLevy2019PsychSci/MalsburgPoppelsLevy2019PsychSci/Makefile","software","shared",NA,NA,"2026-04-08T14:11:05","Levi Baruch"
-"0956797619890619","Implicit_gender_bias_in_linguistic/MalsburgPoppelsLevy2019PsychSci/MalsburgPoppelsLevy2019PsychSci/manuscript/manuscript.bib","supplemental","shared",NA,NA,"2026-04-08T14:11:06","Levi Baruch"
-"0956797619890619","Implicit_gender_bias_in_linguistic/MalsburgPoppelsLevy2019PsychSci/MalsburgPoppelsLevy2019PsychSci/manuscript/manuscript.Rnw","code","shared",NA,NA,"2026-04-08T14:12:02","Levi Baruch"
-"0956797619890619","Implicit_gender_bias_in_linguistic/MalsburgPoppelsLevy2019PsychSci/MalsburgPoppelsLevy2019PsychSci/manuscript/scicite.sty","supplemental","shared",NA,NA,"2026-04-08T14:12:13","Levi Baruch"
-"0956797619890619","Implicit_gender_bias_in_linguistic/MalsburgPoppelsLevy2019PsychSci/MalsburgPoppelsLevy2019PsychSci/manuscript/supplement.Rnw","code","shared",NA,NA,"2026-04-08T14:12:16","Levi Baruch"
-"0956797619890619","Implicit_gender_bias_in_linguistic/MalsburgPoppelsLevy2019PsychSci/MalsburgPoppelsLevy2019PsychSci/materials/expt0_spr_control/data/norming_names.tsv","data","ex0","combined","tabular","2026-04-08T14:12:22","Levi Baruch"

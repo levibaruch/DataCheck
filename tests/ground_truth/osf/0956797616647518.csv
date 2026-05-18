@@ -1,2 +1,4 @@
-"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","validated_at","annotator","data_format_gt"
-"0956797616647518","Dogs_Identify_Agents_in_Third-Party/Raw_data/Raw_Data_Dogs_Identify_Agents_Through_Contingency.xlsm","data","shared","combined","2026-03-31T15:56:05","Levi Baruch","tabular"
+"paper_id","rel_path","type_gt","group_gt","data_granularity_gt","data_format_gt","validated_at","annotator"
+"0956797616647518","Dogs_Identify_Agents_in_Third-Party/Raw_data/Raw_Data_Dogs_Identify_Agents_Through_Contingency_high_but imperfect.csv","data","shared","combined","tabular","2026-05-18T14:16:00","Levi Baruch"
+"0956797616647518","Dogs_Identify_Agents_in_Third-Party/Raw_data/Raw_Data_Dogs_Identify_Agents_Through_Contingency_low_contingency.csv","data","shared","combined","tabular","2026-05-18T12:06:01","Levi Baruch"
+"0956797616647518","Dogs_Identify_Agents_in_Third-Party/Raw_data/Raw_Data_Dogs_Identify_Agents_Through_Contingency_perfect_contingency.csv","data","shared","combined","tabular","2026-05-18T12:06:01","Levi Baruch"
