@@ -66,13 +66,23 @@ if (!exists("SKIP_COLUMNS"))               SKIP_COLUMNS                <- FALSE 
 if (!exists("COLUMNS_ONLY"))               COLUMNS_ONLY                <- FALSE  # TRUE = skip download+LLM, read existing structure.csv, run columns only
 # Folders with more than this many files are treated as aggregate datasets
 AGGREGATE_THRESHOLD <- 20
-# Software package folder detection: folders matching these names with >= threshold
-# files (recursive) are bulk-labeled "software" without LLM calls
-SOFTWARE_FOLDER_THRESHOLD <- 500L
-SOFTWARE_FOLDER_PATTERNS  <- c(
-  "node_modules", "vendor", "renv", "site-packages",
-  "__pycache__", "venv", ".venv", "libs", "lib", "dist", "build"
+# Software package folder detection — two tiers.
+#
+# Tier A (unambiguous): folder names unique to language tooling. Any match is
+# labelled "software" with no size threshold and no extension gate.
+SOFTWARE_FOLDER_PATTERNS_UNAMBIG <- c(
+  "__pycache__", ".git", ".Rproj.user", "renv", "node_modules",
+  "site-packages", "venv", ".venv", "packrat", ".ipynb_checkpoints",
+  "bower_components", "jspm_packages", "__pypackages__",
+  ".pytest_cache", ".mypy_cache"
 )
+# Tier B (ambiguous): names that collide with data/stimulus folders
+# (e.g. a "lib" or "build" full of jpgs). Require both a file-count
+# threshold and an extension-majority gate before bulk-labelling.
+# `target` deliberately excluded: empirically matches psychology stimulus
+# folders (e.g. Stimuli/Target full of jpgs).
+SOFTWARE_FOLDER_PATTERNS_AMBIG  <- c("lib", "libs", "src", "build", "dist", "vendor")
+SOFTWARE_FOLDER_THRESHOLD_AMBIG <- 100L
 # Max rows to scan below row 1 for a usable sub-header in multi-level CSV files
 MULTILEVEL_HEADER_LOOKAHEAD <- 3L
 # Directory names longer than this many words are truncated; spaces → underscores
@@ -409,13 +419,15 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
                     normalizePath(files, mustWork = FALSE))
 
   # ── 4.5. Detect software package folders ────────────────────────────────────
-  # Folders whose basename matches SOFTWARE_FOLDER_PATTERNS and contain >=
-  # SOFTWARE_FOLDER_THRESHOLD files are bulk-labeled "software" without LLM
-  # calls. Their paths are stripped from rel_paths before aggregate detection
-  # and the LLM cap check, so they cannot trigger too_large.
+  # Two-tier rule: unambiguous folder names (Tier A) are claimed regardless of
+  # size; ambiguous names (Tier B) need a file-count threshold + extension gate.
+  # Claimed paths are stripped from rel_paths before aggregate detection and
+  # the LLM cap check, so they cannot trigger too_large.
 
-  sw        <- detect_software_folders(rel_paths, SOFTWARE_FOLDER_THRESHOLD,
-                                       SOFTWARE_FOLDER_PATTERNS)
+  sw        <- detect_software_folders(rel_paths,
+                                       SOFTWARE_FOLDER_PATTERNS_UNAMBIG,
+                                       SOFTWARE_FOLDER_PATTERNS_AMBIG,
+                                       SOFTWARE_FOLDER_THRESHOLD_AMBIG)
   rel_paths <- sw$clean_rel_paths
 
   if (length(sw$software_rel_paths) > 0) {

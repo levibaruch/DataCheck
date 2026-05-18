@@ -56,12 +56,18 @@ Paper ID (character string)
            │
            ▼
 ┌─────────────────────┐
-│  4.5. Software      │  detect_software_folders(): folder basename in SOFTWARE_FOLDER_PATTERNS
-│       folder        │  (node_modules, site-packages, renv, vendor, lib, …) AND >=
-│       detection     │  SOFTWARE_FOLDER_THRESHOLD (500) files recursively → bulk-label
-│                     │  type="software", type_source="rule_folder". Extension-majority
-│                     │  safety gate skips folders where >50% files are data extensions.
-│                     │  Claimed paths stripped from rel_paths before aggregate detection.
+│  4.5. Software      │  detect_software_folders(): two-tier name match. Tier A
+│       folder        │  (SOFTWARE_FOLDER_PATTERNS_UNAMBIG: __pycache__, .git,
+│       detection     │  renv, node_modules, site-packages, venv, .venv,
+│                     │  .Rproj.user, packrat, .ipynb_checkpoints, …) claims
+│                     │  any match regardless of size. Tier B (SOFTWARE_FOLDER_
+│                     │  PATTERNS_AMBIG: lib, libs, src, build, dist, vendor)
+│                     │  requires >= SOFTWARE_FOLDER_THRESHOLD_AMBIG (100) files
+│                     │  AND extension-majority gate (skip if >50% files are
+│                     │  tabular data extensions). Bulk-labels
+│                     │  type="software", type_source="rule_folder".
+│                     │  Claimed paths stripped from rel_paths before aggregate
+│                     │  detection.
 └──────────┬──────────┘
            │
            ▼
@@ -250,8 +256,9 @@ Paper ID (character string)
 | `MAX_CHAR_COL_TYPE_LLM_CALLS` | 3 | `0_index.R` | Max LLM calls for character-ambiguous column classification (Batch 2, = 60 columns max) when `!FULL_RUN` |
 | `MAX_DATA_FILES` | `Inf` | `0_index.R` | Max tabular data files to column-extract per paper; `Inf` = no cap. Set to a finite integer (e.g. `30L`) in the bulk runner as a temporary guard when `combined`/`individual` misclassification inflates N. |
 | `AGGREGATE_THRESHOLD` | 50 | `0_index.R` | Files per folder above which a sentinel row replaces individual paths |
-| `SOFTWARE_FOLDER_THRESHOLD` | 500 | `0_index.R` | Min recursive file count for a software-named folder to trigger bulk `"software"` labeling (step 4.5) |
-| `SOFTWARE_FOLDER_PATTERNS` | character vector | `0_index.R` | Folder basenames that indicate bundled software packages (node_modules, vendor, renv, site-packages, etc.) |
+| `SOFTWARE_FOLDER_THRESHOLD_AMBIG` | 100 | `0_index.R` | Min recursive file count for a **Tier B** (ambiguous-name) folder to trigger bulk `"software"` labelling (step 4.5). Tier A folders have no threshold. |
+| `SOFTWARE_FOLDER_PATTERNS_UNAMBIG` | character vector | `0_index.R` | **Tier A** folder basenames unique to language tooling (`__pycache__`, `.git`, `renv`, `node_modules`, `site-packages`, `venv`, `.venv`, `.Rproj.user`, `packrat`, `.ipynb_checkpoints`, `bower_components`, `jspm_packages`, `__pypackages__`, `.pytest_cache`, `.mypy_cache`). Match alone is sufficient. |
+| `SOFTWARE_FOLDER_PATTERNS_AMBIG` | character vector | `0_index.R` | **Tier B** ambiguous folder basenames (`lib`, `libs`, `src`, `build`, `dist`, `vendor`). Match requires threshold + extension-majority gate. `target` deliberately excluded (collides with psychology stimulus folders). |
 | `AGGREGATE_EXT_OVERRIDE` | named vector | `0_index.R` | Extension → type map applied after sentinel expansion to correct inherited types |
 | `MAX_DIR_WORDS` | 5 | `0_index.R` | Directory name word limit before truncation |
 | `MAX_CODEBOOK_LLM_CALLS` | 3 | `2_codebook_label.R` | Max LLM calls per paper for codebook text parsing |

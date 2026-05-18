@@ -156,9 +156,27 @@ read_data_head <- function(path, n_rows = 3) {
 
 # ── Archive helpers ───────────────────────────────────────────────────────────
 
+# Match the dir-sanitization rule applied in 0_index.R step 2: collapse
+# whitespace to "_", strip special chars, truncate to MAX_DIR_WORDS. Applied
+# to the archive stem so the extracted dir lands on the post-sanitize name on
+# first extract — preventing re-extraction → duplicate-tree drift across runs.
+sanitize_basename <- function(name) {
+  max_words <- if (exists("MAX_DIR_WORDS")) MAX_DIR_WORDS else 5L
+  words <- strsplit(trimws(name), "\\s+")[[1]]
+  words <- gsub("[^A-Za-z0-9_\\-]", "", words)
+  words <- words[nchar(words) > 0]
+  paste(head(words, max_words), collapse = "_")
+}
+
 unpack_archive <- function(path) {
-  ext  <- tolower(tools::file_ext(path))
-  stem <- tools::file_path_sans_ext(basename(path))
+  ext      <- tolower(tools::file_ext(path))
+  raw_stem <- tools::file_path_sans_ext(basename(path))
+  # For tar archives, sanitize dest dir name to match post-extract sanitization
+  # done in 0_index.R step 2. Standalone-compressed files (gz/bz2/xz of a
+  # single file) keep the raw stem — that's the *output filename*, not a dir.
+  is_tar_like  <- !(ext %in% c("gz", "bz2", "xz")) ||
+                   grepl("\\.(tar\\.(gz|bz2|xz)|tgz)$", tolower(basename(path)))
+  stem <- if (is_tar_like) sanitize_basename(raw_stem) else raw_stem
   dest <- file.path(dirname(path), stem)
 
   # Standalone compressed files (e.g. data.csv.gz, data.csv.bz2, data.csv.xz)
@@ -1602,7 +1620,7 @@ PARTICIPANT_ID_PATTERNS <- c(
   "^s\\d{2,}$",                 # s + ≥2 digits: s01, s001 (avoid single-letter collision)
   "^[Pp]\\d+",                  # P prefix: P01, p01, P_01
   "^[Ii][Dd]\\d+",              # ID prefix: ID042, id_042
-  "^participant[_-]?\\d+",      # full word: participant_01, participant01
+  "^participant[\\s_-]?\\d+",   # full word: participant_01, participant01, "Participant 13"
   "^pp\\d+",                    # pp prefix: pp03, pp_03
   "^vp\\d+"                     # vp prefix (German): vp07, vp_07
 )
@@ -1704,19 +1722,28 @@ detect_filename_pattern <- function(filenames, verbose = TRUE) {
 }
 
 # ── Software folder bulk detection ────────────────────────────────────────────
-# Scans rel_paths for directories whose basename matches a known software
-# package folder name (e.g. node_modules, site-packages) AND contains at least
-# `threshold` files recursively. Matched folders are bulk-labeled "software"
-# without LLM calls. An extension-majority safety gate prevents data folders
-# that happen to share a name (e.g. a "lib" folder full of CSVs) from being
-# mislabeled.
+# Two-tier name-based detection.
+#
+# Tier A (unambig_patterns): folder names unique to language tooling
+# (`__pycache__`, `.git`, `renv`, `node_modules`, ...). Any directory whose
+# basename matches is claimed entirely — no size threshold, no extension gate.
+#
+# Tier B (ambig_patterns): folder names that collide with data / stimulus
+# folders (`lib`, `libs`, `build`, `dist`, `vendor`). A match must also
+# contain at least `ambig_threshold` files AND fail the extension-majority
+# gate (>50% recognised data/media extensions → assume data, skip).
 #
 # Returns a list with three fields:
 #   $software_rel_paths  — rel_paths claimed as software
 #   $software_folder_map — named character: rel_path → matched folder path
 #   $clean_rel_paths     — rel_paths not claimed by any software folder
 
-detect_software_folders <- function(rel_paths, threshold, patterns) {
+detect_software_folders <- function(rel_paths,
+                                    unambig_patterns,
+                                    ambig_patterns,
+                                    ambig_threshold) {
+  # Tabular data extensions. Tripping this gate means the folder looks like
+  # data, not code.
   DATA_EXTS <- c("csv", "tsv", "txt", "dat", "xlsx", "xls", "sav", "dta",
                  "sas7bdat", "rds", "rda", "rdata")
 
@@ -1726,7 +1753,9 @@ detect_software_folders <- function(rel_paths, threshold, patterns) {
     clean_rel_paths     = rel_paths
   )
 
-  if (length(rel_paths) == 0 || length(patterns) == 0) return(empty)
+  if (length(rel_paths) == 0 ||
+      (length(unambig_patterns) == 0 && length(ambig_patterns) == 0))
+    return(empty)
 
   # Build all unique directory paths present in the file list (at every depth)
   all_dirs <- unique(unlist(lapply(rel_paths, function(p) {
@@ -1737,33 +1766,46 @@ detect_software_folders <- function(rel_paths, threshold, patterns) {
            character(1))
   }), use.names = FALSE))
 
-  # Candidates: directories whose basename exactly matches a pattern (case-insensitive)
-  patterns_lower  <- tolower(patterns)
-  candidate_dirs  <- all_dirs[tolower(basename(all_dirs)) %in% patterns_lower]
-  if (length(candidate_dirs) == 0) return(empty)
+  if (length(all_dirs) == 0) return(empty)
 
-  # Outermost first: sort by path depth (fewer "/" = shallower)
-  depths         <- nchar(gsub("[^/]", "", candidate_dirs, fixed = FALSE))
-  candidate_dirs <- candidate_dirs[order(depths)]
+  # Bucket candidate dirs by tier (case-insensitive basename match)
+  base_lower      <- tolower(basename(all_dirs))
+  unambig_lower   <- tolower(unambig_patterns)
+  ambig_lower     <- tolower(ambig_patterns)
+  unambig_dirs    <- all_dirs[base_lower %in% unambig_lower]
+  ambig_dirs      <- all_dirs[base_lower %in% ambig_lower]
 
-  unclaimed    <- rel_paths
-  sw_paths     <- character(0)
-  sw_map       <- character(0)   # named: rel_path → matched folder
+  # Outermost first within each tier — claiming a parent strips its children
+  order_by_depth <- function(d) d[order(nchar(gsub("[^/]", "", d)))]
+  unambig_dirs   <- order_by_depth(unambig_dirs)
+  ambig_dirs     <- order_by_depth(ambig_dirs)
 
-  for (d in candidate_dirs) {
+  unclaimed <- rel_paths
+  sw_paths  <- character(0)
+  sw_map    <- character(0)
+
+  # Tier A — claim regardless of size/extensions
+  for (d in unambig_dirs) {
     if (length(unclaimed) == 0) break
-    prefix   <- paste0(d, "/")
-    covered  <- unclaimed[startsWith(unclaimed, prefix)]
+    prefix  <- paste0(d, "/")
+    covered <- unclaimed[startsWith(unclaimed, prefix)]
+    if (length(covered) == 0) next
+    sw_paths        <- c(sw_paths, covered)
+    sw_map[covered] <- d
+    unclaimed       <- unclaimed[!startsWith(unclaimed, prefix)]
+  }
 
-    if (length(covered) < threshold) next
-
-    # Extension-majority safety gate: skip if >50% are recognisable data files
+  # Tier B — threshold + extension-majority gate
+  for (d in ambig_dirs) {
+    if (length(unclaimed) == 0) break
+    prefix  <- paste0(d, "/")
+    covered <- unclaimed[startsWith(unclaimed, prefix)]
+    if (length(covered) < ambig_threshold) next
     exts <- tolower(tools::file_ext(covered))
     if (mean(exts %in% DATA_EXTS) > 0.5) next
-
-    sw_paths          <- c(sw_paths, covered)
-    sw_map[covered]   <- d
-    unclaimed         <- unclaimed[!startsWith(unclaimed, prefix)]
+    sw_paths        <- c(sw_paths, covered)
+    sw_map[covered] <- d
+    unclaimed       <- unclaimed[!startsWith(unclaimed, prefix)]
   }
 
   list(
