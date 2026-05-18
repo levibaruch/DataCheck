@@ -413,6 +413,34 @@ if (nrow(dg_valid) > 0) {
   cm_dg <- NULL
 }
 
+# Paper-weighted confusion matrix builder.
+# For each GT level, computes the mean of per-paper row-stochastic
+# distributions (one paper = one vote). Rows sum to 1; large papers no
+# longer dominate the cell counts.
+paper_weighted_cm <- function(df, gt_col, pred_col, levels) {
+  papers <- unique(df$paper_id)
+  cm        <- matrix(0, length(levels), length(levels),
+                      dimnames = list(levels, levels))
+  n_per_row <- setNames(rep(0L, length(levels)), levels)
+  for (pid in papers) {
+    pdf <- df[df$paper_id == pid, ]
+    for (gtl in levels) {
+      rows <- pdf[!is.na(pdf[[gt_col]]) & pdf[[gt_col]] == gtl, ]
+      if (nrow(rows) == 0) next
+      pr <- table(factor(rows[[pred_col]], levels = levels)) / nrow(rows)
+      cm[gtl, ]      <- cm[gtl, ] + as.numeric(pr)
+      n_per_row[gtl] <- n_per_row[gtl] + 1L
+    }
+  }
+  for (gtl in levels) if (n_per_row[gtl] > 0L)
+    cm[gtl, ] <- cm[gtl, ] / n_per_row[gtl]
+  list(cm = cm, n_per_row = n_per_row)
+}
+
+cm_dg_pw <- if (!is.null(cm_dg)) {
+  paper_weighted_cm(dg_valid, "data_granularity_gt", "data_granularity", dg_levels)
+} else NULL
+
 # ── data_format confusion matrix ─────────────────────────────────────────────
 
 df_valid <- acc[
@@ -426,7 +454,9 @@ if (nrow(df_valid) > 0) {
     gt   = factor(df_valid$data_format_gt, levels = df_levels),
     pred = factor(df_valid$data_format,    levels = df_levels)
   ))
+  cm_df_pw <- paper_weighted_cm(df_valid, "data_format_gt", "data_format", df_levels)
 } else {
+  cm_df_pw <- NULL
   cm_df <- NULL
 }
 
@@ -721,7 +751,20 @@ if (nrow(grp_valid) > 0) {
 }
 BR()
 
-L("### 4b. data_granularity confusion matrix")
+# Render a paper-weighted CM as percentage strings (rows sum to 100%),
+# with a trailing N-papers column.
+render_pw_cm <- function(pw, row_label) {
+  cm <- pw$cm
+  pct <- apply(cm, c(1, 2), function(x) sprintf("%.1f%%", 100 * x))
+  out <- as.data.frame(pct, stringsAsFactors = FALSE)
+  out[["N papers"]] <- as.integer(pw$n_per_row[rownames(cm)])
+  cbind(setNames(data.frame(rownames(cm), check.names = FALSE), row_label),
+        out)
+}
+
+L("### 4b. data_granularity confusion matrix (file-pooled)")
+BR()
+L("_Raw file counts across all papers. Large papers dominate; see 4b' for paper-weighted view._")
 BR()
 if (!is.null(cm_dg) && nrow(cm_dg) > 0) {
   cm_dg_df <- as.data.frame.matrix(cm_dg)
@@ -733,13 +776,33 @@ if (!is.null(cm_dg) && nrow(cm_dg) > 0) {
 }
 BR()
 
-L("### 4c. data_format confusion matrix (raw vs tabular)")
+L("### 4b'. data_granularity confusion matrix (paper-weighted)")
+BR()
+L("_Each paper's row-stochastic confusion is averaged across papers (one paper = one vote). Rows sum to 100%. Cells show the typical per-paper proportion of GT-row files predicted as each column class; the `N papers` column is the number of papers contributing that row._")
+BR()
+if (!is.null(cm_dg_pw) && sum(cm_dg_pw$n_per_row) > 0) {
+  L(md_table(render_pw_cm(cm_dg_pw, "dg \\ pred")))
+} else {
+  L("_Insufficient data._")
+}
+BR()
+
+L("### 4c. data_format confusion matrix (raw vs tabular, file-pooled)")
 BR()
 if (!is.null(cm_df) && nrow(cm_df) > 0) {
   cm_df_df <- as.data.frame.matrix(cm_df)
   L(md_table(cbind(data.frame(`format \\ pred` = rownames(cm_df_df), check.names = FALSE), cm_df_df)))
   BR()
   L("![data_format confusion matrix](df_conf.png)")
+} else {
+  L("_Insufficient data._")
+}
+BR()
+
+L("### 4c'. data_format confusion matrix (paper-weighted)")
+BR()
+if (!is.null(cm_df_pw) && sum(cm_df_pw$n_per_row) > 0) {
+  L(md_table(render_pw_cm(cm_df_pw, "format \\ pred")))
 } else {
   L("_Insufficient data._")
 }

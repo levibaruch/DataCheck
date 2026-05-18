@@ -125,6 +125,44 @@ Known-clean papers useful as sanity checks that the pipeline still runs without 
 
 ---
 
+### Known-limit: per-participant files below the aggregate threshold
+
+These papers have per-participant data files (clear `individual`-granularity
+intent by filename pattern) that the pipeline classifies as `combined`.
+Root cause: the containing folder sits **below `AGGREGATE_THRESHOLD`**, so it
+is never aggregated and US3's LLM granularity inference never fires. The
+fallback US1 filename heuristic (`is_participant_id`, `helper.R:1616`) misses
+these because `PARTICIPANT_ID_PATTERNS` covers only a narrow set of prefixes
+(`sub`, `subj`, `s`, `p`, `id`, `participant_`, `pp`, `vp` + immediate digits).
+Result: `granularity_source = "default_combined"`, prediction = combined,
+GT = individual. Together these papers account for ~211 of the remaining
+file-pooled `individual → combined` errors in the report.
+
+This is accepted behaviour for now — not a bug to fix in this round. If
+revisited, options are: (a) broaden `PARTICIPANT_ID_PATTERNS` to match space
+separators, `subject-NNNN`, descriptor-prefix patterns, end-anchored
+`-A01`-style suffixes; (b) apply US3-style filename-pattern detection to
+non-aggregate folders that contain ≥N files matching a single
+`prefix_NUMBER` regex.
+
+| paper_id | n_err | filename example | regex gap |
+|---|---|---|---|
+| `0956797617713798` | 42 | `Participant 13_positive.doc` | space separator after `Participant` |
+| `0956797615611933` | 36 | `ac_1_m1.txt` | short-prefix (initials) + number |
+| `09567976211055375` | 32 | `inter_shape_data_00.mat` | descriptive-prefix + number |
+| `0956797620943834` | 28 | `CK1.2018-06-18.17_39_26.mat` | initials + digit + dotted date |
+| `0956797614564191` | 21 | `ad185_ac184.csv` | letter-pair + digits + `_` + letter-pair + digits |
+| `0956797614563958` | 17 | `study 1a-beer reasons_Sheet1.csv` | LLM said `combined` for aggregate (Excel sheet explosion) — ambiguous case |
+| `0956797614533969` | 11 | `subject-2294_run1_gain_hrf.txt` | `subject-NNNN` not covered by `^sub\d+` |
+| `0956797618761660` | 9 | `coding_1_J.csv` | descriptor + number + initial |
+| `0956797615595607` | 8 | `Eval_IAT__V3__InLab1st__ASD.csv` | structured suffix, no numeric subject ID |
+| `0956797617735533` | 7 | `Cha-Chong_AvgOrientation_Behavior_Raw Data-A01.csv` | end-anchored `-A01` suffix |
+
+Confirmed not stale-cache artefacts (rerunning `run_index` on each produced
+identical predictions, 0 delta).
+
+---
+
 ## Quick reference — paper IDs by test priority
 
 ```
