@@ -172,6 +172,17 @@ for (pid in eligible) {
   acc_list[[pid]] <- m
 }
 
+# Normalize column sets — different papers may have different optional cols
+# (e.g. type_source/granularity_source added in newer structure.csv schemas).
+# Fill missing cols with NA so rbind succeeds.
+if (length(acc_list) > 0) {
+  all_cols <- unique(unlist(lapply(acc_list, names)))
+  acc_list <- lapply(acc_list, function(d) {
+    miss <- setdiff(all_cols, names(d))
+    for (cn in miss) d[[cn]] <- NA
+    d[, all_cols, drop = FALSE]
+  })
+}
 acc     <- if (length(acc_list) > 0) do.call(rbind, acc_list) else NULL
 has_acc <- !is.null(acc) && nrow(acc) > 0
 

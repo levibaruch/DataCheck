@@ -90,12 +90,24 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
 
   t_start <- proc.time()[["elapsed"]]
 
-  # Select STRUCTURE_PROMPT body based on version (for AB testing)
-  structure_body <- switch(structure_prompt_version,
+  # Select matching header + body for this prompt format version
+  structure_body   <- switch(structure_prompt_version,
     "md"        = STRUCTURE_PROMPT_MD,
     "plaintext" = STRUCTURE_PROMPT_PLAIN,
     "json"      = STRUCTURE_PROMPT_JSON,
-    STRUCTURE_PROMPT_MD  # DEFAULT
+    STRUCTURE_PROMPT_MD
+  )
+  single_header    <- switch(structure_prompt_version,
+    "md"        = SINGLE_HEADER_MD,
+    "plaintext" = SINGLE_HEADER_PLAIN,
+    "json"      = SINGLE_HEADER_JSON,
+    SINGLE_HEADER_MD
+  )
+  aggregate_header <- switch(structure_prompt_version,
+    "md"        = AGGREGATE_HEADER_MD,
+    "plaintext" = AGGREGATE_HEADER_PLAIN,
+    "json"      = AGGREGATE_HEADER_JSON,
+    AGGREGATE_HEADER_MD
   )
   # ── 0. Resolve paper ────────────────────────────────────────────────────────
 
@@ -658,7 +670,7 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
                         build_structure_summary(experiment_map, type_map, last_entry)
       batch_result <- llm_batch(
         paths           = chunks[[i]],
-        system_prompt   = paste0(SINGLE_HEADER, structure_body),
+        system_prompt   = paste0(single_header, structure_body),
         user_prefix     = prefix,
         key_col         = "path",
         extra_cols      = c("type", "group"),
@@ -688,7 +700,7 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
                   build_sentinel_summary(experiment_map, type_map)
       batch_result <- llm_batch(
         paths           = agg_chunks[[i]],
-        system_prompt   = paste0(AGGREGATE_HEADER, structure_body),
+        system_prompt   = paste0(aggregate_header, structure_body),
         user_prefix     = prefix,
         key_col         = "path",
         extra_cols      = c("type", "group"),
@@ -1277,87 +1289,90 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
     # Initialise col_header_group as all-NA (default when no multi-level structure).
     col_header_group <- rep(NA_character_, ncol(df))
 
-    if (mean(auto_named) > 0.5) {
-      # Extract group labels from row-1 names and forward-fill across spans.
-      # "SHAM...3" → prefix "SHAM"; "...4" → "" → NA → filled from last real prefix.
-      row1_names   <- names(df)
-      raw_prefixes <- sub("\\.\\.\\.\\d+$", "", row1_names)
-      raw_prefixes[!nzchar(raw_prefixes)] <- NA_character_
-      last_grp <- NA_character_
-      col_header_group <- vapply(raw_prefixes, function(p) {
-        if (!is.na(p)) last_grp <<- p
-        last_grp
-      }, character(1))
-
-      # Branch 1: scan for a better sub-header row.
-      sub_header_row    <- NULL
-      current_auto_frac <- mean(auto_named)
-      for (i in seq_len(min(MULTILEVEL_HEADER_LOOKAHEAD, nrow(df)))) {
-        candidate      <- as.character(df[i, ])
-        cand_auto_frac <- mean(grepl("^\\.\\.\\.\\d+$", candidate))
-        # A real sub-header cell must be non-empty, non-NA, non-...N, and non-numeric.
-        # Pure numeric rows are data rows, not label rows.
-        has_real       <- any(!is.na(candidate) & nzchar(candidate) &
-                              candidate != "NA" &
-                              !grepl("^\\.\\.\\.\\d+$", candidate) &
-                              is.na(suppressWarnings(as.numeric(candidate))))
-        if (cand_auto_frac < current_auto_frac && has_real) {
-          sub_header_row <- i
-          break
-        }
-      }
-
-      if (!is.null(sub_header_row)) {
-        # Use sub-header values as column names.
-        # NA or empty cells fall back to the original ...N name (preserves uniqueness).
-        new_names           <- as.character(df[sub_header_row, ])
-        fallback            <- is.na(new_names) | !nzchar(new_names)
-        new_names[fallback] <- row1_names[fallback]
-        new_names           <- make.unique(new_names)
-        df                  <- df[(sub_header_row + 1):nrow(df), , drop = FALSE]
-        names(df)           <- new_names
-        # col_header_group is aligned column-wise; row slicing above does not affect it.
-        cat(sprintf("  [multi-level: row %d as header]", sub_header_row + 1))
-      } else {
-        # Branch 2: no sub-header found — group context not meaningful without a sub-header.
-        col_header_group <- rep(NA_character_, ncol(df))
-        has_any_real     <- any(!auto_named)
-        if (has_any_real) {
-          cat("  [multi-level: partial labels retained]")
-          # proceed with df as-is
-        } else {
-          cat("  [skipped: multi-level, no usable sub-header]\n")
-          return(NULL)
-        }
-      }
-    }
-
-    # ── V\d+ auto-header detection ───────────────────────────────────────────────
-    # base R names headerless CSVs V1, V2, V3, ... — the same issue as ...N above
-    # but for CSV files read without column headers.  Apply the same sub-header
-    # lookahead; no group-label extraction (V-names carry no prefix context).
-    v_named <- grepl("^V\\d+$", names(df))
-    if (mean(v_named) > 0.5) {
-      v_sub_header_row <- NULL
-      for (.vi in seq_len(min(MULTILEVEL_HEADER_LOOKAHEAD, nrow(df)))) {
-        candidate <- as.character(df[.vi, ])
-        has_real  <- any(!is.na(candidate) & nzchar(candidate) &
-                         candidate != "NA" &
-                         !grepl("^V\\d+$", candidate) &
-                         is.na(suppressWarnings(as.numeric(candidate))))
-        if (has_real) { v_sub_header_row <- .vi; break }
-      }
-      if (!is.null(v_sub_header_row)) {
-        new_names           <- as.character(df[v_sub_header_row, ])
-        fallback            <- is.na(new_names) | !nzchar(new_names)
-        new_names[fallback] <- names(df)[fallback]
-        new_names           <- make.unique(new_names)
-        df                  <- df[(v_sub_header_row + 1):nrow(df), , drop = FALSE]
-        names(df)           <- new_names
-        col_header_group    <- rep(NA_character_, ncol(df))
-        cat(sprintf("  [V\\d+ header: row %d as header]", v_sub_header_row + 1))
-      }
-    }
+    # NOTE: Multi-level header detection (both `...N` and `V\d+` branches) is
+    # disabled — super untested and does not appear to work well in practice.
+    # `col_header_group` stays all-NA; df keeps original row-1 column names.
+    # if (mean(auto_named) > 0.5) {
+    #   # Extract group labels from row-1 names and forward-fill across spans.
+    #   # "SHAM...3" → prefix "SHAM"; "...4" → "" → NA → filled from last real prefix.
+    #   row1_names   <- names(df)
+    #   raw_prefixes <- sub("\\.\\.\\.\\d+$", "", row1_names)
+    #   raw_prefixes[!nzchar(raw_prefixes)] <- NA_character_
+    #   last_grp <- NA_character_
+    #   col_header_group <- vapply(raw_prefixes, function(p) {
+    #     if (!is.na(p)) last_grp <<- p
+    #     last_grp
+    #   }, character(1))
+    #
+    #   # Branch 1: scan for a better sub-header row.
+    #   sub_header_row    <- NULL
+    #   current_auto_frac <- mean(auto_named)
+    #   for (i in seq_len(min(MULTILEVEL_HEADER_LOOKAHEAD, nrow(df)))) {
+    #     candidate      <- as.character(df[i, ])
+    #     cand_auto_frac <- mean(grepl("^\\.\\.\\.\\d+$", candidate))
+    #     # A real sub-header cell must be non-empty, non-NA, non-...N, and non-numeric.
+    #     # Pure numeric rows are data rows, not label rows.
+    #     has_real       <- any(!is.na(candidate) & nzchar(candidate) &
+    #                           candidate != "NA" &
+    #                           !grepl("^\\.\\.\\.\\d+$", candidate) &
+    #                           is.na(suppressWarnings(as.numeric(candidate))))
+    #     if (cand_auto_frac < current_auto_frac && has_real) {
+    #       sub_header_row <- i
+    #       break
+    #     }
+    #   }
+    #
+    #   if (!is.null(sub_header_row)) {
+    #     # Use sub-header values as column names.
+    #     # NA or empty cells fall back to the original ...N name (preserves uniqueness).
+    #     new_names           <- as.character(df[sub_header_row, ])
+    #     fallback            <- is.na(new_names) | !nzchar(new_names)
+    #     new_names[fallback] <- row1_names[fallback]
+    #     new_names           <- make.unique(new_names)
+    #     df                  <- df[(sub_header_row + 1):nrow(df), , drop = FALSE]
+    #     names(df)           <- new_names
+    #     # col_header_group is aligned column-wise; row slicing above does not affect it.
+    #     cat(sprintf("  [multi-level: row %d as header]", sub_header_row + 1))
+    #   } else {
+    #     # Branch 2: no sub-header found — group context not meaningful without a sub-header.
+    #     col_header_group <- rep(NA_character_, ncol(df))
+    #     has_any_real     <- any(!auto_named)
+    #     if (has_any_real) {
+    #       cat("  [multi-level: partial labels retained]")
+    #       # proceed with df as-is
+    #     } else {
+    #       cat("  [skipped: multi-level, no usable sub-header]\n")
+    #       return(NULL)
+    #     }
+    #   }
+    # }
+    #
+    # # ── V\d+ auto-header detection ───────────────────────────────────────────
+    # # base R names headerless CSVs V1, V2, V3, ... — the same issue as ...N above
+    # # but for CSV files read without column headers.  Apply the same sub-header
+    # # lookahead; no group-label extraction (V-names carry no prefix context).
+    # v_named <- grepl("^V\\d+$", names(df))
+    # if (mean(v_named) > 0.5) {
+    #   v_sub_header_row <- NULL
+    #   for (.vi in seq_len(min(MULTILEVEL_HEADER_LOOKAHEAD, nrow(df)))) {
+    #     candidate <- as.character(df[.vi, ])
+    #     has_real  <- any(!is.na(candidate) & nzchar(candidate) &
+    #                      candidate != "NA" &
+    #                      !grepl("^V\\d+$", candidate) &
+    #                      is.na(suppressWarnings(as.numeric(candidate))))
+    #     if (has_real) { v_sub_header_row <- .vi; break }
+    #   }
+    #   if (!is.null(v_sub_header_row)) {
+    #     new_names           <- as.character(df[v_sub_header_row, ])
+    #     fallback            <- is.na(new_names) | !nzchar(new_names)
+    #     new_names[fallback] <- names(df)[fallback]
+    #     new_names           <- make.unique(new_names)
+    #     df                  <- df[(v_sub_header_row + 1):nrow(df), , drop = FALSE]
+    #     names(df)           <- new_names
+    #     col_header_group    <- rep(NA_character_, ncol(df))
+    #     cat(sprintf("  [V\\d+ header: row %d as header]", v_sub_header_row + 1))
+    #   }
+    # }
 
     sample_vals <- vapply(df, function(col) {
       vals <- as.character(col[!is.na(col)])
