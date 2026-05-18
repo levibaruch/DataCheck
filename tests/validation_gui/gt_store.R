@@ -149,12 +149,16 @@ paper_is_complete <- function(papers) {
     gt_path     <- file.path(osf_gt, paste0(pid, ".csv"))
     if (!file.exists(struct_path) || !file.exists(gt_path)) return("none")
     tryCatch({
-      n_struct <- nrow(read.csv(struct_path, stringsAsFactors = FALSE))
-      n_gt     <- nrow(read.csv(gt_path,     stringsAsFactors = FALSE))
-      if (n_struct == 0L)         return("none")
-      if (n_gt >= n_struct)       return("complete")
-      if (n_gt > 0L)              return("partial")
-      "none"
+      struct <- read.csv(struct_path, stringsAsFactors = FALSE)
+      gt     <- read.csv(gt_path,     stringsAsFactors = FALSE)
+      if (nrow(struct) == 0L)       return("none")
+      if (nrow(gt) == 0L)           return("none")
+      # Complete only if GT covers every structure row AND has no orphan rows
+      # (rel_paths absent from structure — usually pre-explosion stale entries).
+      uncovered <- setdiff(struct$rel_path, gt$rel_path)
+      orphan    <- setdiff(gt$rel_path,     struct$rel_path)
+      if (length(uncovered) == 0L && length(orphan) == 0L) return("complete")
+      "partial"
     }, error = function(e) "none")
   }, character(1L))
 }

@@ -590,6 +590,7 @@ ui <- page_sidebar(
         actionButton("btn_delete_paper",  "Delete annotations",     class = "btn-select-uv btn-select-uv--delete")
       )
     ),
+    uiOutput("orphan_banner_ui"),
     div(style = "overflow-y:auto; flex:1; min-height:0;",
         uiOutput("file_list_ui"))
   ),
@@ -768,6 +769,15 @@ server <- function(input, output, session) {
 
     gt <- read_gt(pid)
     rv$gt <- gt
+
+    # GT rows whose rel_path no longer exists in structure.csv. Usually caused
+    # by pipeline transforms that happen post-annotation — multi-object RData /
+    # multi-sheet Excel files getting exploded into per-object CSVs (originals
+    # deleted), or dir sanitization rewriting parent paths. Surfaced in the
+    # sidebar so the annotator can clear stale entries and re-label the new
+    # files manually.
+    rv$orphan_gt <- if (nrow(gt) > 0)
+      setdiff(gt$rel_path, struct$rel_path) else character(0)
 
     n  <- nrow(struct)
     st <- setNames(rep("unvisited", n), struct$rel_path)
@@ -1181,6 +1191,127 @@ server <- function(input, output, session) {
                  style = sprintf("width:%d%%", pct))
       )
     )
+  })
+
+  # Apply pipeline dir-sanitization rule (0_index.R step 2 / helper.R
+  # `sanitize_basename`) to each component of a rel_path. Used to map a
+  # pre-sanitize GT rel_path onto its post-sanitize structure rel_path.
+  sanitize_relpath <- function(rp) {
+    if (is.na(rp) || !nzchar(rp)) return(rp)
+    max_words <- if (exists("MAX_DIR_WORDS")) MAX_DIR_WORDS else 5L
+    parts <- strsplit(rp, "/", fixed = TRUE)[[1]]
+    # Pipeline sanitizes directory names only — the filename (last component)
+    # is preserved verbatim. Apply the same boundary here.
+    n <- length(parts)
+    if (n <= 1) return(rp)
+    dirs <- parts[seq_len(n - 1L)]
+    fname <- parts[n]
+    fixed <- vapply(dirs, function(name) {
+      # Skip components already clean (matches the guard in 0_index.R:217)
+      if (!grepl("[^A-Za-z0-9_.\\-]", name)) return(name)
+      words <- strsplit(trimws(name), "\\s+")[[1]]
+      words <- gsub("[^A-Za-z0-9_\\-]", "", words)
+      words <- words[nchar(words) > 0]
+      paste(head(words, max_words), collapse = "_")
+    }, character(1))
+    paste(c(fixed, fname), collapse = "/")
+  }
+
+  # For an orphan GT rel_path, return its sanitized counterpart if and only if
+  # it (a) differs from the original, (b) is present in structure.csv,
+  # (c) is not already covered by another GT row. Otherwise NA — not repointable.
+  resolve_orphan_repoint <- function(rp) {
+    if (is.null(rv$structure) || is.null(rv$gt)) return(NA_character_)
+    candidate <- sanitize_relpath(rp)
+    if (identical(candidate, rp)) return(NA_character_)
+    if (!candidate %in% rv$structure$rel_path) return(NA_character_)
+    if (candidate %in% rv$gt$rel_path) return(NA_character_)
+    candidate
+  }
+
+  # Orphan-GT banner: stale GT entries whose rel_path is not in structure.csv
+  # (e.g. xlsm/RData exploded into CSVs after annotation; sanitize renamed
+  # a parent dir). Annotator can drop the stale entry and re-label manually,
+  # or Repoint when the path differs only by directory sanitization.
+  output$orphan_banner_ui <- renderUI({
+    req(!is.null(rv$orphan_gt))
+    if (length(rv$orphan_gt) == 0) return(NULL)
+    rows <- lapply(seq_along(rv$orphan_gt), function(i) {
+      rp        <- rv$orphan_gt[i]
+      repoint   <- resolve_orphan_repoint(rp)
+      tags$div(
+        style = "display:flex; gap:6px; padding:3px 6px; font-size:11px; align-items:center;",
+        tags$span(rp,
+                  title = rp,
+                  style = "flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-family:monospace;"),
+        if (!is.na(repoint)) tags$button(
+          "Repoint",
+          title   = sprintf("Rewrite to: %s", repoint),
+          class   = "btn btn-sm btn-outline-primary",
+          style   = "padding:0 6px; font-size:10px; line-height:1.4;",
+          onclick = sprintf(
+            "Shiny.setInputValue('orphan_repoint_click', %d, {priority:'event'})",
+            i)
+        ),
+        tags$button(
+          "Drop",
+          class   = "btn btn-sm btn-outline-danger",
+          style   = "padding:0 6px; font-size:10px; line-height:1.4;",
+          onclick = sprintf(
+            "Shiny.setInputValue('orphan_del_click', %d, {priority:'event'})",
+            i)
+        )
+      )
+    })
+    tagList(
+      tags$details(open = NA,
+        tags$summary(
+          style = "color:#e65100; font-weight:600; cursor:pointer; padding:4px 0;",
+          sprintf("⚠ %d stale GT entr%s (file no longer on disk)",
+                  length(rv$orphan_gt),
+                  if (length(rv$orphan_gt) == 1) "y" else "ies")
+        ),
+        tags$div(
+          style = "max-height:160px; overflow-y:auto; border-top:1px solid rgba(128,128,128,0.2); margin-top:2px;",
+          rows
+        )
+      ),
+      tags$hr(style = "margin:6px 0;")
+    )
+  })
+
+  # Drop a stale GT row when "Drop" is clicked in the orphan banner.
+  observeEvent(input$orphan_del_click, {
+    req(!is.null(rv$orphan_gt), !is.null(rv$paper_id))
+    i <- as.integer(input$orphan_del_click)
+    if (is.na(i) || i < 1L || i > length(rv$orphan_gt)) return()
+    rp <- rv$orphan_gt[i]
+    rv$gt        <- rv$gt[rv$gt$rel_path != rp, , drop = FALSE]
+    rv$orphan_gt <- rv$orphan_gt[-i]
+    write_gt(rv$paper_id, rv$gt)
+    showNotification(paste0("Dropped stale GT: ", rp),
+                     type = "message", duration = 3)
+  })
+
+  # Repoint a stale GT row to its sanitized rel_path (Mode 3: dir was renamed
+  # by pipeline sanitization after annotation). Rewrites the rel_path in place.
+  observeEvent(input$orphan_repoint_click, {
+    req(!is.null(rv$orphan_gt), !is.null(rv$paper_id))
+    i <- as.integer(input$orphan_repoint_click)
+    if (is.na(i) || i < 1L || i > length(rv$orphan_gt)) return()
+    rp     <- rv$orphan_gt[i]
+    new_rp <- resolve_orphan_repoint(rp)
+    if (is.na(new_rp)) {
+      showNotification(paste0("Cannot repoint: ", rp), type = "warning",
+                       duration = 4)
+      return()
+    }
+    rv$gt$rel_path[rv$gt$rel_path == rp] <- new_rp
+    rv$orphan_gt    <- rv$orphan_gt[-i]
+    rv$status[new_rp] <- "validated"
+    write_gt(rv$paper_id, rv$gt)
+    showNotification(paste0("Repointed GT → ", new_rp),
+                     type = "message", duration = 3)
   })
 
   # T009: File list
