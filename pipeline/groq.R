@@ -1,7 +1,10 @@
 # groq.R — llm_groq(): hits Groq's OpenAI-compatible API.
 # Interface mirrors llm_ollama() so llm_batch() can dispatch transparently.
 # Set GROQ_API_KEY in environment before use.
-# Llama on Groq does not support thinking — think param is silently ignored.
+# Llama on Groq has no reasoning — think param ignored for non-gpt-oss models.
+# gpt-oss-20b / gpt-oss-120b: think %in% c("low","medium","high") maps to
+# reasoning_effort; capture_thinking=TRUE adds include_reasoning=TRUE and
+# pulls message.reasoning back through the thinking field.
 
 library(httr2)
 
@@ -11,7 +14,7 @@ llm_groq <- function(text, system_prompt,
                      text_col        = "text",
                      model           = "llama-3.1-8b-instant",
                      params          = list(),
-                     think           = NULL,      # ignored — Groq/Llama has no thinking
+                     think           = NULL,
                      capture_thinking = FALSE) {
 
   api_key <- Sys.getenv("GROQ_API_KEY")
@@ -41,6 +44,13 @@ llm_groq <- function(text, system_prompt,
     )
     if (!is.null(params$max_tokens))  body$max_tokens  <- params$max_tokens
     if (!is.null(params$top_p))       body$top_p       <- params$top_p
+
+    # gpt-oss reasoning controls (Groq)
+    if (grepl("gpt-oss", groq_model, fixed = TRUE) &&
+        is.character(think) && think %in% c("low", "medium", "high")) {
+      body$reasoning_effort <- think
+      if (isTRUE(capture_thinking)) body$include_reasoning <- TRUE
+    }
 
     req <- request("https://api.groq.com/openai/v1/chat/completions") |>
       req_headers(Authorization = paste("Bearer", api_key),
@@ -74,13 +84,14 @@ llm_groq <- function(text, system_prompt,
       }
 
       parsed  <- resp_body_json(resp)
-      content <- parsed$choices[[1]]$message$content
+      msg     <- parsed$choices[[1]]$message
+      content <- msg$content
       if (is.null(content))
         stop(sprintf("Groq returned null content (finish_reason=%s)",
                      parsed$choices[[1]]$finish_reason %||% "unknown"))
       return(list(
         content    = content,
-        thinking   = NULL,
+        thinking   = msg$reasoning,
         tokens_in  = parsed$usage$prompt_tokens     %||% NA_integer_,
         tokens_out = parsed$usage$completion_tokens %||% NA_integer_
       ))
@@ -94,7 +105,7 @@ llm_groq <- function(text, system_prompt,
       {
         raw    <- call_groq(unique_text[i])
         result <- list(answer = trimws(raw$content))
-        if (capture_thinking) result$thinking <- ""
+        if (capture_thinking) result$thinking <- raw$thinking %||% ""
         result$tokens_in  <- raw$tokens_in
         result$tokens_out <- raw$tokens_out
         result

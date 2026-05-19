@@ -548,6 +548,7 @@ llm_batch <- function(paths, system_prompt, user_prefix, key_col, extra_cols,
       raw             <- if (grepl("^groq/", LLM_MODEL))
                           llm_groq(system_prompt = system_prompt, text = chunk_input,
                                    model = LLM_MODEL, params = llm_params,
+                                   think = LLM_THINK_LEVEL,
                                    capture_thinking = do_capture)
                         else
                           llm_ollama(system_prompt = system_prompt, text = chunk_input,
