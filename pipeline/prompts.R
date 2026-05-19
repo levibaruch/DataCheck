@@ -5,9 +5,11 @@
 # ─────────────────────────────────────────────────────────────────────────────
 
 # ── File classification headers (0_index.R → llm_batch()) ────────────────────
-# Concatenate header + one of the three body prompts below.
+# Each format has a matching header + body. Select via structure_prompt_version.
 
-SINGLE_HEADER <- 'You are classifying files in a psychology research data repository.
+# -- plaintext headers --------------------------------------------------------
+
+SINGLE_HEADER_PLAIN <- 'You are classifying files in a psychology research data repository.
 You will receive a file tree. Return a JSON array in the same order.
 Each element: {"path": "<exact path>", "type": "<type>", "group": "<group>"}
 
@@ -20,8 +22,8 @@ A .txt can be participant data. Ask: what was this file made for?
 
 '
 
-AGGREGATE_HEADER <- 'You are classifying a folder of files. All files share the same extension and parent directory. Your classification applies to the folder as a whole.
-
+AGGREGATE_HEADER_PLAIN <- 'You are classifying a folder of files. All files share the same extension and parent directory. Your classification applies to the folder as a whole.
+v
 You will receive one JSON object per folder:
 
 {
@@ -40,6 +42,87 @@ A .txt can be participant data. Ask: what was this file made for?
 
 
 '
+
+# -- markdown headers ---------------------------------------------------------
+
+SINGLE_HEADER_MD <- '# Task
+You are classifying files in a psychology research data repository.
+
+## Input
+A file tree — one path per line.
+
+## Output
+Return a JSON array in the **same order** as the input.
+Each element: `{"path": "<exact path>", "type": "<type>", "group": "<group>"}`
+
+## Core Principle
+Classify by **purpose**, inferred from the filename and full folder path.
+- Extension is a weak signal — a `.csv` can be data, a codebook, or supplemental.
+- A `.txt` can be participant data.
+- Ask: **what was this file made for?**
+
+'
+
+AGGREGATE_HEADER_MD <- '# Task
+You are classifying a folder of files. All files share the same extension and parent directory. Your classification applies to the **folder as a whole**.
+
+## Input
+One JSON object per folder:
+
+```json
+{
+  "path":      "<folder/.ext key>",
+  "ext":       "<shared extension>",
+  "n_files":   <total file count>,
+  "filenames": ["<sample filename>", ...]
+}
+```
+
+## Output
+Return a JSON array (one element per input object):
+`{"path": "<exact path>", "type": "<type>", "group": "<group>"}`
+
+## Core Principle
+Classify by **purpose**, inferred from the filename and full folder path.
+- Extension is a weak signal — a `.csv` can be data, a codebook, or supplemental.
+- A `.txt` can be participant data.
+- Ask: **what was this file made for?**
+
+'
+
+# -- JSON headers -------------------------------------------------------------
+
+SINGLE_HEADER_JSON <- r"[{
+  "task": "Classify files in a psychology research data repository.",
+  "input_format": "File tree — one path per line.",
+  "output_format": {
+    "type": "JSON array, same order as input",
+    "schema": {"path": "<exact path>", "type": "<type>", "group": "<group>"}
+  },
+  "core_principle": "Classify by purpose, inferred from the filename and full folder path. Extension is a weak signal — a .csv can be data, a codebook, or supplemental. A .txt can be participant data. Ask: what was this file made for?"
+}
+
+]"
+
+AGGREGATE_HEADER_JSON <- r"[{
+  "task": "Classify a folder of files. All files share the same extension and parent directory. Your classification applies to the folder as a whole.",
+  "input_format": {
+    "type": "JSON object per folder",
+    "schema": {
+      "path": "<folder/.ext key>",
+      "ext": "<shared extension>",
+      "n_files": "<total file count>",
+      "filenames": ["<sample filename>", "..."]
+    }
+  },
+  "output_format": {
+    "type": "JSON array, one element per input object",
+    "schema": {"path": "<exact path>", "type": "<type>", "group": "<group>"}
+  },
+  "core_principle": "Classify by purpose, inferred from the filename and full folder path. Extension is a weak signal — a .csv can be data, a codebook, or supplemental. A .txt can be participant data. Ask: what was this file made for?"
+}
+
+]"
 
 
 # ── PROMPT: md ────────────────────────────────────────────────────────────────
@@ -333,34 +416,6 @@ The $defs sections define all classification rules — read them before classify
 
 Echo every path exactly. Output ONLY the JSON array — no schema, no notes.]"
 
-
-# ── Column type classification (0_index.R → llm_batch()) ─────────────────────
-
-COLUMN_TYPE_PROMPT <- 'You are classifying columns in psychology research data.
-For each column descriptor return a JSON array (same order).
-Each element: {"descriptor": "<exact descriptor>", "col_type": "<type>"}
-
-col_type — pick one:
-  continuous  : numeric measurement — reaction time, age, VAS rating, Likert mean,
-                subscale score, count, percentage, any column with decimal values
-  ordinal     : ordered integer scale with few levels — 1–5 Likert item, 1–10 rating,
-                bounded score, ranked preference
-  categorical : unordered group or category code with few levels (condition, gender,
-                language, group assignment)
-  binary      : exactly two possible values (yes/no, 0/1, treatment/control)
-  id          : participant or row identifier — the PRIMARY signal is the column NAME
-                (participant, subject, ResponseId, pid, etc.); values may be numeric or
-                alphanumeric codes; unique or near-unique per row
-
-  unknown     : ONLY when the name AND all sample values together give absolutely no
-                classifiable signal — virtually never the right answer. When in doubt
-                between "unknown" and any other type, always choose the other type.
-                Never use "unknown" for a column whose samples look like numbers.
-
-IMPORTANT: Prefer "continuous" or "ordinal" over "unknown" for numeric columns.
-When in doubt between "continuous" and "ordinal", choose "continuous".
-
-Output ONLY the JSON array. No notes, no text outside the array.'
 
 # ── Character column type classification (0_index.R → llm_batch(), Batch 2) ──
 
