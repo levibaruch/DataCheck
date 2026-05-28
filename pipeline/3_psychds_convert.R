@@ -39,6 +39,9 @@ NUMERIC_TYPES <- c("continuous", "continuous_comma_decimal",
 # Column types that receive a valuePattern in variableMeasured
 CATEGORICAL_TYPES <- c("categorical", "binary", "ordinal")
 
+# Column types that are not given a variablemeasured entry at all (empty)
+EXCLUDED_TYPES <- c("empty")
+
 # New conversion-scoped error codes (Principle V)
 ERR_PIPELINE_FAILED <- "pipeline_failed"
 ERR_NO_DATA_FILES   <- "no_data_files"
@@ -111,9 +114,13 @@ read_full_data <- function(path) {
   # ── Text formats ────────────────────────────────────────────────────────────
   if (ext %in% c("csv", "tsv", "txt", "dat")) {
     sep <- if (ext == "tsv") "\t" else sniff_delimiter(path)
+    # Detect headerless files (Mplus .dat, numeric matrices) so the first data
+    # row is not consumed as column names. Shares detect_header() with
+    # read_data_head() so columns.csv and this converted CSV agree on names.
+    hdr <- detect_header(path, sep)
     df  <- tryCatch(
       suppressWarnings(
-        read.delim(path, sep = sep, header = TRUE, check.names = FALSE,
+        read.delim(path, sep = sep, header = hdr, check.names = FALSE,
                    stringsAsFactors = FALSE, fileEncoding = "")
       ),
       error = function(e) NULL
@@ -127,13 +134,16 @@ read_full_data <- function(path) {
       if (has_invalid) {
         df <- tryCatch(
           suppressWarnings(
-            read.delim(path, sep = sep, header = TRUE, check.names = FALSE,
+            read.delim(path, sep = sep, header = hdr, check.names = FALSE,
                        stringsAsFactors = FALSE, fileEncoding = "latin1")
           ),
           error = function(e) NULL
         )
       }
     }
+    # Headerless: synthesize stable col_N names matching read_data_head().
+    if (!is.null(df) && !hdr && ncol(df) > 0)
+      names(df) <- paste0("col_", seq_len(ncol(df)))
     # ── Multi-level sub-header row drop ──────────────────────────────────────
     # When R assigns ...N placeholder names (duplicate/empty header cells), a
     # sub-header row sits inside the data.  Drop it here so the output CSV
@@ -338,7 +348,8 @@ parse_grobid_xml <- function(xml_path) {
 build_property_values <- function(cols_df, labels_df, coverage_df) {
   if (is.null(cols_df) || nrow(cols_df) == 0) return(list())
 
-  # Join labels (left join on source_file + column_name)
+  # Join labels (left join on source_file + column_name).
+
   if (!is.null(labels_df) && nrow(labels_df) > 0) {
     joined <- merge(cols_df, labels_df,
                     by = c("source_file", "column_name"),
@@ -354,7 +365,11 @@ build_property_values <- function(cols_df, labels_df, coverage_df) {
 
   # Deduplicate by column_name — keep first occurrence per column_name
   # (cols_df does not carry is_raw; callers pre-filter to the relevant study)
-  deduped <- joined[!duplicated(joined$column_name), ]
+  # REMOVED. We do not do deduplication. Authors should not have this themselves and I am not cleaning up after them
+  deduped <- joined#[!duplicated(joined$column_name), ]
+
+  # Drop columns with excluded types (e.g. empty) — these do not get a variableMeasured entry at all
+  deduped <- deduped[!(tolower(deduped$col_type) %in% EXCLUDED_TYPES), ]
 
   pv_list <- lapply(seq_len(nrow(deduped)), function(i) {
     row <- deduped[i, ]
@@ -658,6 +673,20 @@ place_non_data_file <- function(src_path, file_type, filename, study_root) {
   psychds_path
 }
 
+# ── Internal: drop_empty_columns ──────────────────────────────────────────────
+
+# Drop columns that contain no data at all (every value NA or blank) — these are
+# phantom trailing-comma columns common in hand-edited CSVs. We deliberately do
+# NOT dedup or rename duplicate / blank-but-populated headers: those reflect
+# genuine source mistakes and are left for the psychDS validator to surface
+# rather than silently masked (which could hide real data under a reused name).
+drop_empty_columns <- function(df) {
+  if (is.null(df) || ncol(df) == 0) return(df)
+  has_data <- vapply(df, function(col)
+    any(!is.na(col) & nzchar(trimws(as.character(col)))), logical(1))
+  df[, has_data, drop = FALSE]
+}
+
 # ── Internal: write_data_csv ──────────────────────────────────────────────────
 
 # Write a data.frame to a UTF-8 CSV with no BOM, proper quoting.
@@ -665,6 +694,7 @@ place_non_data_file <- function(src_path, file_type, filename, study_root) {
 # Returns list(path, rows_written, columns_written, row_id_renamed).
 write_data_csv <- function(df, dest_path) {
   dir.create(dirname(dest_path), recursive = TRUE, showWarnings = FALSE)
+  df <- drop_empty_columns(df)
   row_id_renamed <- FALSE
 
   # FR-015b: row_id uniqueness check
@@ -903,6 +933,13 @@ convert_study <- function(paper_id, study_group, files_df, cols_df, labels_df,
   write_json(build_provenance(file_records),
              file.path(out_dir, "provenance.json"))
 
+  # Exclude the untouched original files in data/raw/ from psychDS validation —
+  # their arbitrary author-supplied formats/columns trigger most validator
+  # errors, and they are preserved only for provenance, not as psychDS content.
+  # The validator's file is named ".psychds-ignore" and tests leading-slash
+  # paths, so a root-anchored "data/raw/" never matches — "**/data/raw/**" does.
+  writeLines("**/data/raw/**", file.path(out_dir, ".psychds-ignore"))
+
   list(
     paper_id          = paper_id,
     study_group       = study_group,
@@ -1049,7 +1086,8 @@ convert_psychds <- function(paper_id) {
              colClasses = c(paper_id = "character")) else NULL
 
   # 4. Apply ground-truth overrides
-  structure_df <- apply_ground_truth(structure_df, paper_source, paper_id)
+  #commented out. Dont wan this now because we want model performance, not GT performance
+  #structure_df <- apply_ground_truth(structure_df, paper_source, paper_id)
 
   # 5. Detect studies
   data_mask <- !is.na(structure_df$type) & structure_df$type == "data"
@@ -1115,9 +1153,9 @@ convert_psychds <- function(paper_id) {
     shared_files_df <- structure_df[shared_mask, ]
     shared_rel_paths <- character(0)
 
-    # Place shared files into shared/
+    # Place shared files into study-shared/
     if (nrow(shared_files_df) > 0) {
-      shared_root <- file.path(paper_root, "shared")
+      shared_root <- file.path(paper_root, "study-shared")
       for (i in seq_len(nrow(shared_files_df))) {
         r       <- shared_files_df[i, ]
         subdir  <- TYPE_TO_SUBDIR[[if (is.na(r$type)) "other" else r$type]]
@@ -1126,7 +1164,7 @@ convert_psychds <- function(paper_id) {
         dir.create(dirname(dest), recursive = TRUE, showWarnings = FALSE)
         if (file.exists(r$path)) file.copy(r$path, dest, overwrite = TRUE)
         shared_rel_paths <- c(shared_rel_paths,
-                              file.path("../shared", subdir, r$filename))
+                              file.path("../study-shared", subdir, r$filename))
       }
     }
 
