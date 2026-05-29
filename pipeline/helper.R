@@ -100,6 +100,36 @@ sniff_delimiter <- function(path) {
   if (max(counts) == 0) "," else candidates[which.max(counts)]
 }
 
+# Decide whether a delimited text file (csv/tsv/txt/dat) has a header row.
+# Headerless files (raw Mplus .dat, numeric matrices) make read.delim consume
+# the first DATA row as column names — corrupting headers (duplicate/numeric
+# pseudo-names) and silently dropping a row. We treat a file as headerless when
+# its first non-comment row already looks like numeric data AND so does the
+# second: real headers carry at least one textual label. With <2 readable rows
+# we cannot tell, so we assume a header (preserves prior behaviour). Used by
+# both read_data_head() and read_full_data() so columns.csv and the converted
+# CSV agree on column names.
+detect_header <- function(path, sep) {
+  con   <- file(path, "r")
+  on.exit(close(con))
+  lines <- character(0)
+  while (length(lines) < 2) {
+    l <- readLines(con, n = 1, warn = FALSE)
+    if (length(l) == 0) break                                  # EOF
+    if (nzchar(trimws(l)) && !startsWith(trimws(l), "#")) lines <- c(lines, l)
+  }
+  if (length(lines) < 2) return(TRUE)                          # can't tell → header
+  split_row <- function(l)
+    trimws(gsub('^"|"$', '', strsplit(l, sep, fixed = TRUE)[[1]]))
+  is_num <- function(x) {
+    if (!nzchar(x)) return(TRUE)                               # blank: not textual
+    if (toupper(x) %in% c("NA", "NAN", "NULL", "INF", "-INF", "+INF")) return(TRUE)
+    suppressWarnings(!is.na(as.numeric(x)))
+  }
+  all_num <- function(toks) length(toks) > 0 && all(vapply(toks, is_num, logical(1)))
+  !(all_num(split_row(lines[1])) && all_num(split_row(lines[2])))
+}
+
 # Read the first n_rows of a data file regardless of format.
 # Returns a data.frame, or NULL on failure / unsupported format.
 read_data_head <- function(path, n_rows = 3) {
@@ -111,9 +141,10 @@ read_data_head <- function(path, n_rows = 3) {
       tsv  = ,
       dat  = {
         sep <- if (ext == "tsv") "\t" else sniff_delimiter(path)
+        hdr <- detect_header(path, sep)
         df  <- suppressWarnings(
-          read.delim(path, sep = sep, nrows = n_rows, check.names = FALSE,
-                     stringsAsFactors = FALSE)
+          read.delim(path, sep = sep, header = hdr, nrows = n_rows,
+                     check.names = FALSE, stringsAsFactors = FALSE)
         )
         # If any character column contains invalid UTF-8 bytes (e.g. Windows-1252
         # encoded files), retry with latin1 so downstream string ops don't crash.
@@ -122,10 +153,14 @@ read_data_head <- function(path, n_rows = 3) {
         }, logical(1)))
         if (has_invalid) {
           df <- suppressWarnings(
-            read.delim(path, sep = sep, nrows = n_rows, check.names = FALSE,
-                       stringsAsFactors = FALSE, fileEncoding = "latin1")
+            read.delim(path, sep = sep, header = hdr, nrows = n_rows,
+                       check.names = FALSE, stringsAsFactors = FALSE,
+                       fileEncoding = "latin1")
           )
         }
+        # Headerless: synthesize stable col_N names (the first data row was kept).
+        if (!hdr && !is.null(df) && ncol(df) > 0)
+          names(df) <- paste0("col_", seq_len(ncol(df)))
         df
       },
       xlsx = ,
@@ -373,19 +408,17 @@ classify_col_type_rules <- function(col_name, values) {
     return(list(col_type = "text", ambiguous = FALSE, numeric_values = NULL,
                 n_coerced = NA_integer_, is_numeric = FALSE))
 
-  # Rule 6a: decimal numeric — any fractional value is unambiguously continuous.
-  # Fires before Rule 6 to avoid routing VAS / ratio scales to the LLM.
-  if (is.numeric(values) && any(x_noNA != floor(x_noNA)))
-    return(list(col_type = "continuous", ambiguous = FALSE, numeric_values = values,
-                n_coerced = NA_integer_, is_numeric = FALSE))
-
-  # Rule 6: integer numeric column.
-  # > 20 unique values → continuous without LLM.
-  # 3–20 unique values → route to LLM (ordinal vs continuous vs categorical).
-  #   is_numeric = TRUE flags integer-numeric columns so a post-LLM fallback can
-  #   replace "unknown" → "continuous" when the LLM cannot determine the type.
+  # Rule 6: numeric column — decimal and high-cardinality cases both resolve to
+  # continuous in one check (merged from the former Rule 6a + Rule 6; verified
+  # identical on the 120b-JSON validation set via
+  # runners/eval/analysis_scripts/compare_coltype_rule_merge.R — 0 differing columns).
+  #   - any fractional value       → continuous (VAS / ratio scales, no LLM)
+  #   - > 20 unique integer values → continuous (no LLM)
+  #   - 3–20 unique integer values → route to LLM (ordinal vs continuous vs categorical).
+  #     is_numeric = TRUE flags integer-numeric columns so a post-LLM fallback can
+  #     replace "unknown" → "continuous" when the LLM cannot determine the type.
   if (is.numeric(values)) {
-    if (n_unique > 20)
+    if (any(x_noNA != floor(x_noNA)) || n_unique > 20)
       return(list(col_type = "continuous", ambiguous = FALSE, numeric_values = values,
                   n_coerced = NA_integer_, is_numeric = FALSE))
     return(list(col_type = NA_character_, ambiguous = TRUE, numeric_values = values,
@@ -1431,6 +1464,14 @@ match_column_labels <- function(columns_df, codebook_vars_df,
 # source and paper_id must be character strings.
 apply_ground_truth <- function(structure_df, source, paper_id) {
   structure_df$ground_truth_validated <- FALSE
+  # Pre-initialise GT provenance columns to full length. Without this, the first
+  # indexed write `structure_df$gt_type_gt[idx] <- ...` on a non-existent column
+  # builds a vector of length idx (not nrow), so when idx < nrow R errors with
+  # "replacement has <idx> rows, data has <nrow>". Only bites when the first
+  # GT-matched row isn't the last row, hence the intermittent failures.
+  for (.gtcol in c("gt_type_gt", "gt_group_gt", "gt_data_granularity_gt",
+                   "gt_validated_at", "gt_annotator"))
+    if (!.gtcol %in% names(structure_df)) structure_df[[.gtcol]] <- NA_character_
   gt_path <- paste0(paper_path("ground_truth", source, paper_id), ".csv")
   if (!file.exists(gt_path)) return(structure_df)
   gt <- tryCatch(
