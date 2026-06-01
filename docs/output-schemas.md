@@ -33,6 +33,8 @@ One row per file discovered in the paper's OSF repository.
 | `"rule_folder"` | Type assigned by the software folder detection rule (step 4.5). Either: (a) folder basename matched `SOFTWARE_FOLDER_PATTERNS_UNAMBIG` (Tier A — e.g. `__pycache__`, `.git`, `renv`, `node_modules`), or (b) basename matched `SOFTWARE_FOLDER_PATTERNS_AMBIG` (Tier B — e.g. `lib`, `src`, `build`) AND folder contained ≥ `SOFTWARE_FOLDER_THRESHOLD_AMBIG` files AND ≤50% were tabular data extensions. No LLM call made. `aggregate_folder` column records the matched folder path. |
 | `"extension_rule"` | Type assigned by `AGGREGATE_EXT_OVERRIDE` lookup (validation only; not applied to results) |
 | `"rmd_pair_rule"` | Type overridden to `"output"` because the PDF shares its stem with a `.Rmd`/`.qmd`/`.tex` source file in the same directory (post-classification fallback) |
+| `"fixed_ext_rule"` | Type overridden by a deterministic extension lookup applied after the LLM (formats whose purpose is fixed by file format). Code: `.R`, `.qmd`, `.ipynb`, `.do`, `.sps`, `.sas`. Software: `.exe`, `.dmg`, `.app`, `.jar`, `.msi`, `.deb`, `.rpm`, `.sh`, `.bash`, `.zsh`, `.bat`, `.cmd`, `.ps1`, `.dll`, `.so`, `.dylib`, `.lib`, `.lua`, `.psyexp`, `.osexp`, `.opensesame`. Output: `.spv`, `.fig`. Only set when the LLM's label differed from the rule. |
+| `"fixed_filename_rule"` | Type overridden to `"readme"` because the filename matches `^readme(\.|$)` (case-insensitive). Only set when the LLM's label differed. |
 
 ### File Types
 

@@ -1161,6 +1161,44 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
     }
   }
 
+  # ── 7.5. Post-LLM deterministic rules ──────────────────────────────────────
+  # Apply only where the LLM was wrong. type_source is updated only when the
+  # rule actually changed the label, so the eval can attribute corrections.
+
+  # C. Extension-locked types (formats whose purpose is fixed by file format).
+  # Note: .Rmd handled by rmd_pair_rule above; .Rnw paired with PDF likewise.
+  FIXED_EXT_TYPE <- list(
+    r          = "code",     qmd     = "code",   ipynb    = "code",
+    do         = "code",     sps     = "code",   sas      = "code",
+    exe        = "software", dmg     = "software", app    = "software",
+    jar        = "software", msi     = "software", deb    = "software",
+    rpm        = "software",
+    sh         = "software", bash    = "software", zsh    = "software",
+    bat        = "software", cmd     = "software", ps1    = "software",
+    dll        = "software", so      = "software", dylib  = "software",
+    lib        = "software", lua     = "software",
+    psyexp     = "software", osexp   = "software", opensesame = "software",
+    spv        = "output",   fig     = "output"
+  )
+  for (.e in names(FIXED_EXT_TYPE)) {
+    .want <- FIXED_EXT_TYPE[[.e]]
+    .hit  <- which(file_df$ext == .e & file_df$type != .want)
+    if (length(.hit) > 0) {
+      file_df$type[.hit]        <- .want
+      file_df$type_source[.hit] <- "fixed_ext_rule"
+      file_df$data_format[.hit] <- NA_character_
+    }
+  }
+
+  # D. README filename → readme.
+  .readme_hit <- which(grepl("^readme($|\\.)", tolower(file_df$filename)) &
+                       file_df$type != "readme")
+  if (length(.readme_hit) > 0) {
+    file_df$type[.readme_hit]        <- "readme"
+    file_df$type_source[.readme_hit] <- "fixed_filename_rule"
+    file_df$data_format[.readme_hit] <- NA_character_
+  }
+
   # ── 8. Save structure ────────────────────────────────────────────────────────
 
   structure_out <- file.path(eff_dir, "structure.csv")
@@ -1392,8 +1430,11 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
     }, character(1))
 
     # ── Classify each column ───────────────────────────────────────────────────
-    col_classifications <- lapply(names(df), function(col) {
-      classify_col_type_rules(col, df[[col]])
+    # Index by position, not name: blank ("") names make df[[name]] return NULL
+    # and duplicate names return only the first match — either silently feeds the
+    # classifier the wrong (or no) data, mislabelling columns as "empty".
+    col_classifications <- lapply(seq_along(df), function(i) {
+      classify_col_type_rules(names(df)[i], df[[i]])
     })
 
     col_types <- vapply(col_classifications, function(cls) {
@@ -1414,7 +1455,7 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
     # Unique sample values for LLM classification of ambiguous columns
     sample_vals_unique <- vapply(seq_along(names(df)), function(i) {
       if (!ambiguous_idx[i]) return(NA_character_)
-      x_noNA <- df[[names(df)[i]]]
+      x_noNA <- df[[i]]
       x_noNA <- x_noNA[!is.na(x_noNA)]
       cap    <- 20L
       uniq_v <- unique(x_noNA)[seq_len(min(cap, length(unique(x_noNA))))]
@@ -1422,17 +1463,16 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
     }, character(1))
 
     col_stats <- lapply(seq_along(names(df)), function(i) {
-      col <- names(df)[i]
       cls <- col_classifications[[i]]
 
       # n_unique: distinct non-NA values in the source column (all col_types)
-      x_raw_col    <- df[[col]]
+      x_raw_col    <- df[[i]]
       n_unique_val <- length(unique(x_raw_col[!is.na(x_raw_col)]))
 
       # Determine which numeric vector to use for statistics
       x_for_stats <- cls$numeric_values
       if (is.null(x_for_stats) && isTRUE(cls$ambiguous) && isTRUE(cls$is_numeric)) {
-        x_for_stats <- df[[col]]  # ambiguous numeric — compute tentative stats
+        x_for_stats <- df[[i]]  # ambiguous numeric — compute tentative stats
       }
 
       if (is.null(x_for_stats)) {
