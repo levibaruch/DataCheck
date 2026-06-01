@@ -25,6 +25,14 @@ local({
 source(file.path(getOption("dc_root"), "tests", "validation_gui", "gt_store.R"))
 source(file.path(getOption("dc_root"), "tests", "validation_gui", "preview.R"))
 
+# ── Config ────────────────────────────────────────────────────────────────────
+# Set via options() in the launching runner (see run_blind_validation_gui.R).
+#   dc_show_llm_preview  FALSE = blind validation: no LLM-predicted type/group/
+#                        granularity/format shown anywhere, dropdowns start empty.
+#   dc_sample_newest     integer N = expose only the N newest papers (largest ID);
+#                        handled in gt_store.R::discover_papers().
+SHOW_LLM_PREVIEW <- isTRUE(getOption("dc_show_llm_preview", TRUE))
+
 # ── Constants ─────────────────────────────────────────────────────────────────
 
 TYPE_MAP <- c(
@@ -806,7 +814,7 @@ server <- function(input, output, session) {
                                       !is.na(gt_row$data_format_gt[1]))
                                    gt_row$data_format_gt[1] else ""
       updateTextInput(session, "group_val", value = gt_row$group_gt[1])
-    } else {
+    } else if (SHOW_LLM_PREVIEW) {
       rv$selected_type        <- if (!is.na(row$type)) row$type else "other"
       rv$data_granularity_val <- if ("data_granularity" %in% names(row) &&
                                       !is.na(row$data_granularity))
@@ -815,6 +823,12 @@ server <- function(input, output, session) {
                                       !is.na(row$data_format))
                                    row$data_format else ""
       updateTextInput(session, "group_val", value = row$group)
+    } else {
+      # Blind validation: no LLM prediction pre-selected.
+      rv$selected_type        <- NA_character_
+      rv$data_granularity_val <- ""
+      rv$data_format_val      <- ""
+      updateTextInput(session, "group_val", value = "")
     }
   }
 
@@ -1340,12 +1354,14 @@ server <- function(input, output, session) {
         "\u00b7"                  # ·
       )
 
-      # Show GT type if validated, else LLM prediction
+      # Show GT type if validated; else LLM prediction (unless blind mode)
       type_shown <- if (stat == "validated") {
         gt_row <- rv$gt[rv$gt$rel_path == row$rel_path, ]
         if (nrow(gt_row) > 0) gt_row$type_gt[1] else row$type
-      } else {
+      } else if (SHOW_LLM_PREVIEW) {
         row$type
+      } else {
+        NA_character_
       }
       abbrev <- if (!is.na(type_shown) && type_shown %in% names(TYPE_ABBREV))
         TYPE_ABBREV[type_shown]
@@ -1354,7 +1370,8 @@ server <- function(input, output, session) {
       else
         NA_character_
 
-      df_badge <- if (isTRUE(row$type == "data") &&
+      df_badge <- if (SHOW_LLM_PREVIEW &&
+                       isTRUE(row$type == "data") &&
                        "data_format" %in% names(row) &&
                        !is.na(row$data_format))
         tags$span(class = paste0("tbadge-df-", row$data_format), row$data_format)
@@ -1451,6 +1468,7 @@ server <- function(input, output, session) {
 
   # T034: Prediction mismatch note
   output$prediction_note_ui <- renderUI({
+    if (!SHOW_LLM_PREVIEW) return(NULL)
     req(!is.null(rv$structure))
     idx <- rv$current_idx
     if (idx < 1L || idx > nrow(rv$structure)) return(NULL)
@@ -1522,18 +1540,18 @@ server <- function(input, output, session) {
         tags$span(toupper(row$ext)),
         tags$span(class = "file-hdr__dot", "\u00b7"),
         tags$span(fsize),
-        tags$span(class = "file-hdr__dot", "\u00b7"),
-        tags$span(
+        if (SHOW_LLM_PREVIEW) tags$span(class = "file-hdr__dot", "\u00b7"),
+        if (SHOW_LLM_PREVIEW) tags$span(
           class = paste0("file-row__type tbadge-", row$type),
           style = "padding:2px 7px; font-size:0.78em;",
           row$type
         ),
-        tags$span(
+        if (SHOW_LLM_PREVIEW) tags$span(
           class = "file-row__type",
           style = "padding:2px 7px; font-size:0.78em; border-radius:3px; font-weight:700; background:rgba(128,128,128,0.12); color:inherit; opacity:0.7;",
           paste("grp:", row$group)
         ),
-        if (!is.na(row$data_granularity) && row$data_granularity == "individual")
+        if (SHOW_LLM_PREVIEW && !is.na(row$data_granularity) && row$data_granularity == "individual")
           tags$span(
             class = "file-row__type tbadge-codebook",
             style = "padding:2px 7px; font-size:0.78em;",
@@ -1553,8 +1571,11 @@ server <- function(input, output, session) {
       depth  <- length(strsplit(rp, "/", fixed = TRUE)[[1]]) - 1L
       indent <- paste(rep("  ", max(0L, depth)), collapse = "")
       marker <- if (rp == cur_rp) "\u25cf" else " "
-      sprintf("%s%s %-28s  [%s/%s]", indent, marker,
-              substr(fn, 1, 28), tp, grp)
+      if (SHOW_LLM_PREVIEW)
+        sprintf("%s%s %-28s  [%s/%s]", indent, marker,
+                substr(fn, 1, 28), tp, grp)
+      else
+        sprintf("%s%s %s", indent, marker, substr(fn, 1, 28))
     }, rv$structure$rel_path, rv$structure$filename,
        rv$structure$type,     rv$structure$group,
        SIMPLIFY = TRUE)
@@ -1574,12 +1595,19 @@ server <- function(input, output, session) {
     parent <- dirname(row$rel_path)
 
     sibs <- rv$structure[dirname(rv$structure$rel_path) == parent, ]
-    sib_lines <- sprintf(
-      "  %s%s  [%s]",
-      sibs$filename,
-      ifelse(sibs$rel_path == row$rel_path, "  \u2190 current", ""),
-      sibs$type
-    )
+    sib_lines <- if (SHOW_LLM_PREVIEW)
+      sprintf(
+        "  %s%s  [%s]",
+        sibs$filename,
+        ifelse(sibs$rel_path == row$rel_path, "  \u2190 current", ""),
+        sibs$type
+      )
+    else
+      sprintf(
+        "  %s%s",
+        sibs$filename,
+        ifelse(sibs$rel_path == row$rel_path, "  \u2190 current", "")
+      )
     sib_block <- tags$div(
       tags$small(tags$strong(sprintf("Siblings in %s/", parent))),
       tags$pre(

@@ -6,6 +6,7 @@
 #   dc_outputs_dir   — override for outputs/<paper_id>/ root
 #   dc_gt_dir        — override for ground_truth/ root
 #   dc_papers_filter — character vector of paper IDs to expose (NULL = all)
+#   dc_sample_newest — integer N: expose only the N newest papers (largest ID)
 
 # ── Path helpers ──────────────────────────────────────────────────────────────
 
@@ -58,6 +59,13 @@ discover_papers <- function() {
     list.dirs(osf_dir, full.names = FALSE, recursive = FALSE)
   }
   has_structure <- dirs[file.exists(file.path(osf_dir, dirs, "structure.csv"))]
+  # Optionally keep only the N newest papers (largest numeric ID first).
+  n_newest <- getOption("dc_sample_newest", NULL)
+  if (!is.null(n_newest) && length(has_structure) > n_newest) {
+    num <- suppressWarnings(as.numeric(gsub("[^0-9].*$", "", has_structure)))
+    ord <- order(num, has_structure, decreasing = TRUE, na.last = TRUE)
+    has_structure <- has_structure[head(ord, n_newest)]
+  }
   sort(has_structure)
 }
 
