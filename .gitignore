@@ -42,3 +42,16 @@ quality_report_*.md
 # Claude and specify
 .claude/
 .specify/
+
+_thesis_feedback/
+reports/
+
+# Eval snapshots and retired-script archive (kept on disk, untracked)
+_eval_versions/
+_old/
+
+# Regenerated pipeline outputs
+results/
+
+# Generated from pipeline/prompts.R via runners/tools/export_prompts_appendix.R
+docs/appendix_prompts.tex
