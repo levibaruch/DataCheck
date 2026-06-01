@@ -814,7 +814,7 @@ BR()
 
 L("### 4d. Accuracy by classification method (type_source)")
 BR()
-L("_Paper-averaged = mean of per-paper accuracies (each paper equal weight). File-pooled = raw counts across all files._")
+L("_How files were classified (LLM vs deterministic rules) and the accuracy of each method. **Coverage** = share of all annotated files handled by that method. Paper-averaged = mean of per-paper accuracies (each paper equal weight); file-pooled = raw counts across all files._")
 BR()
 
 src_data_4d <- list()  # store for heatmap
@@ -822,6 +822,8 @@ src_data_4d <- list()  # store for heatmap
 if ("type_source" %in% names(acc)) {
   src_levels <- sort(unique(acc$type_source[!is.na(acc$type_source) &
                  !acc$type_source %in% c("extension_rule", "sentinel_llm")]))
+
+  total_files_4d <- sum(!is.na(acc$type_source) & !is.na(acc$type_gt) & !is.na(acc$type))
 
   src_tbl <- do.call(rbind, lapply(src_levels, function(src) {
     rows <- acc[!is.na(acc$type_source) & acc$type_source == src, ]
@@ -855,9 +857,12 @@ if ("type_source" %in% names(acc)) {
     src_data_4d[[src]] <<- c(pa_type = pa_type, pa_grp = pa_grp, pa_dg = pa_dg,
                                fp_type = fp_type, fp_grp = fp_grp, fp_dg = fp_dg)
 
+    coverage <- if (total_files_4d > 0) 100 * n_type / total_files_4d else NA_real_
+
     data.frame(
       `Method`               = src,
       `N files`              = n_type,
+      `Coverage`             = fmt1(coverage),
       `N papers`             = length(pids),
       `Type — paper avg`     = fmt1(pa_type),
       `Type — file pool`     = fmt1(fp_type),
@@ -868,6 +873,38 @@ if ("type_source" %in% names(acc)) {
       check.names = FALSE, stringsAsFactors = FALSE
     )
   }))
+
+  # Sort by file count desc so the dominant method appears first
+  src_tbl <- src_tbl[order(-src_tbl$`N files`), , drop = FALSE]
+  rownames(src_tbl) <- NULL
+
+  # Append a TOTAL row (file-pooled accuracy across all methods)
+  if (nrow(src_tbl) > 0) {
+    all_rows <- acc[!is.na(acc$type_source) &
+                    !acc$type_source %in% c("extension_rule", "sentinel_llm"), ]
+    n_all     <- sum(!is.na(all_rows$type_gt) & !is.na(all_rows$type))
+    fp_all_t  <- if (n_all > 0) 100 * sum(all_rows$type_gt == all_rows$type, na.rm = TRUE) / n_all else NA_real_
+    grp_all   <- all_rows[!is.na(all_rows$group_gt) & !is.na(all_rows$group), ]
+    fp_all_g  <- if (nrow(grp_all) > 0) 100 * sum(grp_all$group_gt == grp_all$group) / nrow(grp_all) else NA_real_
+    dg_all_r  <- all_rows[!is.na(all_rows$data_granularity_gt) & !is.na(all_rows$data_granularity), ]
+    fp_all_dg <- if (nrow(dg_all_r) > 0) 100 * sum(dg_all_r$data_granularity_gt == dg_all_r$data_granularity) / nrow(dg_all_r) else NA_real_
+
+    total_row <- data.frame(
+      `Method`               = "**TOTAL (all methods)**",
+      `N files`              = n_all,
+      `Coverage`             = "100.0",
+      `N papers`             = length(unique(all_rows$paper_id)),
+      `Type — paper avg`     = "—",
+      `Type — file pool`     = fmt1(fp_all_t),
+      `Group — paper avg`    = "—",
+      `Group — file pool`    = fmt1(fp_all_g),
+      `Granularity — paper avg` = "—",
+      `Granularity — file pool` = fmt1(fp_all_dg),
+      check.names = FALSE, stringsAsFactors = FALSE
+    )
+    src_tbl <- rbind(src_tbl, total_row)
+  }
+
   L(md_table(src_tbl))
   BR()
   L("![Accuracy by type_source heatmap](src_heatmap.png)")
