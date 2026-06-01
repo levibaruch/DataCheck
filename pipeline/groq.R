@@ -112,6 +112,14 @@ llm_groq <- function(text, system_prompt,
       },
       error = \(e) {
         warning("Groq call ", i, " failed: ", e$message, call. = FALSE)
+        log_path <- if (exists("LLM_ERROR_LOG")) LLM_ERROR_LOG else "./logs/llm_batch_errors.log"
+        try({
+          dir.create(dirname(log_path), recursive = TRUE, showWarnings = FALSE)
+          cat(sprintf("[%s] groq_call_failed model=%s call=%d error=%s\n",
+                      format(Sys.time(), "%Y-%m-%dT%H:%M:%S"),
+                      model, i, e$message),
+              file = log_path, append = TRUE)
+        }, silent = TRUE)
         list(answer = NA_character_, error = TRUE, error_msg = e$message)
       }
     )
