@@ -289,11 +289,62 @@ llm_model(LLM_MODEL)
 KNOWN_ERROR_CODES <- c("no_links", "download_failed", "empty_repo", "too_large")
 paper_results <- list()
 
+# ── Resume: read the logs BEFORE starting; skip papers already processed ──────
+# A previous run's validation_summary.csv (the logger) + eval_per_paper.csv are
+# the source of truth for "done". We reload their rows into the in-memory lists
+# so the final aggregate + report cover prior AND new work, and collect the set
+# of finished paper_ids so they are not re-converted / re-validated / re-scored.
+# CSV read helper: returns a data.frame (paper_id forced character) or NULL.
+.read_log <- function(path) {
+  if (!file.exists(path)) return(NULL)
+  df <- tryCatch(
+    read.csv(path, stringsAsFactors = FALSE, colClasses = c(paper_id = "character")),
+    error = function(e) NULL)
+  if (is.null(df) || nrow(df) == 0) NULL else df
+}
+
+done_pids <- character(0)
+
+prev_val <- .read_log(VALIDATION_PATH)
+if (!is.null(prev_val)) {
+  for (i in seq_len(nrow(prev_val)))
+    validation_results[[length(validation_results) + 1L]] <- prev_val[i, , drop = FALSE]
+  done_pids <- union(done_pids, unique(prev_val$paper_id))
+}
+
+prev_iss <- .read_log(VALIDATION_ISSUES_PATH)
+if (!is.null(prev_iss))
+  for (i in seq_len(nrow(prev_iss)))
+    validation_issues[[length(validation_issues) + 1L]] <- prev_iss[i, , drop = FALSE]
+
+# Reload prior per-paper metrics into paper_results (keep only the fields
+# aggregate_metrics consumes so rbind across rows stays rectangular). A paper
+# that scored but produced no valid psychDS lives only here — union it in too.
+prev_pp <- .read_log(PAPER_PATH)
+if (!is.null(prev_pp)) {
+  metric_cols <- c("paper_id", "n_files", "macro_f1", "micro_f1",
+                   "kappa", "mcc", "accuracy", "retry_rate")
+  for (i in seq_len(nrow(prev_pp))) {
+    row <- prev_pp[i, , drop = FALSE]
+    paper_results[[row$paper_id]] <- as.list(row[, intersect(metric_cols, names(row))])
+  }
+  done_pids <- union(done_pids, unique(prev_pp$paper_id))
+}
+
+if (length(done_pids) > 0)
+  cat(sprintf("  resume: %d paper(s) already processed — skipping\n", length(done_pids)))
+
 for (j in seq_len(nrow(papers_df))) {
   pid <- papers_df$id[j]
   src <- papers_df$source[j]
   out_dir <- paper_path("outputs", src, pid)   # OUTPUT_DIR/src/id (isolated base)
   dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+
+  # Already in the logs from a prior run — do not re-run the 120b pipeline.
+  if (pid %in% done_pids) {
+    cat(sprintf("\n[%d/%d] %s/%s  [SKIP — already processed]\n", j, nrow(papers_df), src, pid))
+    next
+  }
 
   cat(sprintf("\n[%d/%d] %s/%s\n", j, nrow(papers_df), src, pid))
 

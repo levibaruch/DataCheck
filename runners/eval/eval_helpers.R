@@ -38,6 +38,8 @@ cm_stats <- function(cm_m) {
   rs  <- rowSums(cm_m); cs <- colSums(cm_m)
   p_o <- sum(diag(cm_m)) / N
   p_e <- sum(rs * cs) / N^2
+  # p_e == 1 only for a single-class repo (no class variability): κ is genuinely
+  # 0/0 — undefined, not 1 — so leave it NA and exclude it from κ summaries.
   kap <- if (p_e < 1) (p_o - p_e) / (1 - p_e) else NA_real_
   all_t <- rownames(cm_m)
   f1s <- sapply(all_t, function(cls) {
@@ -47,6 +49,9 @@ cm_stats <- function(cm_m) {
     if (!is.na(p) && !is.na(r) && (p + r) > 0) 2*p*r/(p+r) else NA_real_
   })
   mf1   <- mean(f1s, na.rm = TRUE) * 100
+  # mean is NaN only when every class F1 is undefined, which happens iff there are
+  # zero correct predictions (total-failure repo) — that is F1 = 0, not "unmeasured".
+  if (is.nan(mf1)) mf1 <- 0
   mcc_n <- N * sum(diag(cm_m)) - sum(rs * cs)
   mcc_d <- sqrt((N^2 - sum(cs^2)) * (N^2 - sum(rs^2)))
   mcc   <- if (mcc_d > 0) mcc_n / mcc_d else NA_real_
@@ -86,8 +91,10 @@ eval_paper <- function(pid, output_dir, src = "osf") {
   mtp <- sum(class_tp); mfp <- sum(class_fp); mfn <- sum(class_fn)
   mp  <- if ((mtp + mfp) > 0) mtp / (mtp + mfp) else NA_real_
   mr  <- if ((mtp + mfn) > 0) mtp / (mtp + mfn) else NA_real_
+  # No correct predictions (mtp == 0) leaves micro precision+recall == 0: that is a
+  # total-failure repo scoring F1 = 0, not "unmeasured" — matches macro_f1 handling.
   micro_f1 <- if (!is.na(mp) && !is.na(mr) && (mp + mr) > 0)
-    2 * mp * mr / (mp + mr) * 100 else NA_real_
+    2 * mp * mr / (mp + mr) * 100 else 0
 
   retry_rate <- if ("type" %in% names(str))
     mean(str$type == SENTINEL_VAL, na.rm = TRUE) * 100 else NA_real_
