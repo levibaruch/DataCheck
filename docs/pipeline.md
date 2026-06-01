@@ -127,6 +127,11 @@ Paper ID (character string)
 │                     │  Encoding: csv/tsv/txt/dat read with default encoding; if any
 │                     │  character column contains invalid UTF-8 bytes, file is re-read
 │                     │  with fileEncoding="latin1" (handles Windows-1252 encoded files)
+│                     │  Header: detect_header() flags headerless files (first two
+│                     │  non-comment rows both all-numeric → e.g. Mplus .dat, numeric
+│                     │  matrices); read with header=FALSE + synthesized col_N names so
+│                     │  the first data row is not eaten. Shared with read_full_data()
+│                     │  (psychDS) so columns.csv and the converted CSV agree.
 └──────────┬──────────┘
            ▼
 ┌─────────────────────┐
