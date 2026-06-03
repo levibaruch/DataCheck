@@ -1001,6 +1001,24 @@ append_conversion_summary <- function(rows, summary_path = NULL) {
   if ("paper_id" %in% names(df))
     df$paper_id <- as.character(df$paper_id)
 
+  # Replace any existing rows for the same paper(s) so re-running a paper does
+  # not accumulate duplicate study-group rows. Falls back to plain append if the
+  # existing file's columns don't line up.
+  if (file.exists(summary_path) && "paper_id" %in% names(df)) {
+    old <- tryCatch(
+      read.csv(summary_path, stringsAsFactors = FALSE,
+               colClasses = c(paper_id = "character")),
+      error = function(e) NULL)
+    if (!is.null(old) && "paper_id" %in% names(old) &&
+        identical(sort(names(old)), sort(names(df)))) {
+      old <- old[!(old$paper_id %in% df$paper_id), , drop = FALSE]
+      df  <- rbind(old[names(df)], df)
+      write.table(df, summary_path, sep = ",", row.names = FALSE,
+                  col.names = TRUE, quote = TRUE, fileEncoding = "UTF-8")
+      return(invisible(summary_path))
+    }
+  }
+
   write.table(df, summary_path,
               append    = file.exists(summary_path),
               sep       = ",",

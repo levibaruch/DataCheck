@@ -17,12 +17,13 @@
 source("pipeline/0_index.R")
 source("pipeline/2_codebook_label.R")
 source("pipeline/3_psychds_convert.R")
+source("pipeline/4_report.R")
 
 FULL_RUN       <- TRUE
-DATA_DIR       <- "/Volumes/NINJAV/data"
+DATA_DIR       <- "data"
 #OUTPUT_DIR     <- "/Volumes/NINJAV/DataCheckOut/outputs"
 #PSYCHDS_OUT_DIR <- "/Volumes/NINJAV/DataCheckOut/psychds"
-LLM_TEMPERATURE <- 0.7
+LLM_TEMPERATURE <- 0.3
 LLM_THINK_LEVEL <- "low" # "none", "low", "medium", "high"
 CAPTURE_THINKING <- TRUE   # write one row per prompt call to thinking_traces.csv
 
@@ -30,23 +31,32 @@ CAPTURE_THINKING <- TRUE   # write one row per prompt call to thinking_traces.cs
 
 # Change these to the models you are actually using! I can recommend gpt-oss:20b
 llm_use(TRUE)
-llm_model("ollama/gpt-oss:20b-cloud")
+llm_model("ollama/gpt-oss:120b-cloud")
 
 local({
 
   # ── Discover all papers ─────────────────────────────────────────────────────
   # XML_DIR is defined in 0_index.R
 
-  all_ids <- tools::file_path_sans_ext(
-    list.files(XML_DIR, pattern = "\\.xml$", full.names = FALSE)
-  )
+  # Paper XMLs (GROBID metadata) are optional here — only needed when sampling a
+  # random paper. Discovery is best-effort; a missing/empty XML_DIR is fine.
+  all_ids <- if (dir.exists(XML_DIR))
+    tools::file_path_sans_ext(list.files(XML_DIR, pattern = "\\.xml$", full.names = FALSE))
+  else character(0)
 
-  if (length(all_ids) == 0) stop("No paper IDs found in ", XML_DIR)
-
-  # IDs must stay as character strings — no numeric coercion
+  # IDs must stay as character strings — no numeric coercion.
+  # Resolve pid: CLI arg wins, else the hard-coded default, else a random XML id.
   args <- commandArgs(trailingOnly = TRUE)
-  # pid <- if (length(args) > 0) args[1] else sample(all_ids, 1L)
-  pid <- "09567976211024254"
+  pid <- if (length(args) > 0) {
+    args[1]
+  } else {
+    "0956797615620784"
+  }
+  if (is.null(pid) || !nzchar(pid)) {
+    if (length(all_ids) == 0)
+      stop("No paper id given and no XMLs found in ", XML_DIR)
+    pid <- sample(all_ids, 1L)
+  }
   cat("\n══════════════════════════════════════════════════════════════════════\n")
   cat(sprintf("  Paper: %s\n", pid))
   cat("══════════════════════════════════════════════════════════════════════\n\n")
@@ -150,6 +160,25 @@ local({
     cat(sprintf("  FAILED — %s\n", paste(errs, collapse = "; ")))
   }
 
+  # ── Stage 4: run_report ──────────────────────────────────────────────────────
+
+  cat("\n── Stage 4: run_report ─────────────────────────────────────────────────\n")
+
+  t4_start <- proc.time()[["elapsed"]]
+
+  report <- tryCatch(
+    run_report(pid, src),
+    error = function(e) list(success = FALSE, error = conditionMessage(e))
+  )
+
+  t4_elapsed <- proc.time()[["elapsed"]] - t4_start
+
+  if (isTRUE(report$success)) {
+    cat(sprintf("  success=TRUE  %s  elapsed=%.1fs\n", report$html_path, t4_elapsed))
+  } else {
+    cat(sprintf("  FAILED — %s\n", report$error %||% "?"))
+  }
+
   # ── Output file paths ─────────────────────────────────────────────────────────
 
   out_base  <- paper_path("outputs", src, pid)
@@ -158,7 +187,8 @@ local({
     columns   = file.path(out_base, "columns.csv"),
     labels    = file.path(out_base, "labels.csv"),
     coverage  = file.path(out_base, "codebook_coverage.csv"),
-    thinking  = file.path(out_base, "thinking_traces.csv")
+    thinking  = file.path(out_base, "thinking_traces.csv"),
+    report    = file.path(out_base, "report.html")
   )
   existing <- out_files[file.exists(out_files)]
 

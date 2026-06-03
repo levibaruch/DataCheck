@@ -140,6 +140,10 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
   if (isTRUE(CAPTURE_THINKING)) {
     THINKING_LOG_PATH <<- file.path(eff_dir, "thinking_traces.csv")
     dir.create(eff_dir, recursive = TRUE, showWarnings = FALSE)
+    # Reset per-run: traces are append-only during a run, so clear any prior
+    # run's CSV/MD first — a rerun replaces traces rather than duplicating them.
+    for (p in c(THINKING_LOG_PATH, sub("\\.csv$", ".md", THINKING_LOG_PATH)))
+      if (file.exists(p)) file.remove(p)
   }
 
   target_dir <- paper_path("data", source, paper_id)
@@ -180,18 +184,24 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
     t_download <- 0
     message("── Dataverse deposit: skipping download, reading from ", target_dir)
   } else if (download) {
-    xml_path <- file.path(XML_DIR, paste0(paper_id, ".xml"))
-    paper    <- read(xml_path)
-    stopifnot(!is.null(paper$id))
+    if (dir.exists(target_dir)) {
+      # Data already present locally — no metadata XML or download needed.
+      message("── Data already present at ", target_dir, "; skipping download")
+    } else {
+      # Need to fetch: the metadata XML supplies the OSF links. It is required
+      # only in this case — papers with local data run fine without it.
+      xml_path <- file.path(XML_DIR, paste0(paper_id, ".xml"))
+      if (!file.exists(xml_path))
+        stop("no_xml: cannot download paper ", paper_id,
+             " — no metadata XML at ", xml_path, " and no local data at ", target_dir)
+      paper <- read(xml_path)
+      stopifnot(!is.null(paper$id))
 
-    links        <- osf_links(paper)
-    unique_links <- setdiff(unique(links$text), BADGE_REPOS)
+      links        <- osf_links(paper)
+      unique_links <- setdiff(unique(links$text), BADGE_REPOS)
+      if (length(unique_links) == 0)
+        stop("no_links: paper ", paper_id, " has no OSF data links")
 
-    if (length(unique_links) == 0) {
-      stop("no_links: paper ", paper_id, " has no OSF data links")
-    }
-
-    if (!dir.exists(target_dir)) {
       osf_file_download(unique_links, download_to = target_dir,
                         max_download_size = 10e9, max_file_size = NULL)
     }
