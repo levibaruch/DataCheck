@@ -31,7 +31,7 @@ CAPTURE_THINKING <- TRUE   # write one row per prompt call to thinking_traces.cs
 
 # Change these to the models you are actually using! I can recommend gpt-oss:20b
 llm_use(TRUE)
-llm_model("ollama/gpt-oss:120b-cloud")
+llm_model("ollama/gpt-oss:20b-cloud")
 
 local({
 
@@ -50,7 +50,7 @@ local({
   pid <- if (length(args) > 0) {
     args[1]
   } else {
-    "0956797615620784"
+    ""
   }
   if (is.null(pid) || !nzchar(pid)) {
     if (length(all_ids) == 0)

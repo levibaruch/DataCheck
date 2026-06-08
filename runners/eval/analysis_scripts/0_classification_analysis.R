@@ -91,12 +91,12 @@ local({
 #          tests/ground_truth/osf/<paper>.csv
 # Outputs: results/eval/outputs/step2/comparison/
 #   - merged.csv                  long pred+GT (one row per file x config)
-#   - headline_metrics.csv        per config: kappa, macro/micro F1, MCC, acc, retry
+#   - headline_metrics.csv        per config: macro/micro F1, MCC, acc, retry
 #   - per_class_<field>.csv       per config per class: TP/FP/FN/P/R/F1/FPR/FNR
 #   - confusion_<field>_<cfg>.csv raw confusion (gt vs pred), one per config x field
 #   - top_confusions.csv          top gt->pred error pairs per config (type)
 #   - ext_errors.csv              per config: error rate by file extension
-#   - per_paper.csv               per (config, paper) accuracy / kappa / macro F1
+#   - per_paper.csv               per (config, paper) accuracy / macro F1
 #   - paper_variability.csv       per config: mean/SD/min of paper accuracy
 #   - missingness.csv             %NA + %sentinel per config per field
 #   - cross_config.csv            pairwise agreement between configs per field
@@ -239,7 +239,7 @@ for (cfg in configs) {
   sd  <- scorable(sub, "type", "type_gt")
   cm  <- confusion(sd)
   s   <- if (!is.null(cm)) cm_stats(cm) else
-         list(kappa = NA, macro_f1 = NA, mcc = NA, accuracy = NA, f1s = NULL)
+         list(macro_f1 = NA, mcc = NA, accuracy = NA, f1s = NULL)
   micro_f1_fp <- micro_f1_from_sd(sd)
 
   # "other"-excluded variants — "other" is the LLM fallback bucket and drags
@@ -247,7 +247,7 @@ for (cfg in configs) {
   sd_no <- sd[sd$gt != "other" & sd$pred != "other", , drop = FALSE]
   cm_no <- confusion(sd_no)
   s_no  <- if (!is.null(cm_no)) cm_stats(cm_no) else
-           list(kappa = NA, macro_f1 = NA, mcc = NA, accuracy = NA)
+           list(macro_f1 = NA, mcc = NA, accuracy = NA)
   micro_f1_no_fp <- micro_f1_from_sd(sd_no)
 
   # micro F1
@@ -279,7 +279,7 @@ for (cfg in configs) {
         sp2 <- list(macro_f1 = NA_real_); mf2 <- NA_real_
       }
       data.frame(n = nrow(d), acc = mean(d$gt == d$pred) * 100,
-                 kappa = sp$kappa, macro_f1 = sp$macro_f1, mcc = sp$mcc,
+                 macro_f1 = sp$macro_f1, mcc = sp$mcc,
                  micro_f1 = mf,
                  macro_f1_no_other = sp2$macro_f1,
                  micro_f1_no_other = mf2)
@@ -304,14 +304,12 @@ for (cfg in configs) {
     accuracy_fp   = acc,
     macro_f1_fp   = s$macro_f1,
     micro_f1_fp   = micro_f1_fp,
-    kappa_fp      = s$kappa,
     mcc_fp        = s$mcc,
     macro_f1_no_other_fp = s_no$macro_f1,
     micro_f1_no_other_fp = micro_f1_no_fp,
     accuracy_pa   = if (!is.null(pa)) mean(pa$acc, na.rm = TRUE) else NA,
     macro_f1_pa   = if (!is.null(pa)) mean(pa$macro_f1, na.rm = TRUE) else NA,
     micro_f1_pa   = if (!is.null(pa)) mean(pa$micro_f1, na.rm = TRUE) else NA,
-    kappa_pa      = if (!is.null(pa)) mean(pa$kappa, na.rm = TRUE) else NA,
     mcc_pa        = if (!is.null(pa)) mean(pa$mcc, na.rm = TRUE) else NA,
     macro_f1_no_other_pa = if (!is.null(pa)) mean(pa$macro_f1_no_other, na.rm = TRUE) else NA,
     micro_f1_no_other_pa = if (!is.null(pa)) mean(pa$micro_f1_no_other, na.rm = TRUE) else NA,
@@ -338,7 +336,6 @@ paper_var <- if (nrow(per_paper) > 0)
       sd_acc   = sd(d$acc, na.rm = TRUE),
       min_acc  = min(d$acc, na.rm = TRUE),
       pct_below_50 = mean(d$acc < 50, na.rm = TRUE) * 100,
-      mean_kappa   = mean(d$kappa, na.rm = TRUE),
       stringsAsFactors = FALSE
     )
   })) else data.frame()
@@ -353,7 +350,7 @@ for (cfg in configs) for (f in FIELDS) {
   sd  <- scorable(sub, f, FIELD_MAP[[f]])
   cm  <- confusion(sd)
   s   <- if (!is.null(cm)) cm_stats(cm) else
-         list(macro_f1 = NA, kappa = NA, accuracy = NA)
+         list(macro_f1 = NA, accuracy = NA)
 
   # paper-averaged per-field metrics
   gt_field <- FIELD_MAP[[f]]
@@ -370,13 +367,12 @@ for (cfg in configs) for (f in FIELDS) {
       ))
       sp <- cm_stats(cmp)
       data.frame(acc = mean(pred_v == gt_v) * 100,
-                 macro_f1 = sp$macro_f1, kappa = sp$kappa,
+                 macro_f1 = sp$macro_f1,
                  stringsAsFactors = FALSE)
     }))
   } else NULL
   accuracy_pa <- if (!is.null(pa_rows)) mean(pa_rows$acc,      na.rm = TRUE) else NA_real_
   macro_f1_pa <- if (!is.null(pa_rows)) mean(pa_rows$macro_f1, na.rm = TRUE) else NA_real_
-  kappa_pa    <- if (!is.null(pa_rows)) mean(pa_rows$kappa,    na.rm = TRUE) else NA_real_
   n_papers_pa <- if (!is.null(pa_rows)) nrow(pa_rows) else 0L
 
   field_summary[[length(field_summary) + 1L]] <- data.frame(
@@ -388,10 +384,8 @@ for (cfg in configs) for (f in FIELDS) {
     accuracy = round(if (nrow(sd) > 0) mean(sd$pred == sd$gt) * 100 else NA, 2),
     macro_f1 = round(s$macro_f1, 2),
     micro_f1 = round(micro_f1_from_sd(sd), 2),
-    kappa    = round(s$kappa, 3),
     accuracy_pa = round(accuracy_pa, 2),
     macro_f1_pa = round(macro_f1_pa, 2),
-    kappa_pa    = round(kappa_pa, 3),
     stringsAsFactors = FALSE
   )
 }
@@ -703,7 +697,7 @@ add("Repositories **%d**  ·  Configurations **%d**  ·  Merged rows **%d**",
 add("")
 add("Configurations: %s", paste(configs, collapse = ", "))
 add("")
-add("Rows with `pred == NA` or `pred == %s` are excluded from accuracy / F1 / κ but counted in **missingness**.", SENTINEL)
+add("Rows with `pred == NA` or `pred == %s` are excluded from accuracy / F1 but counted in **missingness**.", SENTINEL)
 add("")
 add("All plots live in `plots/`; CSVs in the same dir feed every table below.")
 add("")
@@ -716,13 +710,12 @@ add("Both **file-pooled (fp)** — all files counted once — and **repository-a
 add("")
 add("`llm_error` files count as wrong (a miss for the true class), not excluded — so high-failure configurations are not rewarded for failing. Prompt-failure rate is the separate reliability metric.")
 add("")
-add("| configuration | n files | κ fp | κ pa | macro-F1 fp | macro-F1 pa | micro-F1 fp | micro-F1 pa | MCC fp | MCC pa | acc fp | acc pa | %% prompts failed |")
-add("|%s|", paste(rep("---", 13), collapse = "|"))
+add("| configuration | n files | macro-F1 fp | macro-F1 pa | micro-F1 fp | micro-F1 pa | MCC fp | MCC pa | acc fp | acc pa | %% prompts failed |")
+add("|%s|", paste(rep("---", 11), collapse = "|"))
 for (i in seq_len(nrow(headline))) {
   r <- headline[i, ]
-  add("| %s | %d | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %.2f |",
+  add("| %s | %d | %s | %s | %s | %s | %s | %s | %s | %s | %.2f |",
       r$config, r$n_files,
-      fmt3(r$kappa_fp), fmt3(r$kappa_pa),
       fmt1(r$macro_f1_fp), fmt1(r$macro_f1_pa),
       fmt1(r$micro_f1_fp), fmt1(r$micro_f1_pa),
       fmt3(r$mcc_fp), fmt3(r$mcc_pa),
@@ -775,8 +768,6 @@ pivot("accuracy")
 pivot("accuracy_pa")
 pivot("macro_f1")
 pivot("macro_f1_pa")
-pivot("kappa", dp = 3)
-pivot("kappa_pa", dp = 3)
 pivot("pct_sentinel", dp = 2, label = "% files llm_error (per field)")
 pivot("n_scored", dp = 0)
 pivot("n_papers", dp = 0, label = "n_repositories")
@@ -984,14 +975,14 @@ if ("type_source" %in% names(merged)) {
 add("## 6. Per-repository variability (`type` accuracy)")
 add("")
 add("")
-add("| configuration | n repositories | mean acc | SD acc | min acc | %% repositories <50%% | mean κ |")
-add("|---|---|---|---|---|---|---|")
+add("| configuration | n repositories | mean acc | SD acc | min acc | %% repositories <50%% |")
+add("|---|---|---|---|---|---|")
 for (i in seq_len(nrow(paper_var))) {
   r <- paper_var[i, ]
-  add("| %s | %d | %s | %s | %s | %s | %s |",
+  add("| %s | %d | %s | %s | %s | %s |",
       r$config, r$n_papers,
       fmt1(r$mean_acc), fmt1(r$sd_acc), fmt1(r$min_acc),
-      fmt1(r$pct_below_50), fmt3(r$mean_kappa))
+      fmt1(r$pct_below_50))
 }
 add("")
 
@@ -1004,8 +995,8 @@ for (cfg in configs) {
   d <- d[order(d$acc), ]
   add("**%s**", cfg)
   for (i in seq_len(min(5, nrow(d))))
-    add("- %s: %.1f%% acc (n=%d, κ=%s)",
-        d$paper_id[i], d$acc[i], d$n[i], fmt3(d$kappa[i]))
+    add("- %s: %.1f%% acc (n=%d)",
+        d$paper_id[i], d$acc[i], d$n[i])
   add("")
 }
 
@@ -1099,35 +1090,12 @@ writeLines(md, file.path(OUT_DIR, "report.md"))
 # Winner = highest pa macro-F1 (≥80% paper coverage so a half-finished config
 # can't win by sample bias) — computed at the top of the plots section
 
-# Per-paper macro-F1 / micro-F1 / κ are drawn as a combined reliability panel
+# Per-paper macro-F1 / micro-F1 are drawn as a combined reliability panel
 # in the thesis figures section below (see figure C).
 
-# Top-3 deep-dive plots — per-paper Cohen's κ histogram + size-vs-macro-F1
-# scatter for the best three configs (thesis Figures 5 and 8).
+# Top-3 deep-dive plots — size-vs-macro-F1 scatter for the best three configs
+# (thesis Figure 8).
 top3 <- headline$config[order(-headline$macro_f1_pa)][1:3]
-
-plot_kappa_hist <- function(vals, file, title_suffix) {
-  vals <- vals[!is.na(vals)]
-  if (length(vals) == 0) return()
-  png(file, width = 1200, height = 700, res = 150)
-  on.exit(dev.off())
-  par(mar = c(5, 4, 3, 1))
-  kap_lo <- min(-0.1, floor(min(vals) / 0.05) * 0.05)   # κ ≤ 1, so cap top at 1
-  h <- hist(vals, breaks = seq(kap_lo, 1, by = 0.05), plot = FALSE)
-  ymax <- max(h$counts) + 1
-  plot(NULL, xlim = c(kap_lo, 1), ylim = c(0, ymax),
-       xlab = "Cohen's κ (per paper)", ylab = "Number of papers",
-       main = sprintf("%s  (mean=%.3f  median=%.3f)",
-                      title_suffix, mean(vals), median(vals)), las = 1)
-  rect(h$breaks[-length(h$breaks)], 0, h$breaks[-1], h$counts,
-       col = "#4C72B0", border = "white")
-  abline(v = mean(vals),   col = "#C44E52", lwd = 2, lty = 2)
-  abline(v = median(vals), col = "#55A868", lwd = 2, lty = 2)
-  legend("topleft",
-         legend = c(sprintf("Mean   %.3f", mean(vals)),
-                    sprintf("Median %.3f", median(vals))),
-         col = c("#C44E52", "#55A868"), lwd = 2, lty = 2, bty = "n")
-}
 
 plot_size_vs_metric <- function(n_files, y, file, title_suffix, ylab) {
   ok <- !is.na(n_files) & !is.na(y)
@@ -1154,9 +1122,6 @@ for (cfg in top3) {
   d <- per_paper[per_paper$config == cfg, ]
   if (nrow(d) == 0) next
   safe <- safe_label(cfg)
-  plot_kappa_hist(d$kappa,
-                  file.path(PLOT_DIR, sprintf("thesis_kappa_dist_%s.png", safe)),
-                  sprintf("Per-paper Cohen's κ — %s", cfg))
   plot_size_vs_metric(d$n, d$macro_f1,
                    file.path(PLOT_DIR, sprintf("thesis_size_vs_macro_f1_%s.png", safe)),
                    sprintf("Repository size vs macro-F1 — %s", cfg), "Macro-F1 (%)")
@@ -1172,23 +1137,21 @@ model_lvls  <- unique(model_of(configs))
 model_cols  <- setNames(hcl.colors(length(model_lvls), "Dark 3"), model_lvls)
 
 # A. Headline ranking — configs sorted by macro-F1 pa, paired macro/micro-F1
-#    bars (equal- vs frequency-weighted), κ (primary) + prompt-fail annotated
+#    bars (equal- vs frequency-weighted) + prompt-fail annotated
 {
   hr <- headline[order(headline$macro_f1_pa), ]   # ascending → best on top (horiz)
   M  <- rbind(`macro-F1` = hr$macro_f1_pa,
-              `micro-F1` = hr$micro_f1_pa,
-              `κ×100`    = hr$kappa_pa * 100)
-  bar_cols <- c("macro-F1" = "#4C72B0", "micro-F1" = "#DD8452", "κ×100" = "#55A868")
+              `micro-F1` = hr$micro_f1_pa)
+  bar_cols <- c("macro-F1" = "#4C72B0", "micro-F1" = "#DD8452")
   png(file.path(PLOT_DIR, "thesis_headline_ranking.png"),
       width = 1700, height = 1100, res = 150)
   par(mar = c(7, 11, 4, 3))
   bp <- barplot(M, beside = TRUE, horiz = TRUE, names.arg = hr$config, las = 1,
                 col = bar_cols, xlim = c(0, 100), cex.names = 0.85,
-                xlab = "macro-F1 / micro-F1 (%)   ·   Cohen's κ (×100)",
+                xlab = "macro-F1 / micro-F1 (%)",
                 main = "Configurations ranked by macro-F1 (repository-averaged)")
   text(M[1, ], bp[1, ], sprintf("%.1f", M[1, ]), pos = 4, cex = 0.65, xpd = TRUE)
   text(M[2, ], bp[2, ], sprintf("%.1f", M[2, ]), pos = 4, cex = 0.65, xpd = TRUE)
-  text(M[3, ], bp[3, ], sprintf("κ=%.2f", hr$kappa_pa), pos = 4, cex = 0.65, xpd = TRUE)
   legend(x = 50, y = par("usr")[3] - diff(par("usr")[3:4]) * 0.13,
          legend = names(bar_cols), fill = bar_cols, horiz = TRUE, xjust = 0.5,
          bty = "n", cex = 0.85, xpd = NA)
@@ -1244,8 +1207,8 @@ tadd("## 1. Headline — repository-averaged")
 tadd("")
 tadd("Decision unit = repository. Each repository contributes one score; large repositories do not dominate. Prompt failure rate = %% of prompts (one `(repository, prompt_nr)` LLM batch) with at least one `llm_error` file (parse failure / retry exhausted).")
 tadd("")
-tadd("| model | prompt | n repositories | macro-F1 pa | micro-F1 pa | κ pa | prompts failed %% |")
-tadd("|---|---|---|---|---|---|---|")
+tadd("| model | prompt | n repositories | macro-F1 pa | micro-F1 pa | prompts failed %% |")
+tadd("|---|---|---|---|---|---|")
 # Order: best-model first (by mean macro-F1 across its formats), then format
 # (md → plaintext → json) inside each model
 fmt_levels <- c("md", "plaintext", "json")
@@ -1260,10 +1223,10 @@ for (mdl in model_order) {
   sub <- sub[!is.na(sub$config), , drop = FALSE]
   for (i in seq_len(nrow(sub))) {
     r <- sub[i, ]
-    tadd("| %s | %s | %d | %s | %s | %s | %.2f |",
+    tadd("| %s | %s | %d | %s | %s | %.2f |",
          mdl, r$fmt_lbl, n_papers_per_cfg[r$config],
          fmt1(r$macro_f1_pa), fmt1(r$micro_f1_pa),
-         fmt3(r$kappa_pa), r$pct_prompt_fail)
+         r$pct_prompt_fail)
   }
 }
 tadd("")
@@ -1335,8 +1298,8 @@ tadd("## 2. Reliability — per-repository distribution")
 tadd("")
 
 if ("macro_f1" %in% names(per_paper)) {
-  tadd("| configuration | n repositories | median macro-F1 | IQR | min | median micro-F1 | median κ |")
-  tadd("|---|---|---|---|---|---|---|")
+  tadd("| configuration | n repositories | median macro-F1 | IQR | min | median micro-F1 |")
+  tadd("|---|---|---|---|---|---|")
   for (cfg in configs[order(-headline$macro_f1_pa[match(configs, headline$config)])]) {
     d <- per_paper[per_paper$config == cfg, ]
     if (nrow(d) == 0) next
@@ -1344,9 +1307,8 @@ if ("macro_f1" %in% names(per_paper)) {
     iqr   <- IQR(d$macro_f1,    na.rm = TRUE)
     mn    <- min(d$macro_f1,    na.rm = TRUE)
     medu  <- median(d$micro_f1, na.rm = TRUE)
-    medk  <- median(d$kappa,    na.rm = TRUE)
-    tadd("| %s | %d | %s | %s | %s | %s | %s |",
-         cfg, nrow(d), fmt1(med), fmt1(iqr), fmt1(mn), fmt1(medu), fmt3(medk))
+    tadd("| %s | %d | %s | %s | %s | %s |",
+         cfg, nrow(d), fmt1(med), fmt1(iqr), fmt1(mn), fmt1(medu))
   }
   tadd("")
 }
@@ -1386,7 +1348,7 @@ tadd("")
 # 7. Top-3 deep-dive ---------------------------------------------------------
 tadd("## 7. Top-3 configurations — per-repository distributions")
 tadd("")
-tadd("For the three highest-scoring configurations by macro-F1 pa: per-repository Cohen's κ distribution and repository-size vs macro-F1.")
+tadd("For the three highest-scoring configurations by macro-F1 pa: repository-size vs macro-F1.")
 tadd("")
 
 # Repository-size vs per-repository metric. The naive unweighted Spearman over
@@ -1429,9 +1391,6 @@ for (cfg in top3) {
   tadd("### %s", cfg)
   tadd("")
   tadd("- n repositories = %d", nrow(d))
-  tadd("- κ: mean %.3f, median %.3f, %% κ ≥ 0.8: %.1f%%",
-       mean(d$kappa, na.rm = TRUE), median(d$kappa, na.rm = TRUE),
-       mean(d$kappa >= 0.8, na.rm = TRUE) * 100)
   tadd("- accuracy: mean %.1f%%, median %.1f%%, %% repositories <50%%: %.1f%%",
        mean(d$acc, na.rm = TRUE), median(d$acc, na.rm = TRUE),
        mean(d$acc < 50, na.rm = TRUE) * 100)
@@ -1441,8 +1400,6 @@ for (cfg in top3) {
   # size correlation — robust to small-repo ceiling artifact (see helper)
   for (ln in size_corr_lines(d$n, d$macro_f1, "macro-F1")) tadd("- %s", ln)
   for (ln in size_corr_lines(d$n, d$micro_f1, "micro-F1")) tadd("- %s", ln)
-  tadd("")
-  tadd("![per-paper κ %s](plots/thesis_kappa_dist_%s.png)", cfg, safe)
   tadd("")
   tadd("![size vs macro-F1 %s](plots/thesis_size_vs_macro_f1_%s.png)", cfg, safe)
   tadd("")
@@ -1548,8 +1505,7 @@ for (f in sort(list.files(OUT_DIR))) cat("  ", f, "\n")
 local({
   d <- read_per_paper(); d <- d[d$config == FOCUS_CFG, ]
   if (nrow(d) == 0) stop("No per_paper rows for config: ", FOCUS_CFG)
-  metrics <- list(c(col = "kappa",    label = "Cohen's $\\kappa$", dp = "3"),
-                  c(col = "macro_f1", label = "Macro-F1",          dp = "1"),
+  metrics <- list(c(col = "macro_f1", label = "Macro-F1",          dp = "1"),
                   c(col = "micro_f1", label = "Micro-F1",          dp = "1"))
   summ <- do.call(rbind, lapply(metrics, function(m) {
     v <- d[[m["col"]]]; v <- v[!is.na(v)]
@@ -1846,7 +1802,7 @@ local({
       "several with a single such file), so one false positive forces that repo to $0\\%$ ",
       "and drags the repo-average. File-pooled precision is $98.6\\%$, in line with the ",
       "other subtypes; the repository-average is unstable here for the same degenerate ",
-      "small-$n$ reason that leaves Cohen's $\\kappa$ undefined on tiny repositories.}"))
+      "small-$n$ reason that destabilises per-repository metrics on tiny repositories.}"))
   cat("Wrote data_recall_by_subtype.{csv,tex}\n")
 })
 
@@ -1970,7 +1926,7 @@ local({
   qsumm <- do.call(rbind, lapply(levels(d$q), function(lv) {
     s <- d[!is.na(d$q) & d$q == lv, ]
     data.frame(quartile = lv, n_repos = nrow(s), size_lo = min(s$n), size_hi = max(s$n),
-               size_med = median(s$n), kappa = mean(s$kappa, na.rm = TRUE),
+               size_med = median(s$n),
                macro_f1 = mean(s$macro_f1, na.rm = TRUE),
                micro_f1 = mean(s$micro_f1, na.rm = TRUE), stringsAsFactors = FALSE)
   }))
@@ -1978,8 +1934,8 @@ local({
   rng <- function(lo, hi) if (lo == hi) as.character(lo) else
     sprintf("%s--%s", format(lo, big.mark = ","), format(hi, big.mark = ","))
   rows2 <- vapply(seq_len(nrow(qsumm)), function(i) { r <- qsumm[i, ]
-    sprintf("    %s & %s & %d & %d & %.3f & %.1f & %.1f \\\\", r$quartile,
-      rng(r$size_lo, r$size_hi), r$size_med, r$n_repos, r$kappa, r$macro_f1, r$micro_f1)
+    sprintf("    %s & %s & %d & %d & %.1f & %.1f \\\\", r$quartile,
+      rng(r$size_lo, r$size_hi), r$size_med, r$n_repos, r$macro_f1, r$micro_f1)
   }, character(1))
   latex_table("size_quartiles.tex",
     sprintf(paste0("Mean evaluation metric by repository-size quartile for the best ",
@@ -1987,8 +1943,8 @@ local({
       "toward the largest (clearest for Macro-F1), while the smallest repos dip ",
       "slightly as their few files make the metric coarse. The relationship is thus ",
       "negative overall but not strictly monotonic."), esc(FOCUS_CFG)),
-    "tab:size-quartiles", "lrrrrrr",
-    "Quartile & Size (files) & Median & Repos & Cohen's $\\kappa$ & Macro-F1 & Micro-F1", rows2)
+    "tab:size-quartiles", "lrrrrr",
+    "Quartile & Size (files) & Median & Repos & Macro-F1 & Micro-F1", rows2)
   cat("Wrote size_quartiles.{csv,tex}\n")
 })
 
@@ -2095,8 +2051,7 @@ if (!is.null(step1)) {
     best_row <- sub[best, ]
     L("Best: think=`", best_row$think, "` temp=`", best_row$temp,
       "` → macro F1 ", fmt_pct(best_row$macro_f1),
-      "  micro F1 ", fmt_pct(best_row$micro_f1),
-      "  κ ", fmt(best_row$kappa, 3))
+      "  micro F1 ", fmt_pct(best_row$micro_f1))
     BR()
   }
 } else {
@@ -2155,7 +2110,7 @@ if (!is.null(step3)) {
   step3$model_label <- step3$model_label %||% step3$model
 
   header <- c("model", "prompt", "think", "temp",
-              "macro F1", "micro F1", "κ", "MCC", "accuracy", "retry %", "n papers")
+              "macro F1", "micro F1", "MCC", "accuracy", "retry %", "n papers")
   rows <- lapply(seq_len(nrow(step3)), function(i) {
     r <- step3[i, ]
     c(r$model_label,
@@ -2164,7 +2119,6 @@ if (!is.null(step3)) {
       as.character(r$temp),
       fmt_pct(r$macro_f1),
       fmt_pct(r$micro_f1),
-      fmt(r$kappa, 3),
       fmt(r$mcc,   3),
       fmt_pct(r$accuracy),
       fmt_pct(r$retry_rate),

@@ -235,6 +235,23 @@ One row per paper processed by `run_codebook_bulk.R`. Appended immediately after
 
 ---
 
+## `report_summary.csv`
+
+One row per paper processed by Stage 4 (`4_report.R`) of `run_full_pipeline_bulk.R`. Appended immediately after each paper. Used to auto-resume after a crash. The report itself is written per paper as a single self-contained `outputs/<source>/<paper_id>/report.html` — a styled, end-user-facing document (not a CSV) with a sticky sidebar (key-number panel + section nav) and a numbered walkthrough that follows the pipeline: Overview (tiles + roadmap) → ① Files found (classification + file-type legend) → ② Columns & their types (distribution + expandable per-variable overview: type + how decided, codebook label + how matched, granularity, sample values, stats) → ③ Codebook matching (coverage + recommendation callouts) → ④ Data granularity (individual vs combined + how inferred) → Behind the scenes (rules-vs-LLM split) → Glossary. Each numbered stage carries a "How this step works" disclosure. Single brand colour for cards; vivid colour reserved for type/decision badges and callouts.
+
+| Column | Type | Description |
+|---|---|---|
+| `paper_id` | character | Paper identifier (leading zeros preserved) |
+| `success` | logical | `TRUE` if `report.html` was written |
+| `error` | character | Error code (`no_structure`) or message if `success = FALSE`; `NA` otherwise |
+| `elapsed_ms` | integer | Wall-clock time in milliseconds |
+| `n_files` | integer | Files in `structure.csv` |
+| `n_columns` | integer | Columns in `columns.csv` |
+| `n_labelled` | integer | Data columns with `label_status` in {`labelled`, `llm`} |
+| `n_codebook_vars` | integer | Variables in `codebook_coverage.csv` |
+
+---
+
 ## `outputs/<paper_id>/labels.csv`
 
 One row per column in each data file (parallel to `columns.csv`). Produced by `2_codebook_label.R`.

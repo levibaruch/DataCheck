@@ -152,4 +152,6 @@
 "956797618773095","^Experiment[0-9]+_Sheet[0-9]+\.csv$","Experiment1_results.csv","Experiment1_Sheet1.csv","Experiment1_Sheet10.csv","individual","2026-05-18 17:18:34"
 "956797618773095","^Experiment[0-9]+_a_[0-9]+-[0-9]+\.csv$","Experiment1_results.csv","Experiment1_Sheet1.csv","Experiment1_Sheet10.csv","individual","2026-05-18 17:18:34"
 "956797618773095","^experiment[0-9]+_b_[0-9]+-[0-9]+\.csv$","Experiment1_results.csv","Experiment1_Sheet1.csv","Experiment1_Sheet10.csv","individual","2026-05-18 17:18:34"
-"09567976211055375","^inter_close_data[0-9]+_[0-9]+\.mat$","inter_close_data1_00.mat","inter_close_data1_01.mat","inter_close_data1_02.mat","individual","2026-05-19 15:40:03"
+"0","^sub-[0-9]+\.csv$","sub-01.csv","sub-02.csv","sub-03.csv","individual","2026-06-01 14:30:32"
+"0","^sub-[0-9]+_eeg\.edf$","sub-01_eeg.edf","sub-02_eeg.edf","sub-03_eeg.edf","individual","2026-06-01 14:30:32"
+"0956797619831964","(no clear pattern)","angCITS.RData","anxCITS.RData","frenchValuesCITS.RData","combined","2026-06-04 11:07:58"

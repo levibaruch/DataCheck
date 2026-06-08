@@ -55,3 +55,5 @@ results/
 
 # Generated from pipeline/prompts.R via runners/tools/export_prompts_appendix.R
 docs/appendix_prompts.tex
+# CrossRef DOI metadata cache
+cache/

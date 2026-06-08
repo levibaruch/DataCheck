@@ -28,6 +28,14 @@ if (!exists("GROUND_TRUTH_DIR")) {
 DATA_SIZE_LIMIT_MB <- 500
 PIPELINE_VERSION   <- "021"
 
+# CrossRef DOI metadata enrichment (journal, year, volume/issue/pages, ISSN).
+# GROBID header-only XML has empty <monogr>/<date>; DOI is reliably present, so
+# we resolve citation metadata from CrossRef and cache it on disk.
+PSYCHDS_CROSSREF      <- TRUE
+CROSSREF_CACHE_DIR    <- "./cache/crossref"
+CROSSREF_MAILTO       <- "levi12373@gmail.com"   # CrossRef "polite pool" contact
+CROSSREF_TIMEOUT_SEC  <- 15L
+
 # Rows to scan below row 1 for a sub-header in multi-level CSVs.
 # Must stay in sync with the same constant in 0_index.R.
 MULTILEVEL_HEADER_LOOKAHEAD <- 3L
@@ -306,8 +314,14 @@ parse_grobid_xml <- function(xml_path) {
     abstract <- if (length(abstract_paras) == 0) NA_character_
                 else paste(abstract_paras, collapse = " ")
 
+    # Anchor all paper-level metadata to the teiHeader's source biblStruct.
+    # WHY: `.//author`, `.//monogr`, `.//idno` are document-wide and also match
+    # every cited reference in <back>/<listBibl> — that is the "way too many
+    # authors" glitch. The paper's own metadata lives only under this node.
+    src <- "//teiHeader//sourceDesc/biblStruct"
+
     authors <- vapply(
-      xml2::xml_find_all(doc, ".//author/persName"),
+      xml2::xml_find_all(doc, paste0(src, "/analytic/author/persName")),
       function(p) {
         fn <- trimws(xml2::xml_text(xml2::xml_find_first(p, ".//forename[1]")))
         sn <- trimws(xml2::xml_text(xml2::xml_find_first(p, ".//surname")))
@@ -317,27 +331,193 @@ parse_grobid_xml <- function(xml_path) {
       },
       character(1)
     )
-    authors <- authors[nzchar(authors)]
+    authors <- unique(authors[nzchar(authors)])
 
-    doi      <- .txt(".//idno[@type='DOI']")
+    doi      <- .txt(paste0(src, "//idno[@type='DOI']"))
     date_raw <- xml2::xml_attr(
       xml2::xml_find_first(doc, ".//publicationStmt//date[@type='published']"),
       "when"
     )
+    if (is.na(date_raw) || !nzchar(date_raw))
+      date_raw <- xml2::xml_attr(
+        xml2::xml_find_first(doc, paste0(src, "/monogr/imprint/date[@type='published']")),
+        "when"
+      )
     keywords <- .txts(".//keywords/term")
 
+    # Journal title (GROBID puts host-publication title at level='j' in monogr)
+    journal <- .txt(paste0(src, "/monogr/title[@level='j']"))
+    if (is.na(journal) || !nzchar(journal))
+      journal <- .txt(paste0(src, "/monogr/title[@level='m']"))
+
+    # Citation block — all under monogr/imprint
+    volume    <- .txt(paste0(src, "/monogr/imprint/biblScope[@unit='volume']"))
+    issue     <- .txt(paste0(src, "/monogr/imprint/biblScope[@unit='issue']"))
+    publisher <- .txt(paste0(src, "/monogr/imprint/publisher"))
+    issn      <- .txt(paste0(src, "/monogr/idno[@type='ISSN']"))
+
+    # Pages — biblScope[unit=page] is either text ("123-145") or from/to attrs
+    page_node <- xml2::xml_find_first(doc,
+      paste0(src, "/monogr/imprint/biblScope[@unit='page']"))
+    pages <- if (is.na(page_node)) NA_character_ else {
+      pf <- xml2::xml_attr(page_node, "from"); pt <- xml2::xml_attr(page_node, "to")
+      if (!is.na(pf) && nzchar(pf))
+        paste0(pf, if (!is.na(pt) && nzchar(pt)) paste0("-", pt) else "")
+      else trimws(xml2::xml_text(page_node))
+    }
+
+    # Publication year — leading 4-digit year from the published date
+    pub_year <- if (!is.na(date_raw) && grepl("^[0-9]{4}", date_raw))
+                  sub("^([0-9]{4}).*$", "\\1", date_raw) else NA_character_
+
+    .nn <- function(x) if (is.na(x) || !nzchar(x)) NULL else x
     list(
-      title    = if (is.na(title))    NULL else title,
-      abstract = if (is.na(abstract)) NULL else abstract,
-      authors  = if (length(authors) == 0) NULL else as.list(authors),
-      doi      = if (is.na(doi))      NULL else doi,
-      date     = if (is.na(date_raw)) NULL else date_raw,
-      keywords = if (length(keywords) == 0) NULL else as.list(keywords)
+      title     = .nn(title),
+      abstract  = .nn(abstract),
+      authors   = if (length(authors) == 0) NULL else as.list(authors),
+      doi       = .nn(doi),
+      date      = .nn(date_raw),
+      journal   = .nn(journal),
+      pub_year  = .nn(pub_year),
+      volume    = .nn(volume),
+      issue     = .nn(issue),
+      pages     = .nn(pages),
+      publisher = .nn(publisher),
+      issn      = .nn(issn),
+      keywords  = if (length(keywords) == 0) NULL else as.list(keywords)
     )
   }, error = function(e) {
     warning("parse_grobid_xml: failed for ", xml_path, ": ", conditionMessage(e))
     NULL
   })
+}
+
+# ── Internal: CrossRef DOI enrichment ─────────────────────────────────────────
+
+# Normalise a DOI string. GROBID often appends junk (e.g. trailing "pss." or a
+# bare period). Returns lowercased "10.xxxx/..." or NA if unrecognisable.
+clean_doi <- function(doi) {
+  if (is.null(doi) || is.na(doi) || !nzchar(doi)) return(NA_character_)
+  d <- tolower(trimws(doi))
+  d <- sub("^https?://(dx\\.)?doi\\.org/", "", d)   # strip URL form
+  d <- sub("^doi:\\s*", "", d)
+  m <- regmatches(d, regexpr("10\\.[0-9]{4,9}/[^[:space:]]+", d))
+  if (length(m) == 0) return(NA_character_)
+  sub("[.,;]+$", "", m)                              # drop trailing punctuation
+}
+
+# Fetch citation metadata for a DOI from the CrossRef REST API, with on-disk
+# JSON caching. Returns a named list (journal/pub_year/date/volume/issue/pages/
+# issn/publisher/title/authors) of only the fields CrossRef supplied, or NULL.
+fetch_crossref_meta <- function(doi, cache_dir = CROSSREF_CACHE_DIR) {
+  base <- clean_doi(doi)
+  if (is.na(base)) return(NULL)
+
+  # GROBID frequently glues junk onto the DOI tail — "...504302pss." or
+  # "...505776pss.sagepub". Try the cleaned DOI first, then a variant with a
+  # trailing letter-run stripped, then a variant truncated at the last digit
+  # (handles junk containing punctuation, e.g. "pss.sagepub"). The trailing
+  # variants are guesses, only reached after earlier forms 404.
+  candidates <- unique(c(
+    base,
+    sub("([0-9])[a-z]+$", "\\1", base),
+    sub("([0-9])[^0-9]*$", "\\1", base)))
+
+  dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
+
+  fetch_one <- function(d) {
+    cache_file <- file.path(cache_dir, paste0(sanitize_id(d), ".json"))
+    if (file.exists(cache_file))
+      return(tryCatch(jsonlite::fromJSON(cache_file, simplifyVector = FALSE),
+                      error = function(e) NULL))
+    api_url <- paste0("https://api.crossref.org/works/", utils::URLencode(d),
+                      "?mailto=", utils::URLencode(CROSSREF_MAILTO))
+    ua  <- paste0("DataCheck/", PIPELINE_VERSION,
+                  " (https://github.com/levibaruch/DataCheck; mailto:",
+                  CROSSREF_MAILTO, ")")
+    raw <- tryCatch({
+      con <- url(api_url, headers = c("User-Agent" = ua))
+      on.exit(close(con), add = TRUE)
+      old_to <- options(timeout = CROSSREF_TIMEOUT_SEC); on.exit(options(old_to), add = TRUE)
+      paste(readLines(con, warn = FALSE), collapse = "\n")
+    }, error = function(e) NULL)
+    if (is.null(raw) || !nzchar(raw)) return(NULL)
+    parsed <- tryCatch(jsonlite::fromJSON(raw, simplifyVector = FALSE),
+                       error = function(e) NULL)
+    if (is.null(parsed) || is.null(parsed$message)) return(NULL)
+    writeLines(jsonlite::toJSON(parsed$message, auto_unbox = TRUE), cache_file)
+    parsed$message
+  }
+
+  msg <- NULL
+  for (d in candidates) { msg <- fetch_one(d); if (!is.null(msg)) break }
+  if (is.null(msg)) {
+    warning("fetch_crossref_meta: no CrossRef record for ", base)
+    return(NULL)
+  }
+
+  .first <- function(x) if (is.null(x) || length(x) == 0) NA_character_
+                        else trimws(as.character(x[[1]]))
+  # Year: prefer print, then online, then issued — date-parts is [[ [year,...] ]]
+  .year <- function(node) {
+    dp <- node[["date-parts"]]
+    if (is.null(dp) || length(dp) == 0 || length(dp[[1]]) == 0) return(NA_character_)
+    y <- dp[[1]][[1]]
+    if (is.null(y)) NA_character_ else as.character(y)
+  }
+  pub_year <- .year(msg[["published-print"]])
+  if (is.na(pub_year)) pub_year <- .year(msg[["published-online"]])
+  if (is.na(pub_year)) pub_year <- .year(msg[["issued"]])
+
+  authors <- NULL
+  if (!is.null(msg$author) && length(msg$author) > 0) {
+    authors <- vapply(msg$author, function(a) {
+      given <- if (!is.null(a$given)) a$given else ""
+      fam   <- if (!is.null(a$family)) a$family else if (!is.null(a$name)) a$name else ""
+      trimws(paste(given, fam))
+    }, character(1))
+    authors <- authors[nzchar(authors)]
+  }
+
+  .nn <- function(x) if (is.na(x) || !nzchar(x)) NULL else x
+  out <- list(
+    journal   = .nn(.first(msg[["container-title"]])),
+    pub_year  = .nn(pub_year),
+    date      = .nn(.first(msg$created[["date-time"]])),  # ISO; refined below
+    volume    = .nn(.first(msg$volume)),
+    issue     = .nn(.first(msg$issue)),
+    pages     = .nn(.first(msg$page)),
+    issn      = .nn(.first(msg$ISSN)),
+    publisher = .nn(.first(msg$publisher)),
+    title     = .nn(.first(msg$title)),
+    authors   = if (is.null(authors) || length(authors) == 0) NULL else as.list(authors)
+  )
+  # Prefer a clean YYYY-MM-DD published date when we have the year
+  if (!is.null(out$pub_year)) out$date <- out$pub_year
+  Filter(Negate(is.null), out)
+}
+
+# Merge CrossRef metadata into GROBID xml_meta. CrossRef is authoritative for
+# citation fields (journal/year/volume/issue/pages/issn/publisher); GROBID keeps
+# precedence for abstract/keywords and as a fallback for title/authors.
+enrich_with_crossref <- function(xml_meta, doi) {
+  if (!isTRUE(PSYCHDS_CROSSREF)) return(xml_meta)
+  cr <- tryCatch(fetch_crossref_meta(doi),
+                 error = function(e) NULL)
+  if (is.null(cr) || length(cr) == 0) return(xml_meta)
+  if (is.null(xml_meta)) xml_meta <- list()
+
+  authoritative <- c("journal", "pub_year", "date", "volume", "issue",
+                     "pages", "issn", "publisher")
+  for (f in authoritative)
+    if (!is.null(cr[[f]])) xml_meta[[f]] <- cr[[f]]
+
+  # Fill title/authors only when GROBID gave nothing
+  if (is.null(xml_meta$title)   && !is.null(cr$title))   xml_meta$title   <- cr$title
+  if ((is.null(xml_meta$authors) || length(xml_meta$authors) == 0) &&
+      !is.null(cr$authors))                              xml_meta$authors <- cr$authors
+
+  xml_meta
 }
 
 # ── Internal: build_property_values ──────────────────────────────────────────
@@ -520,6 +700,20 @@ build_dataset_description <- function(paper_id, study_group, property_values,
       desc[["identifier"]] <- paste0("https://doi.org/", xml_meta$doi)
     if (!is.null(xml_meta$date) && nzchar(xml_meta$date))
       desc[["datePublished"]] <- xml_meta$date
+    if (!is.null(xml_meta$pub_year) && nzchar(xml_meta$pub_year))
+      desc[["datacheck:publication_year"]] <- xml_meta$pub_year
+
+    # Journal as schema.org isPartOf (Periodical), with citation detail nested
+    if (!is.null(xml_meta$journal) && nzchar(xml_meta$journal)) {
+      periodical <- list(`@type` = "Periodical", name = xml_meta$journal)
+      if (!is.null(xml_meta$issn))      periodical[["issn"]]      <- xml_meta$issn
+      if (!is.null(xml_meta$publisher)) periodical[["publisher"]] <- xml_meta$publisher
+      desc[["isPartOf"]] <- periodical
+    }
+    if (!is.null(xml_meta$volume)) desc[["datacheck:volume"]]      <- xml_meta$volume
+    if (!is.null(xml_meta$issue))  desc[["datacheck:issue"]]       <- xml_meta$issue
+    if (!is.null(xml_meta$pages))  desc[["datacheck:pagination"]]  <- xml_meta$pages
+
     if (!is.null(xml_meta$keywords) && length(xml_meta$keywords) > 0)
       desc[["keywords"]] <- xml_meta$keywords
   }
@@ -1122,6 +1316,16 @@ convert_psychds <- function(paper_id) {
   xml_path <- file.path("/Volumes/Models/expanded_xml",
                         paste0(paper_id, ".xml"))
   xml_meta <- parse_grobid_xml(xml_path)
+
+  # Enrich citation metadata (journal/year/volume/issue/pages/issn) from
+  # CrossRef by DOI — GROBID header-only XML lacks these. Falls back to the
+  # DOI form "10.1177/<paper_id>" for OSF Psych Science ids when the GROBID DOI
+  # is missing or unparseable.
+  doi_for_lookup <- if (!is.null(xml_meta) && !is.null(xml_meta$doi))
+                      xml_meta$doi else NA_character_
+  if (is.na(clean_doi(doi_for_lookup)) && grepl("^[0-9]{10,}$", paper_id))
+    doi_for_lookup <- paste0("10.1177/", paper_id)
+  xml_meta <- enrich_with_crossref(xml_meta, doi_for_lookup)
 
   # 7. Determine layout
   single_study <- (length(studies) == 1)

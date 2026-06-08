@@ -20,6 +20,8 @@ contents using an LLM, and extracts column-level statistics into structured CSVs
 | `runners/run_psychds_bulk.R` | Batch-convert all successfully indexed papers to PsychDS format. Crash-resilient, auto-resumes from `psychds/conversion_summary.csv`. |
 | `runners/run_dataverse_bulk.R` | Batch-index all Harvard Dataverse deposits in `data_check/data/dataverse/`. Crash-resilient, auto-resumes from `bulk_summary.csv`. Writes `source = "dataverse"` rows. |
 | `pipeline/3_psychds_convert.R` (`convert_psychds()`) | Convert a single paper by ID to PsychDS format. Returns list of per-study result rows. |
+| `pipeline/4_report.R` (`run_report()`) | Render the per-paper user report (`report.html`) from existing CSV outputs. Read-only; no LLM. Stage 4 of `run_full_pipeline_bulk.R`. |
+| `runners/reports/report_user.R` | Regenerate per-paper reports for one paper (`--paper-id`/`--source`) or every paper under `--outputs-dir`, without a pipeline run. |
 | `runners/run_validation_gui.R` | Launch the Shiny validation GUI for manual ground-truth annotation of file type, group, and `is_raw`. Writes `ground_truth/<paper_id>.csv`. These override pipeline classifications in the PsychDS conversion step. |
 | `runners/run_test_validation_gui.R` | Launch the validation GUI in test mode. Reads from `tests/outputs/osf/<paper_id>/`, writes to `tests/ground_truth/osf/<paper_id>.csv`, and shows only OSF papers in `tests/test_papers.csv`. |
 
@@ -238,11 +240,41 @@ Paper ID (character string)
 │                     │  Sentinel expansion: aggregate placeholder rows replaced with
 │                     │  individual file records before conversion
 │                     │  Ground truth: ground_truth/<paper_id>.csv overrides type/group/data_granularity
-│                     │  Paper metadata: populated from GROBID TEI XML if present (xml2)
+│                     │  Paper metadata: populated from GROBID TEI XML if present (xml2);
+│                     │  authors read only from teiHeader analytic (not bibliography refs).
+│                     │  Citation metadata (journal, publication year, volume, issue,
+│                     │  pages, ISSN, publisher) resolved from CrossRef by DOI and cached
+│                     │  to cache/crossref/; CrossRef is authoritative over GROBID for
+│                     │  these fields. Emitted as schema.org isPartOf (Periodical),
+│                     │  datePublished, and datacheck:publication_year/volume/issue/pagination.
 │                     │  Plaintext extraction: doc/codebook files with .pdf/.docx/.rtf
 │                     │  extension produce a .txt copy in documentation/txt/ via
 │                     │  extract_plain_text() in helper.R (pdftools/officer/RTF strip);
 │                     │  image-only PDFs and errors are flagged in provenance.json only
+└─────────────────────┘
+           │
+           ▼
+┌─────────────────────┐
+│  14. User report    │  pipeline/4_report.R  run_report(paper_id, source)
+│                     │  Reads: outputs/<source>/<paper_id>/structure.csv
+│                     │         outputs/<source>/<paper_id>/columns.csv
+│                     │         outputs/<source>/<paper_id>/labels.csv
+│                     │         outputs/<source>/<paper_id>/codebook_coverage.csv
+│                     │  Writes: outputs/<source>/<paper_id>/report.html
+│                     │  READ-ONLY over existing CSVs — no LLM, no reclassification.
+│                     │  Styled, self-contained HTML (the single export). Plain-
+│                     │  language, end-user-facing. Sticky sidebar (key-number
+│                     │  panel + section nav) + a numbered walkthrough that mirrors
+│                     │  the pipeline: Overview → ① Files found (classification +
+│                     │  type legend) → ② Columns & types (distribution + expandable
+│                     │  per-variable overview: type + how decided, codebook label +
+│                     │  how matched, granularity, samples, stats) → ③ Codebook
+│                     │  matching (coverage + callouts) → ④ Data granularity
+│                     │  (individual vs combined + how inferred) → Behind the scenes
+│                     │  (rules-vs-LLM split) → Glossary. Each stage carries a "How
+│                     │  this step works" <details>. Single brand colour; vivid
+│                     │  colour only on type/decision badges + callouts.
+│                     │  Standalone regen: runners/reports/report_user.R
 └─────────────────────┘
 ```
 
@@ -271,6 +303,10 @@ Paper ID (character string)
 | `MULTILEVEL_HEADER_LOOKAHEAD` | 3L | `0_index.R` | Max rows to scan below row 1 for a usable sub-header row in multi-level CSV files |
 | `PSYCHDS_OUT_DIR` | `./data_check/psychds` | `3_psychds_convert.R` | Root directory for PsychDS output directories |
 | `DATA_SIZE_LIMIT_MB` | 500 | `3_psychds_convert.R` | Max data file size (MB) for CSV conversion; oversized files are raw-copied only |
+| `PSYCHDS_CROSSREF` | `TRUE` | `3_psychds_convert.R` | Enable CrossRef DOI lookup to fill citation metadata (journal/year/volume/issue/pages/ISSN/publisher) |
+| `CROSSREF_CACHE_DIR` | `./cache/crossref` | `3_psychds_convert.R` | On-disk JSON cache of CrossRef responses (one file per DOI) |
+| `CROSSREF_MAILTO` | `levi12373@gmail.com` | `3_psychds_convert.R` | Contact for CrossRef "polite pool" User-Agent |
+| `CROSSREF_TIMEOUT_SEC` | 15L | `3_psychds_convert.R` | Per-request network timeout for CrossRef calls |
 
 ## Resource Limits
 

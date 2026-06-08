@@ -638,16 +638,14 @@ llm_batch <- function(paths, system_prompt, user_prefix, key_col, extra_cols,
         merged[match(chunk_match_keys, merged[[key_col]]), ]
       }, error = function(e) e)
 
-      # Feature 036: After a clean parse, validate the "type" column if present.
-      # Apply typo mapping first (e.g. "coden" → "code"), then check validity.
-      # If any type is still invalid, convert to simpleError so the existing retry
+      # After a clean parse, validate the "type" column if present.
+      # If any type is invalid, convert to simpleError so the existing retry
       # path below handles it identically to a parse failure.
       if (!inherits(parsed, "error") && "type" %in% names(parsed)) {
-        parsed$type <- vapply(parsed$type, validate_type, character(1L))
         invalid_types <- parsed$type[!vapply(parsed$type, is_valid_type, logical(1L))]
         if (length(invalid_types) > 0L) {
           parsed <- simpleError(sprintf(
-            "llm_validation: invalid type value(s) after mapping: %s",
+            "llm_validation: invalid type value(s): %s",
             paste(unique(invalid_types), collapse = ", ")
           ))
         }
@@ -1078,9 +1076,11 @@ parse_codebook <- function(path) {
         )
         .extract_structured_codebook(df, src)
       },
-      dta =, sav = { 
-        df <- haven::read_dta(path)
-        .extract_haven_labels(df, src)
+      dta =, sav = {
+        df <- if (ext == "sav") haven::read_sav(path) else haven::read_dta(path)
+        res <- .extract_haven_labels(df, src)
+        if (!is.null(res)) attr(res, ".is_haven") <- TRUE
+        res
       },
       docx = , doc = , pdf = , rtf = , odt = {
         text <- .extract_rich_text(path, ext)
@@ -1103,7 +1103,7 @@ parse_codebook <- function(path) {
 
   if (!is.null(result) && is.data.frame(result) && nrow(result) > 0) {
     result$group        <- .infer_group(result$group) # TODO what the fuck is the point of this? Why would we need to infer group here when we know it upstream?
-    result$parse_method <- "structured"
+    result$parse_method <- if (isTRUE(attr(result, ".is_haven"))) "haven" else "structured"
     return(result)
   }
 
@@ -1616,26 +1616,6 @@ group_aggregate_folder <- function(rel_paths_in_folder, folder = "") {
 
 # ── LLM Output Validation (Feature 036) ───────────────────────────────────────
 
-
-# Lookup table of known typos and case variations in LLM file type outputs.
-# Applied during validation to correct common mistakes before checking validity.
-# Extensible: add entries empirically as patterns emerge in error logs.
-TYPO_MAP <- c(
-  "coden"        = "code",          # Common typo
-  "Code"         = "code",          # Case variation
-  "supplimental" = "supplemental",  # Common misspelling
-  "supp"         = "supplemental"   # Abbreviation
-)
-
-# Apply typo mapping to a single file type value.
-# Returns the mapped value if found in typo_map; otherwise returns type_value unchanged.
-# Caller checks validity via is_valid_type() after mapping.
-validate_type <- function(type_value, typo_map = TYPO_MAP) {
-  if (!is.na(type_value) && type_value %in% names(typo_map)) {
-    return(typo_map[[type_value]])
-  }
-  return(as.character(type_value))
-}
 
 # Return TRUE if type_value is in the valid file type set.
 is_valid_type <- function(type_value, valid_types = VALID_FILE_TYPES) {

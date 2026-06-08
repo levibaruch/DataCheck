@@ -117,7 +117,7 @@ TYPE_SOURCE_EXPLAIN <- c(
 
 # How a col_type was decided: returns c(method, why). method ∈ {Rule, LLM, —}.
 .coltype_method <- function(t) {
-  if (is.na(t) || t == "") return(c("—", "not determined"))
+  if (is.na(t) || t == "") return(c("-", "not determined"))
   if (grepl("^continuous", t)) return(c("Rule", "numeric values (decimals, or a wide range of integers)"))
   switch(t,
     empty       = c("Rule", "every value was missing"),
@@ -200,8 +200,19 @@ TYPE_SOURCE_EXPLAIN <- c(
 .fp     <- function(text) sprintf("<p>%s</p>", .html_escape(text))
 .fbadge <- function(text, cls) sprintf("<span class=\"badge %s\">%s</span>", cls, .html_escape(text))
 
-.ful <- function(items)
-  c("<ul>", vapply(items, function(x) sprintf("<li>%s</li>", .html_escape(x)), character(1)), "</ul>")
+.ful <- function(items, cap = 20L) {
+  items <- items[!is.na(items) & items != ""]
+  li <- function(x) sprintf("<li>%s</li>", .html_escape(x))
+  if (length(items) <= cap)
+    return(c("<ul>", vapply(items, li, character(1)), "</ul>"))
+  visible <- items[seq_len(cap)]
+  hidden  <- items[seq(cap + 1L, length(items))]
+  rest <- paste(vapply(hidden, li, character(1)), collapse = "")
+  more <- sprintf(
+    "<li><details class=\"more-list\"><summary>... and %d more</summary><ul>%s</ul></details></li>",
+    length(hidden), rest)
+  c("<ul>", vapply(visible, li, character(1)), more, "</ul>")
+}
 
 # spec grid: pairs is a list of c(key, value_html). Values are emitted raw, so the
 # caller is responsible for escaping plain text (badges pass through as HTML).
@@ -297,24 +308,23 @@ TYPE_SOURCE_EXPLAIN <- c(
 
   tiles <- list(
     c(format(nrow(st), big.mark = ","), "files"),
-    c(as.character(n_data),             sprintf("data files (%d tabular)", n_tab)),
     c(format(n_columns, big.mark = ","),"columns"),
-    c(as.character(length(exp_grp)),    "experiment groups")
+    c(as.character(length(exp_grp)),    "studies detected")
   )
   roadmap <- c(
     "<p>DataCheck processed your repository in these stages. The numbered sections below follow that order:</p>",
     "<ol class=\"roadmap\">",
-    "<li><a href=\"#files-found\"><b>Files found</b> — every file sorted into a type</a></li>",
-    "<li><a href=\"#experimental-groups\"><b>Experimental groups</b> — which study each file belongs to</a></li>",
-    "<li><a href=\"#data-granularity\"><b>Data granularity</b> — per-participant or combined? (decides which files are read)</a></li>",
-    "<li><a href=\"#columns-their-types\"><b>Columns &amp; their types</b> — the variables inside your data</a></li>",
-    "<li><a href=\"#codebook-matching\"><b>Codebook matching</b> — are your variables documented?</a></li>",
-    "<li><a href=\"#psychds-conversion\"><b>PsychDS conversion</b> — how your repository was re-packaged</a></li>",
+    "<li><a href=\"#files-found\"><b>Files found:</b> every file sorted into a type</a></li>",
+    "<li><a href=\"#studies-detected\"><b>Studies detected:</b> which study each file belongs to</a></li>",
+    "<li><a href=\"#data-granularity\"><b>Data granularity:</b> per-participant or combined? (decides which files are read)</a></li>",
+    "<li><a href=\"#columns-their-types\"><b>Columns &amp; their types:</b> the variables inside your data</a></li>",
+    "<li><a href=\"#codebook-matching\"><b>Codebook matching:</b> are your variables documented?</a></li>",
+    "<li><a href=\"#psychds-conversion\"><b>PsychDS conversion:</b> how your repository was re-packaged</a></li>",
     "</ol>",
     "<p class=\"mut\">See <a href=\"#repository-quality\">Repository quality</a> for documentation feedback. Each step shows whether it was decided by rules or by a language model, with the model's reasoning available inline.</p>"
   )
   .card("Overview", NA, c(.ftiles(tiles),
-    if (length(exp_grp) > 0) .fp(sprintf("Experiment groups detected: %s.", paste(sort(exp_grp), collapse = ", "))) else character(0),
+    if (length(exp_grp) > 0) .fp(sprintf("Studies detected: %s.", paste(sort(exp_grp), collapse = ", "))) else character(0),
     roadmap))
 }
 
@@ -359,7 +369,7 @@ GROUP_HOW <- paste(
 .sec_groups <- function(st) {
   groups <- unique(st$group[!is.na(st$group) & st$group != ""])
   if (length(groups) == 0)
-    return(.card("Experimental groups", 2L,
+    return(.card("Studies detected", 2L,
                  c(.fp("No study groups were assigned."), .fhow(GROUP_HOW))))
 
   ordered <- .group_order(groups)
@@ -375,10 +385,10 @@ GROUP_HOW <- paste(
   type_hdr <- paste(vapply(types, function(t)
     sprintf("<span class=\"gth\">%s</span>", .fbadge(t, .ft_class(t))), character(1)), collapse = "")
   head_row <- sprintf(
-    "<div class=\"gtbl-head\" style=\"grid-template-columns:%s\"><span>Group</span><span>Files</span>%s<span></span></div>",
+    "<div class=\"gtbl-head\" style=\"grid-template-columns:%s\"><span>Study</span><span>Files</span>%s<span></span></div>",
     tmpl, type_hdr)
 
-  rows <- unlist(lapply(ordered, function(g) {
+  make_grow <- function(g) {
     sub <- st[st$group == g & !is.na(st$group), ]
     fls <- if ("rel_path" %in% names(sub)) sub$rel_path else sub$filename
     cnt <- table(factor(sub$type, levels = types))
@@ -393,12 +403,18 @@ GROUP_HOW <- paste(
       cells,
       "<span class=\"chev\" aria-hidden=\"true\">&#9656;</span>",
       "</summary>",
-      sprintf("<div class=\"grow-body\">%s</div>", paste(.ful(.cap_list(fls, 50L)), collapse = "")),
+      sprintf("<div class=\"grow-body\">%s</div>", paste(.ful(fls), collapse = "")),
       "</details>")
-  }))
+  }
+  study_rows  <- unlist(lapply(ordered[ordered != "shared"], make_grow))
+  shared_rows <- if ("shared" %in% ordered) {
+    c("<div class=\"gtbl-sep\">Files shared between experimental groups</div>",
+      make_grow("shared"))
+  } else character(0)
+  rows <- c(study_rows, shared_rows)
 
-  .card("Experimental groups", 2L,
-        c(.fp("Files in your repository are split across these study groups. Each column is a file type; click a group to list its files."),
+  .card("Studies detected", 2L,
+        c(.fp("Files in your repository are split across these studies. Each column is a file type; click a study to list its files."),
           "<div class=\"gtbl-wrap\"><div class=\"gtbl\">", head_row, rows, "</div></div>",
           .fhow(GROUP_HOW)))
 }
@@ -463,13 +479,14 @@ GROUP_HOW <- paste(
   g <- function(col) if (col %in% names(rows)) rows[[col]] else rep(NA, nrow(rows))
   sg <- g("study_group"); ndf <- g("n_data_files"); nrf <- g("n_raw_files")
   nv <- g("n_variables"); nl <- g("n_labelled"); ok <- g("success")
+  total_df <- suppressWarnings(as.integer(ndf) + as.integer(nrf))
   trows <- lapply(seq_len(nrow(rows)), function(i)
-    c(as.character(sg[i]), .fmt_num(ndf[i]), .fmt_num(nrf[i]), .fmt_num(nv[i]), .fmt_num(nl[i]),
+    c(as.character(sg[i]), .fmt_num(total_df[i]), .fmt_num(nv[i]), .fmt_num(nl[i]),
       if (isTRUE(as.logical(ok[i]))) "&#10003;" else "&#10007;"))
   parts <- c(parts,
     .fp("Each study group became its own PsychDS dataset:"),
-    .ftable(c("Study group", "Data files", "Raw-copied", "Variables", "Labelled", "OK"),
-            trows, raw_cols = c(6L)))
+    .ftable(c("Study group", "Data files", "Variables", "Labelled", "OK"),
+            trows, raw_cols = c(5L)))
   if (any(as.logical(g("has_paper_metadata")), na.rm = TRUE))
     parts <- c(parts, .fcallout("info", "Paper metadata (extracted from the manuscript with GROBID) was attached to the dataset description."))
   if (any(as.logical(g("has_ground_truth")), na.rm = TRUE))
@@ -503,7 +520,7 @@ GROUP_HOW <- paste(
   sc   <- .count_tbl(gsrc)
   rows <- lapply(seq_len(nrow(sc)), function(i) {
     s   <- sc$value[i]
-    why <- if (s %in% names(GRAN_SOURCE_EXPLAIN)) GRAN_SOURCE_EXPLAIN[[s]] else "—"
+    why <- if (s %in% names(GRAN_SOURCE_EXPLAIN)) GRAN_SOURCE_EXPLAIN[[s]] else "-"
     c(s, as.character(sc$n[i]), why)
   })
   tbl <- if (nrow(sc) > 0)
@@ -544,6 +561,10 @@ GROUP_HOW <- paste(
     if ("granularity_source" %in% names(st))
       gran_s <- setNames(st$granularity_source, st$rel_path)
   }
+  # Study group lookup
+  study_g <- character(0)
+  if (!is.null(st) && "rel_path" %in% names(st) && "group" %in% names(st))
+    study_g <- setNames(st$group, st$rel_path)
 
   multi_file <- length(unique(co$source_file)) > 1
   n_show     <- min(nrow(co), REPORT_MAX_VARS)
@@ -568,10 +589,17 @@ GROUP_HOW <- paste(
     label_txt <- if (labelled) l_label else "not labelled"
 
     # ── summary line (collapsed) ──
+    s_grp <- if (length(study_g) > 0 && src[i] %in% names(study_g)) study_g[[src[i]]] else NA_character_
+    study_slot <- sprintf("<span class=\"var-study\">%s</span>",
+      if (!is.na(s_grp) && nzchar(s_grp))
+        sprintf("<span class=\"badge b-gray\">%s</span>", .html_escape(s_grp))
+      else "")
     summ <- c("<summary>",
       sprintf("<span class=\"var-name\">%s</span>", .html_escape(nm[i])),
       sprintf("<span class=\"var-label%s\">%s</span>",
               if (labelled) "" else " none", .html_escape(label_txt)),
+      "<span></span>",
+      study_slot,
       .fbadge(ifelse(is.na(ctype[i]), "?", .ct_label(ctype[i])), .ct_class(ctype[i])),
       "<span class=\"chev\" aria-hidden=\"true\">&#9656;</span>",
       "</summary>")
@@ -644,9 +672,10 @@ GROUP_HOW <- paste(
   body <- unlist(lapply(seq_len(n_show), one_var))
   note <- if (nrow(co) > n_show)
     .fp(sprintf("Showing the first %d of %d columns.", n_show, nrow(co))) else character(0)
+  hdr <- "<div class=\"var-hdr\"><span>Variable</span><span>Description</span><span></span><span>Study</span><span>Type</span><span></span></div>"
   c("<h3 class=\"sub\">Every variable</h3>",
     .fp("Click a variable to see its inferred type (and how that was decided), its codebook label and how it was matched, granularity, sample values, and statistics."),
-    body, note)
+    hdr, body, note)
 }
 
 .sec_codebook <- function(st, lb, cov, traces = NULL) {
@@ -680,7 +709,7 @@ GROUP_HOW <- paste(
       callouts <- c(callouts, .fcallout("warn", sprintf(
         "%d codebook variable(s) were defined but not found in any data column. This is usually a naming mismatch between the codebook and the data headers.", n_unmatch)))
     if (n_labelled < n_total_cols && n_total_cols > 0)
-      callouts <- c(callouts, .fcallout("info", sprintf(
+      callouts <- c(callouts, .fcallout("warn", sprintf(
         "%d data column(s) have no codebook entry. Documenting these would make the dataset fully self-describing.", n_total_cols - n_labelled)))
     if (n_unmatch == 0 && n_labelled == n_total_cols && n_total_cols > 0)
       callouts <- c(callouts, .fcallout("good",
@@ -694,14 +723,24 @@ GROUP_HOW <- paste(
       "Some columns matched a variable that only appears in a different experiment's codebook (ambiguous_experiment). Check the codebook covers the right experiment."))
 
   lists <- character(0)
-  if (!has_no_codebook && !has_unparsed_codebook && n_unmatch > 0) {
-    unmatched_names <- cov$codebook_variable[cov$match_status == "unmatched_in_data"]
-    lists <- c(lists, .fp("Codebook variables not found in the data:"), .ful(.cap_list(unmatched_names)))
-  }
-  if (!has_no_codebook && !has_unparsed_codebook && !is.null(lb) && n_total_cols > 0) {
-    unl <- lb$column_name[lb$label_status == "unlabelled"]
-    if (length(unl[!is.na(unl)]) > 0)
-      lists <- c(lists, .fp("Data columns with no codebook entry:"), .ful(.cap_list(unl)))
+  if (!has_no_codebook && !has_unparsed_codebook) {
+    unmatched_names <- if (n_unmatch > 0) cov$codebook_variable[cov$match_status == "unmatched_in_data"] else character(0)
+    unl <- if (!is.null(lb) && n_total_cols > 0) {
+      v <- lb$column_name[lb$label_status == "unlabelled"]; v[!is.na(v)]
+    } else character(0)
+    if (length(unmatched_names) > 0 || length(unl) > 0) {
+      unmatched_names <- .cap_list(unmatched_names, 50L)
+      unl             <- .cap_list(unl, 50L)
+      nr <- max(length(unmatched_names), length(unl))
+      trows <- paste(vapply(seq_len(nr), function(k) {
+        a <- if (k <= length(unmatched_names)) sprintf("<code>%s</code>", .html_escape(unmatched_names[k])) else ""
+        b <- if (k <= length(unl))             sprintf("<code>%s</code>", .html_escape(unl[k]))             else ""
+        sprintf("<tr><td>%s</td><td>%s</td></tr>", a, b)
+      }, character(1)), collapse = "")
+      lists <- c(
+        "<table class=\"mlist\"><thead><tr><th>Codebook variable not in data</th><th>Data column without codebook entry</th></tr></thead><tbody>",
+        trows, "</tbody></table>")
+    }
   }
   .card("Codebook matching", 5L, c(.ftiles(tiles),
         "<p>Two views of the same matching: <b>labelled</b> is per data column (did this column get a description?); <b>coverage</b> is per codebook variable (was this defined variable found in the data?).</p>",
@@ -715,6 +754,7 @@ GROUP_HOW <- paste(
   has_codebook <- any(st$type == "codebook", na.rm = TRUE)
   pm   <- if (!is.null(cov)) cov$parse_method else character(0)
   machine_readable <- any(pm %in% c("structured", "haven"), na.rm = TRUE)
+  has_haven_cov    <- any(pm == "haven", na.rm = TRUE)
   lmeth   <- if (!is.null(lb)) lb$label_method else character(0)
   has_haven <- any(lmeth == "haven", na.rm = TRUE)
   status <- if (!is.null(lb)) lb$label_status else character(0)
@@ -739,8 +779,12 @@ GROUP_HOW <- paste(
   if (has_codebook)
     add(if (machine_readable) "good" else "info",
         if (machine_readable) "Machine-readable codebook" else "Codebook is free-text",
-        if (machine_readable) "Variable definitions were read directly from a spreadsheet or embedded labels."
-        else "Definitions had to be read by a language model. A CSV/XLSX data dictionary parses more reliably.")
+        if (has_haven_cov)
+          "Variable labels are embedded directly in your SPSS or Stata file — no separate codebook needed."
+        else if (machine_readable)
+          "Variable definitions were read directly from a structured spreadsheet (CSV/XLSX)."
+        else
+          "Definitions had to be read by a language model. A CSV/XLSX data dictionary parses more reliably.")
 
   if (has_haven)
     add("good", "Embedded value labels",
@@ -832,7 +876,7 @@ GROUP_HOW <- paste(
       c(sprintf("<div class=\"trace-meta\">%s</div>", .html_escape(meta)),
         sprintf("<pre class=\"trace\">%s</pre>", .trace_highlight(.html_escape(tr$thinking[i]))))
     }))
-    label <- sprintf("%s — %d LLM call%s%s", s, length(sel), if (length(sel) == 1) "" else "s",
+    label <- sprintf("%s: %d LLM call%s%s", s, length(sel), if (length(sel) == 1) "" else "s",
                      if (length(sel) > 20L) " (first 20 shown)" else "")
     .fdetails(label, blocks)
   }))
@@ -920,6 +964,7 @@ font-weight:600;line-height:1.5;white-space:nowrap;border:1px solid rgba(0,0,0,.
 .gtbl{border:1px solid var(--rule);border-radius:2px;overflow:hidden;width:100%}
 .gtbl-head,.grow-sum{display:grid;align-items:center;gap:.35rem;padding:.5rem .5rem}
 .gtbl-head>span,.grow-sum>span{min-width:0}
+.gtbl-sep{padding:.35rem .5rem;font-size:.72rem;font-weight:700;text-transform:uppercase;color:var(--mut);border-top:1px solid var(--rule);background:var(--bg);letter-spacing:.04em}
 .gtbl-head{background:transparent;color:var(--ink);font-size:.72rem;font-weight:700;
 text-transform:uppercase;letter-spacing:.03em;border-bottom:1.5px solid var(--ink)}
 .gth{display:flex;justify-content:center;text-align:center}
@@ -938,6 +983,11 @@ text-transform:uppercase;letter-spacing:.03em;border-bottom:1.5px solid var(--in
 .grow[open] .chev{transform:rotate(90deg)}
 .grow-body{padding:.4rem .9rem .7rem}
 .grow-body ul{margin:.3rem 0}
+.more-list>summary{list-style:none;cursor:pointer;color:var(--mut);font-size:.88rem;padding:.1rem 0}
+.more-list>summary::-webkit-details-marker{display:none}
+.more-list>summary::before{content:\"\\25B8  \";font-size:.75em}
+.more-list[open]>summary::before{content:\"\\25BE  \";font-size:.75em}
+.more-list>ul{margin:.2rem 0 .2rem .8rem}
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.6rem;margin:.3rem 0 .7rem}
 .tile{background:#fff;border:1px solid var(--rule);border-radius:2px;padding:.6rem .8rem}
 .tile-val{font-size:1.4rem;font-weight:700;color:var(--ink)}
@@ -956,8 +1006,10 @@ flex-wrap:wrap;padding:.6rem .8rem;user-select:none}
 .step-body p{margin:.6rem 0 0;color:var(--ink)}
 .var{border:1px solid var(--rule);border-radius:2px;margin:.35rem 0;background:#fff}
 .var[open]{border-color:#bdbdbd}
+.var-hdr{display:grid;grid-template-columns:170px minmax(0,380px) 1fr 80px 110px 16px;gap:.55rem;padding:.3rem .7rem;font-size:.72rem;font-weight:700;text-transform:uppercase;color:var(--mut);letter-spacing:.04em;border-bottom:1px solid var(--rule)}
 .var>summary{list-style:none;cursor:pointer;display:grid;
-grid-template-columns:170px 1fr 130px 16px;align-items:center;gap:.55rem;padding:.45rem .7rem}
+grid-template-columns:170px minmax(0,380px) 1fr 80px 110px 16px;align-items:center;gap:.55rem;padding:.45rem .7rem}
+.var-study{display:flex;justify-content:flex-end;min-width:0}
 .var>summary::-webkit-details-marker{display:none}
 .var>summary:hover{background:#f7f7f5}
 .var[open]>summary{border-bottom:1px solid var(--rule2)}
@@ -981,9 +1033,9 @@ border-left-width:3px;border-radius:2px;padding:.55rem .8rem;margin:.4rem 0;back
 .check .ci{font-weight:700;flex:0 0 auto;font-size:1.05rem;line-height:1.4}
 .check-t b{font-weight:700}
 .check-d{color:var(--mut);font-size:.88rem;margin-top:.1rem}
-.check.good{border-left-color:#38573b}.check.good .ci{color:#38573b}
-.check.warn{border-left-color:#8a6a2c}.check.warn .ci{color:#8a6a2c}
-.check.info{border-left-color:#33475b}.check.info .ci{color:#33475b}
+.check.good{border-left-color:#27692b;background:#e2f0df}.check.good .ci{color:#27692b}
+.check.warn{border-left-color:#a05f10;background:#f8edda}.check.warn .ci{color:#a05f10}
+.check.info{border-left-color:#25506e;background:#e0eaf4}.check.info .ci{color:#25506e}
 .trace-meta{color:var(--mut);font-size:.78rem;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;margin:.5rem 0 .15rem}
 .trace{background:#f6f5f1;color:#2a2a2a;border:1px solid var(--rule);border-radius:2px;padding:.6rem .8rem;margin:0 0 .3rem;
 font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8rem;line-height:1.6;
@@ -1015,12 +1067,16 @@ footer{color:var(--mut);font-size:.82rem;text-align:center;margin:1rem 0}
               slugs[i], marker(cards[[i]]$step), .html_escape(cards[[i]]$title)))),
     "</div></div>")
 
+  intro_card <- c("<div class=\"side-card\">",
+    sprintf("<p class=\"mut\" style=\"font-size:.82rem\">%s</p>", .html_escape(REPORT_INTRO)),
+    "</div>")
+
   sidebar <- c("<aside class=\"sidebar\">",
     "<div class=\"side-card brand\">",
     "<h1>DataCheck report</h1>",
     sprintf("<p class=\"meta\">%s<br>source: %s &middot; %s</p>",
             .html_escape(paper_id), .html_escape(source), format(Sys.Date(), "%Y-%m-%d")),
-    "</div>", kp, toc, "</aside>")
+    "</div>", intro_card, kp, toc, "</aside>")
 
   # ── Main column ──
   card_html <- unlist(lapply(seq_along(cards), function(i) {
@@ -1031,7 +1087,6 @@ footer{color:var(--mut);font-size:.82rem;text-align:center;margin:1rem 0}
       cd$html, "</section>")
   }))
   main <- c("<div class=\"main\">",
-    sprintf("<div class=\"lead\">%s</div>", .html_escape(REPORT_INTRO)),
     card_html,
     "<footer>Generated by DataCheck · this report reads existing pipeline outputs only.</footer>",
     "</div>")
@@ -1039,7 +1094,7 @@ footer{color:var(--mut);font-size:.82rem;text-align:center;margin:1rem 0}
   c("<!DOCTYPE html>", "<html lang=\"en\">", "<head>",
     "<meta charset=\"utf-8\">",
     "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">",
-    sprintf("<title>DataCheck report — %s</title>", .html_escape(paper_id)),
+    sprintf("<title>DataCheck report: %s</title>", .html_escape(paper_id)),
     sprintf("<style>%s</style>", .HTML_STYLE),
     "</head>", "<body>", "<div class=\"wrap\"><div class=\"layout\">",
     sidebar, main,
@@ -1067,12 +1122,12 @@ run_report <- function(paper_id, source = "osf", out_dir = NULL) {
 
   cards <- list(
     .sec_overview(st, n_columns),
+    .sec_quality(st, co, lb, cov),
     .sec_files(st, traces),
     .sec_groups(st),
     .sec_granularity(st, traces),
     .sec_columns(co, lb, st, traces),
     .sec_codebook(st, lb, cov, traces),
-    .sec_quality(st, co, lb, cov),
     .sec_psychds(paper_id, out_dir)
   )
 
