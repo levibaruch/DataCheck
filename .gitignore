@@ -9,6 +9,7 @@
 # Data & outputs (large/generated)
 data/
 outputs/*/
+!outputs/example_outputs
 psychds/*/
 psychds/*.csv
 !psychds/EXPERIMENTAL.txt

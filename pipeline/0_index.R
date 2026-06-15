@@ -61,6 +61,10 @@ if (!exists("MAX_COL_TYPE_LLM_CALLS"))      MAX_COL_TYPE_LLM_CALLS      <- 5L
 if (!exists("MAX_CHAR_COL_TYPE_LLM_CALLS")) MAX_CHAR_COL_TYPE_LLM_CALLS <- 3L
 if (!exists("MAX_GRANULARITY_LLM_CALLS"))   MAX_GRANULARITY_LLM_CALLS   <- 1L  # US3: max LLM calls for granularity (aggregate folders with unclear signals)
 if (!exists("MAX_DATA_FILES"))              MAX_DATA_FILES              <- Inf  # cap on tabular data files to column-extract per paper (Inf = no cap)
+# Cap on structure-classification LLM calls (Phase 1 + Phase 2) per paper. A paper
+# needing more is skipped with a too_large error rather than grinding thousands of
+# batches. Default: no cap on full runs, 10 otherwise. Override from the runner.
+if (!exists("MAX_LLM_CALLS"))               MAX_LLM_CALLS               <- if (isTRUE(FULL_RUN)) Inf else 10L
 if (!exists("FULL_RUN"))                    FULL_RUN                    <- FALSE
 if (!exists("SKIP_COLUMNS"))               SKIP_COLUMNS                <- FALSE  # TRUE = skip column extraction entirely
 if (!exists("COLUMNS_ONLY"))               COLUMNS_ONLY                <- FALSE  # TRUE = skip download+LLM, read existing structure.csv, run columns only
@@ -562,10 +566,9 @@ run_index <- function(paper_id = NA, download = TRUE, output_dir = NULL, structu
   if (!is_dv) t_download <- proc.time()[["elapsed"]] - t_download_start
 
   t_llm_start   <- proc.time()[["elapsed"]]
-  MAX_LLM_CALLS <- 10
   n_p1_calls <- ceiling(length(llm_paths) / LLM_BATCH_SIZE)
   n_p2_calls <- ceiling(length(agg_groups_list) / LLM_BATCH_SIZE)
-  if (!FULL_RUN && (n_p1_calls + n_p2_calls) > MAX_LLM_CALLS) {
+  if ((n_p1_calls + n_p2_calls) > MAX_LLM_CALLS) {
     stop("too_large: ", length(llm_paths), " individual + ", length(agg_groups_list),
          " aggregate paths would require ", n_p1_calls + n_p2_calls,
          " LLM calls (max ", MAX_LLM_CALLS, ")")

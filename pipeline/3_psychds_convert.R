@@ -435,12 +435,17 @@ fetch_crossref_meta <- function(doi, cache_dir = CROSSREF_CACHE_DIR) {
     ua  <- paste0("DataCheck/", PIPELINE_VERSION,
                   " (https://github.com/levibaruch/DataCheck; mailto:",
                   CROSSREF_MAILTO, ")")
-    raw <- tryCatch({
+    # suppressWarnings: candidate DOIs are guesses (GROBID often appends junk to
+    # the DOI tail), so a 404 on an early candidate is expected — R otherwise
+    # emits a noisy "cannot open URL ... 404" warning before the connection
+    # error is caught below. The real "no record found" warning still fires
+    # once all candidates are exhausted.
+    raw <- suppressWarnings(tryCatch({
       con <- url(api_url, headers = c("User-Agent" = ua))
       on.exit(close(con), add = TRUE)
       old_to <- options(timeout = CROSSREF_TIMEOUT_SEC); on.exit(options(old_to), add = TRUE)
       paste(readLines(con, warn = FALSE), collapse = "\n")
-    }, error = function(e) NULL)
+    }, error = function(e) NULL))
     if (is.null(raw) || !nzchar(raw)) return(NULL)
     parsed <- tryCatch(jsonlite::fromJSON(raw, simplifyVector = FALSE),
                        error = function(e) NULL)
