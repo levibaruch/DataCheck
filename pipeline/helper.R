@@ -820,19 +820,39 @@ normalize_varname <- function(x) {
   x
 }
 
+# Reduce each word in a label to its root using the Porter stemming algorithm
+# (SnowballC::wordStem). Falls back to a crude trailing-"s" stripper when
+# SnowballC is unavailable, so the pipeline still runs in minimal environments
+# (Principle I: Crash Resilience). Operates on one already-lowercased,
+# punctuation-stripped string and returns the space-joined stemmed words.
+.stem_words <- local({
+  have_snowball <- NULL  # cached availability check
+  function(s) {
+    if (is.null(have_snowball))
+      have_snowball <<- requireNamespace("SnowballC", quietly = TRUE)
+    words <- strsplit(s, " ", fixed = TRUE)[[1]]
+    words <- words[nzchar(words)]
+    if (length(words) == 0) return("")
+    if (isTRUE(have_snowball)) {
+      stemmed <- tryCatch(SnowballC::wordStem(words, language = "porter"),
+                          error = function(e) NULL)
+      if (!is.null(stemmed)) return(paste(stemmed, collapse = " "))
+    }
+    # Fallback: strip a single trailing "s" from words of >= 8 chars.
+    paste(sub("^([a-z]{7,})s$", "\\1", words, perl = TRUE), collapse = " ")
+  }
+})
+
 # Normalise a label string for semantic-equivalence comparison.
-# Strips possessives, punctuation, pluralising "s", and extra whitespace so
-# that minor wording differences (e.g. "Participants' age" vs "Participant age")
-# normalise to the same string.
+# Strips possessives and punctuation, applies Porter stemming, and collapses
+# whitespace so that minor wording differences (e.g. "Participants' responses"
+# vs "Participant response") normalise to the same string.
 normalize_label <- function(x) {
   x <- tolower(x)
   x <- gsub("'s|'s|\u2019s|\u2018s", "", x, perl = TRUE)  # strip possessives (straight + curly)
   x <- gsub("[^a-z0-9 ]", " ", x)                          # non-alphanumeric → space
-  # Strip trailing "s" from words of ≥ 8 total chars (handles "participants" → "participant",
-  # "feelings" → "feeling", "responses" → "response") while leaving short words intact
-  x <- gsub("\\b([a-z]{7,})s\\b", "\\1", x, perl = TRUE)
   x <- gsub("\\s+", " ", trimws(x))                        # collapse whitespace
-  x
+  vapply(x, .stem_words, character(1), USE.NAMES = FALSE)  # Porter stem each word
 }
 
 # Scan a data.frame's column headers for a "variable name" column and a

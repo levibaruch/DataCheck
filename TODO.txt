@@ -1,6 +1,26 @@
 TODO — metacheck-datacheck pipeline
 
 ────────────────────────────────────────────────────────────────────────────────
+[BUG] LLM echoes enumerated 'N. ' ordinal into path field → whole batch collapses to other/shared
+  The structure prompt sends files as a numbered list ("1. `path`", "2. `path`", ...).
+  Some models copy the leading ordinal into the returned JSON `path` field
+  (e.g. "1. When_Knowledge.../Study1a_finances"). The pipeline matches the LLM
+  response back to the file list by EXACT string on path
+  (match(non_agg_relpaths, structure_parsed$path) at 0_index.R:819-832), so every
+  file misses → falls to fallback_vals type="other", group="shared". The model's
+  classification is otherwise correct (visible in the thinking trace); only the join
+  fails. Effect: the whole repo scores 0 (e.g. paper 0956797615588195 in the
+  gpt-oss-120b-low_json eval — all 20 files → other/shared, macro/micro/acc = 0).
+  Frequency (eval step2, batches of size >=2, signature = all-other & all-shared):
+  26 collapsed batches / 345 files / 23 (paper,config) pairs; concentrated in json
+  format + weaker models (llama3.1-8b = 22 batches); gpt-oss-120b-low_json = 1.
+  Likely fix: strip a leading "^[0-9]+\.\s*" ordinal from the returned path before
+  the match (and/or match on basename as a fallback). Conservative count — n>=2
+  threshold excludes single-file batches, so true frequency is higher.
+  Location: pipeline/0_index.R:819-832 (match + fallback), prompt enumeration upstream
+  Status: PENDING
+
+────────────────────────────────────────────────────────────────────────────────
 [IMPROVEMENT] Map 'other' file type to other/ folder in PsychDS output, not documentation/
   Files classified as 'other' (lock files, OS metadata, github configs etc.) have no
   research relevance and should not be placed in documentation/. Create a separate
@@ -15,8 +35,11 @@ TODO — metacheck-datacheck pipeline
   (e.g. "continuous" → "continuou"). Replace with SnowballC::wordStem() using
   the Porter algorithm for correct plural normalization.
   Package: SnowballC (already on CRAN, base R compatible)
-  Location: normalize_varname() in pipeline/helper.R
-  Status: PENDING
+  Location: normalize_label() in pipeline/helper.R (not normalize_varname —
+            the trailing-s strip lived in label normalization)
+  Status: DONE — normalize_label() now stems each word via
+          SnowballC::wordStem(language = "porter"), with the crude trailing-s
+          stripper retained as a fallback when SnowballC is unavailable.
 
 ────────────────────────────────────────────────────────────────────────────────
 [FEATURE] Add deterministic ordinal detection rule to col_type cascade
