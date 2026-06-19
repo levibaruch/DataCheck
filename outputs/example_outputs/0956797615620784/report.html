@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DataCheck report: 0956797615620784</title>
+<style>
+:root{--blue:#2f4a63;--green:#38573b;--purple:#4a3d63;--teal:#2f5650;
+--orange:#7a5a2c;--indigo:#3d3f63;--slate:#3a4452;--gray:#3a3a3a;
+--pink:#6b3a4d;--red:#7a2c2c;--cyan:#2f5650;--brand:#33475b;
+--bg:#ffffff;--card:#ffffff;--ink:#1a1a1a;--mut:#555555;--rule:#cfcfcf;--rule2:#e3e3e3}
+*{box-sizing:border-box}
+body{font-family:Georgia,"Times New Roman",Times,serif;
+background:var(--bg);color:var(--ink);line-height:1.55;margin:0;padding:2rem 1rem;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1440px;width:94%;margin:0 auto}
+.layout{display:grid;grid-template-columns:250px 1fr;gap:1.8rem;align-items:start}
+.sidebar{position:sticky;top:1.2rem;display:flex;flex-direction:column;gap:1rem}
+.main{min-width:0}
+h1{font-size:1.4rem;margin:0 0 .15rem;line-height:1.2;font-weight:700}
+.meta{color:var(--mut);margin:0;font-size:.85rem;word-break:break-all}
+.side-card{background:var(--card);border:1px solid var(--rule);border-radius:2px;padding:.9rem 1rem}
+.kpanel{display:flex;flex-direction:column;gap:0}
+.kp{display:flex;align-items:baseline;justify-content:space-between;gap:.5rem;
+border-bottom:1px solid var(--rule2);padding:.32rem 0}
+.kp:last-child{border-bottom:none}
+.kp-v{font-size:1.1rem;font-weight:700;color:var(--ink)}
+.kp-l{color:var(--mut);font-size:.82rem;text-align:right}
+.toc{display:flex;flex-direction:column;gap:.05rem}
+.toc-h{color:var(--mut);font-size:.72rem;font-weight:700;text-transform:uppercase;
+letter-spacing:.06em;margin:.1rem 0 .4rem}
+.toc a{display:flex;align-items:center;gap:.5rem;color:var(--ink);text-decoration:none;
+font-size:.88rem;padding:.2rem .25rem}
+.toc a:hover{color:var(--brand);text-decoration:underline}
+.toc a:hover .num{border-color:var(--brand);color:var(--brand)}
+.nav-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#b0b0b0;
+flex:0 0 auto;margin:0 .2rem}
+/* numbered chip: outlined square, document-style (no filled accent) */
+.toc .num{display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;
+border:1px solid var(--ink);border-radius:2px;background:transparent;color:var(--ink);font-size:.74rem;font-weight:700;flex:0 0 auto}
+.brand{border-left:3px solid var(--brand)}
+.lead{background:var(--card);border:1px solid var(--rule);border-radius:2px;padding:1rem 1.25rem;margin-bottom:1.25rem}
+@media(max-width:760px){.layout{grid-template-columns:1fr}
+.sidebar{position:static}.toc{display:none}
+.var>summary{display:flex;flex-wrap:wrap;gap:.4rem}}
+.card{background:var(--card);border:1px solid var(--rule);border-radius:2px;padding:1rem 1.3rem 1.3rem;margin-bottom:1.3rem}
+.card h2{font-size:1.25rem;margin:.1rem 0 .9rem;color:var(--ink);scroll-margin-top:1.2rem;font-weight:700;
+display:flex;align-items:center;gap:.55rem;padding-bottom:.4rem;border-bottom:1px solid var(--rule)}
+.card h2 .num{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;
+border:1.5px solid var(--brand);border-radius:2px;background:transparent;color:var(--brand);font-size:.95rem;font-weight:700;flex:0 0 auto}
+h3.sub{font-size:1rem;margin:1.1rem 0 .2rem;color:var(--ink);font-weight:700}
+.roadmap{margin:.4rem 0 .2rem;padding-left:1.3rem}
+.roadmap li{margin:.3rem 0}
+.roadmap a{color:var(--ink);text-decoration:none}
+.roadmap a:hover{color:var(--brand);text-decoration:underline}
+.how{margin:.7rem 0 .2rem;border:1px solid var(--rule);border-radius:2px;background:#faf9f6}
+.how>summary{list-style:none;cursor:pointer;padding:.5rem .8rem;font-size:.88rem;font-weight:700;
+color:var(--brand);user-select:none}
+.how>summary::-webkit-details-marker{display:none}
+.how>summary::before{content:"\25B8  ";color:var(--mut)}
+.how[open]>summary::before{content:"\25BE  "}
+.how-body{padding:0 .9rem .7rem;font-size:.92rem}
+.how-body p{margin:.5rem 0 0}
+.tree{background:#f6f5f1;color:#2a2a2a;border:1px solid var(--rule);border-radius:2px;padding:.7rem .9rem;margin:.4rem 0 0;
+font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.82rem;line-height:1.5;
+overflow-x:auto;white-space:pre}
+p{margin:.5rem 0}
+table{border-collapse:collapse;width:100%;margin:.7rem 0;font-size:.92rem}
+th,td{border-bottom:1px solid var(--rule2);padding:.4rem .55rem;text-align:left;vertical-align:top}
+th{background:transparent;color:var(--ink);font-weight:700;border-bottom:1.5px solid var(--ink)}
+tbody tr:hover{background:#f7f7f5}
+.badge{display:inline-block;padding:.1rem .42rem;border-radius:3px;font-size:.8rem;
+font-weight:600;line-height:1.5;white-space:nowrap;border:1px solid rgba(0,0,0,.1)}
+.badge b{font-weight:700;margin-left:.15rem}
+.b-blue{background:#e7edf3;color:#2f4a63}.b-green{background:#e9efe8;color:#38573b}
+.b-purple{background:#ece9f1;color:#4a3d63}.b-teal{background:#e4eeec;color:#2f5650}
+.b-orange{background:#f1ece1;color:#7a5a2c}.b-indigo{background:#e9eaf1;color:#3d3f63}
+.b-slate{background:#e9ecef;color:#3a4452}.b-gray{background:#eeeeee;color:#3a3a3a}
+.b-pink{background:#f1e7ec;color:#6b3a4d}.b-red{background:#f1e3e3;color:#7a2c2c}
+.dist{display:flex;flex-wrap:wrap;gap:.4rem;margin:.5rem 0}
+.gtbl-wrap{margin:.6rem 0}
+.gtbl{border:1px solid var(--rule);border-radius:2px;overflow:hidden;width:100%}
+.gtbl-head,.grow-sum{display:grid;align-items:center;gap:.35rem;padding:.5rem .5rem}
+.gtbl-head>span,.grow-sum>span{min-width:0}
+.gtbl-sep{padding:.35rem .5rem;font-size:.72rem;font-weight:700;text-transform:uppercase;color:var(--mut);border-top:1px solid var(--rule);background:var(--bg);letter-spacing:.04em}
+.gtbl-head{background:transparent;color:var(--ink);font-size:.72rem;font-weight:700;
+text-transform:uppercase;letter-spacing:.03em;border-bottom:1.5px solid var(--ink)}
+.gth{display:flex;justify-content:center;text-align:center}
+.gtbl-head .gth .badge{font-size:.66rem;white-space:normal;line-height:1.2;letter-spacing:.02em}
+.grow{border-top:1px solid var(--rule2)}
+.grow:first-of-type{border-top:none}
+.grow>summary{list-style:none;cursor:pointer;user-select:none}
+.grow>summary::-webkit-details-marker{display:none}
+.grow>summary:hover{background:#f7f7f5}
+.gname{font-weight:700;font-size:.92rem;justify-self:start}
+.gcount,.gn,.gz,.gth{justify-self:center}
+.gcount{font-weight:700;color:var(--ink)}
+.gn{font-weight:600}
+.gz{color:#b8b8b8}
+.grow[open]>summary{border-bottom:1px solid var(--rule2);background:#f7f7f5}
+.grow[open] .chev{transform:rotate(90deg)}
+.grow-body{padding:.4rem .9rem .7rem}
+.grow-body ul{margin:.3rem 0}
+.more-list>summary{list-style:none;cursor:pointer;color:var(--mut);font-size:.88rem;padding:.1rem 0}
+.more-list>summary::-webkit-details-marker{display:none}
+.more-list>summary::before{content:"\25B8  ";font-size:.75em}
+.more-list[open]>summary::before{content:"\25BE  ";font-size:.75em}
+.more-list>ul{margin:.2rem 0 .2rem .8rem}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.6rem;margin:.3rem 0 .7rem}
+.tile{background:#fff;border:1px solid var(--rule);border-radius:2px;padding:.6rem .8rem}
+.tile-val{font-size:1.4rem;font-weight:700;color:var(--ink)}
+.tile-lab{color:var(--mut);font-size:.85rem}
+.step{border:1px solid var(--rule);border-radius:2px;margin:.5rem 0;background:#fff;overflow:hidden}
+.step[open]{border-color:#bdbdbd}
+.step>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:.6rem;
+flex-wrap:wrap;padding:.6rem .8rem;user-select:none}
+.step>summary::-webkit-details-marker{display:none}
+.step>summary:hover{background:#f7f7f5}
+.step-title{font-weight:700;flex:0 0 auto}
+.step-gist{color:var(--mut);font-size:.9rem;flex:1 1 200px;min-width:160px}
+.chev{color:var(--mut);transition:transform .15s ease;flex:0 0 auto}
+.step[open] .chev{transform:rotate(90deg)}
+.step-body{padding:0 .9rem .7rem;border-top:1px solid var(--rule2)}
+.step-body p{margin:.6rem 0 0;color:var(--ink)}
+.var{border:1px solid var(--rule);border-radius:2px;margin:.35rem 0;background:#fff}
+.var[open]{border-color:#bdbdbd}
+.var-hdr{display:grid;grid-template-columns:170px minmax(0,380px) 1fr 80px 110px 16px;gap:.55rem;padding:.3rem .7rem;font-size:.72rem;font-weight:700;text-transform:uppercase;color:var(--mut);letter-spacing:.04em;border-bottom:1px solid var(--rule)}
+.var>summary{list-style:none;cursor:pointer;display:grid;
+grid-template-columns:170px minmax(0,380px) 1fr 80px 110px 16px;align-items:center;gap:.55rem;padding:.45rem .7rem}
+.var-study{display:flex;justify-content:flex-end;min-width:0}
+.var>summary::-webkit-details-marker{display:none}
+.var>summary:hover{background:#f7f7f5}
+.var[open]>summary{border-bottom:1px solid var(--rule2)}
+.var[open] .chev{transform:rotate(90deg)}
+.var-name{font-weight:700;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.9rem}
+.var-label{color:#333;font-size:.88rem;min-width:0}
+.var-label.none{color:var(--mut);font-style:italic}
+.var-body{padding:.4rem .8rem .7rem}
+.spec{display:grid;grid-template-columns:max-content 1fr;gap:.3rem .9rem;font-size:.9rem}
+.spec-k{color:var(--mut);font-weight:700}
+.spec-v{color:var(--ink)}
+.mut{color:var(--mut)}
+.callout{display:flex;gap:.6rem;align-items:flex-start;border:1px solid var(--rule);border-left-width:3px;border-radius:2px;
+padding:.55rem .8rem;margin:.55rem 0;font-size:.93rem}
+.callout .ci{font-weight:700;flex:0 0 auto}
+.callout.good{background:#eef2ec;border-left-color:#38573b;color:#2f4a2f}
+.callout.warn{background:#f5efe3;border-left-color:#8a6a2c;color:#5f441f}
+.callout.info{background:#eceff3;border-left-color:#33475b;color:#2f4257}
+.check{display:flex;gap:.6rem;align-items:flex-start;border:1px solid var(--rule);
+border-left-width:3px;border-radius:2px;padding:.55rem .8rem;margin:.4rem 0;background:#fff;font-size:.92rem}
+.check .ci{font-weight:700;flex:0 0 auto;font-size:1.05rem;line-height:1.4}
+.check-t b{font-weight:700}
+.check-d{color:var(--mut);font-size:.88rem;margin-top:.1rem}
+.check.good{border-left-color:#27692b;background:#e2f0df}.check.good .ci{color:#27692b}
+.check.warn{border-left-color:#a05f10;background:#f8edda}.check.warn .ci{color:#a05f10}
+.check.info{border-left-color:#25506e;background:#e0eaf4}.check.info .ci{color:#25506e}
+.trace-meta{color:var(--mut);font-size:.78rem;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;margin:.5rem 0 .15rem}
+.trace{background:#f6f5f1;color:#2a2a2a;border:1px solid var(--rule);border-radius:2px;padding:.6rem .8rem;margin:0 0 .3rem;
+font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8rem;line-height:1.6;
+white-space:pre-wrap;word-break:break-word;max-height:340px;overflow-y:auto}
+.trace .kw{padding:0 .25rem;border-radius:2px;font-weight:700;border:1px solid rgba(0,0,0,.12)}
+.trace .kw-grp{font-weight:700;text-decoration:underline}
+ul{margin:.4rem 0 .6rem}
+footer{color:var(--mut);font-size:.82rem;text-align:center;margin:1rem 0}
+</style>
+</head>
+<body>
+<div class="wrap"><div class="layout">
+<aside class="sidebar">
+<div class="side-card brand">
+<h1>DataCheck report</h1>
+<p class="meta">0956797615620784<br>source: osf &middot; 2026-06-09</p>
+</div>
+<div class="side-card">
+<p class="mut" style="font-size:.82rem">This report summarises what DataCheck did with your repository. It scanned the repository, classified every file, extracted all columns of each tabular dataset, determined the variable type of each of those columns, and matched the columns to variables in any codebooks you added. Below you can follow the process step by step, see where an LLM was used, and get feedback on a few best practices for sharing repositories.</p>
+</div>
+<div class="side-card"><div class="kpanel">
+<div class="kp"><span class="kp-v">3</span><span class="kp-l">files</span></div>
+<div class="kp"><span class="kp-v">1</span><span class="kp-l">data files</span></div>
+<div class="kp"><span class="kp-v">11</span><span class="kp-l">columns</span></div>
+<div class="kp"><span class="kp-v">100%</span><span class="kp-l">columns labelled</span></div>
+<div class="kp"><span class="kp-v">0</span><span class="kp-l">per-participant files</span></div>
+</div></div>
+<div class="side-card"><div class="toc"><div class="toc-h">Contents</div>
+<a href="#overview"><span class="nav-dot"></span>Overview</a>
+<a href="#repository-quality"><span class="nav-dot"></span>Repository quality</a>
+<a href="#files-found"><span class="num">1</span>Files found</a>
+<a href="#studies-detected"><span class="num">2</span>Studies detected</a>
+<a href="#data-granularity"><span class="num">3</span>Data granularity</a>
+<a href="#columns-their-types"><span class="num">4</span>Columns &amp; their types</a>
+<a href="#codebook-matching"><span class="num">5</span>Codebook matching</a>
+<a href="#psychds-conversion"><span class="num">6</span>PsychDS conversion</a>
+</div></div>
+</aside>
+<div class="main">
+<section class="card">
+<h2 id="overview">Overview</h2>
+<div class="tiles">
+<div class="tile"><div class="tile-val">3</div><div class="tile-lab">files</div></div>
+<div class="tile"><div class="tile-val">11</div><div class="tile-lab">columns</div></div>
+<div class="tile"><div class="tile-val">0</div><div class="tile-lab">studies detected</div></div>
+</div>
+<p>DataCheck processed your repository in these stages. The numbered sections below follow that order:</p>
+<ol class="roadmap">
+<li><a href="#files-found"><b>Files found:</b> every file sorted into a type</a></li>
+<li><a href="#studies-detected"><b>Studies detected:</b> which study each file belongs to</a></li>
+<li><a href="#data-granularity"><b>Data granularity:</b> per-participant or combined? (decides which files are read)</a></li>
+<li><a href="#columns-their-types"><b>Columns &amp; their types:</b> the variables inside your data</a></li>
+<li><a href="#codebook-matching"><b>Codebook matching:</b> are your variables documented?</a></li>
+<li><a href="#psychds-conversion"><b>PsychDS conversion:</b> how your repository was re-packaged</a></li>
+</ol>
+<p class="mut">See <a href="#repository-quality">Repository quality</a> for documentation feedback. Each step shows whether it was decided by rules or by a language model, with the model's reasoning available inline.</p>
+</section>
+<section class="card">
+<h2 id="repository-quality">Repository quality</h2>
+<p>A quick health check of how well your repository documents itself. <b>3 of 5</b> indicators look good.</p>
+<div class="check warn"><span class="ci">&#9888;</span><div class="check-t"><b>No README</b><div class="check-d">Add a README describing the study, the files, and how to reproduce the results.</div></div></div>
+<div class="check good"><span class="ci">&#10003;</span><div class="check-t"><b>Codebook present</b><div class="check-d">A codebook / data dictionary documents your variables.</div></div></div>
+<div class="check info"><span class="ci">&#9432;</span><div class="check-t"><b>Codebook is free-text</b><div class="check-d">Definitions had to be read by a language model. A CSV/XLSX data dictionary parses more reliably.</div></div></div>
+<div class="check good"><span class="ci">&#10003;</span><div class="check-t"><b>All 11 columns documented</b><div class="check-d">Every data column matched a codebook description.</div></div></div>
+<div class="check good"><span class="ci">&#10003;</span><div class="check-t"><b>All codebook variables found</b><div class="check-d">Every variable defined in the codebook was located in the data.</div></div></div>
+<div class="callout info"><span class="ci">&#9432;</span><span>These indicators reflect documentation quality for sharing and reuse. They are guidance, not a judgement of your research.</span></div>
+</section>
+<section class="card">
+<h2 id="files-found"><span class="num">1</span>Files found</h2>
+<p>DataCheck downloaded your repository, unpacked archives, and sorted every file into a type.</p>
+<p>Files by type:</p>
+<div class="dist">
+<span class="badge b-green">code <b>1</b></span>
+<span class="badge b-purple">codebook <b>1</b></span>
+<span class="badge b-blue">data <b>1</b></span>
+</div>
+<details class="how"><summary>What each type means</summary><div class="how-body">
+<table>
+<thead><tr>
+<th>Type</th>
+<th>What it means</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><span class="badge b-blue">data</span></td>
+<td>Files holding the research measurements to be analysed: spreadsheets (CSV, SAV, XLSX, etc.) and raw recordings (EEG, MATLAB, video).</td>
+</tr>
+<tr>
+<td><span class="badge b-purple">codebook</span></td>
+<td>A document describing what each variable means: a data dictionary or coding key.</td>
+</tr>
+<tr>
+<td><span class="badge b-green">code</span></td>
+<td>Analysis scripts (R, Python, MATLAB, etc.) that produce the analyses or results, also known as 'analysis' files. Not the experiment program.</td>
+</tr>
+<tr>
+<td><span class="badge b-slate">software</span></td>
+<td>The experiment program itself: stimulus/task software, installers, build files, compiled binaries.</td>
+</tr>
+<tr>
+<td><span class="badge b-orange">output</span></td>
+<td>Files produced by running a script: rendered notebooks, generated figures, log files.</td>
+</tr>
+<tr>
+<td><span class="badge b-teal">supplemental</span></td>
+<td>Human-authored material that is not data, code, or a codebook: both the manuscript (papers, reports, preregistrations) and study materials (survey instruments, consent forms).</td>
+</tr>
+<tr>
+<td><span class="badge b-gray">readme</span></td>
+<td>README, LICENSE, or CONTRIBUTING files.</td>
+</tr>
+<tr>
+<td><span class="badge b-pink">asset</span></td>
+<td>Stimuli shown to participants: images, audio, or video used in the study.</td>
+</tr>
+<tr>
+<td><span class="badge b-gray">other</span></td>
+<td>No research content: OS metadata, lock files, environment config, and the like.</td>
+</tr>
+<tr>
+<td><span class="badge b-red">llm_error</span></td>
+<td>A file the classification step could not label after retries. Review it manually.</td>
+</tr>
+</tbody>
+</table>
+</div></details>
+<p>How each file's type was decided:</p>
+<table>
+<thead><tr>
+<th>Method</th>
+<th>Files</th>
+<th>What it means</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>llm</td>
+<td>3</td>
+<td>a language model, classified directly</td>
+</tr>
+</tbody>
+</table>
+<details class="how"><summary>How this step works</summary><div class="how-body">
+<p>If not downloaded yet, DataCheck fetches all files from the OSF link you supplied. It then recursively extracts archives within the repository (.zip, .tar, .rar) and ignores duplicate files (files with the same name and exact size).</p>
+<p>All files within the repository are classified into one of nine types: data, code, codebook, software, output, supplemental, readme, asset, or other. Files are classified based on their purpose; each category is defined under "What each type means" in the Files found section. Besides the type, the experimental group (in multi-study repositories) is classified by an LLM. Finally, for every data file the granularity (whether the file holds measurements of one or of multiple participants) is determined here. Classification combines deterministic rules with LLM inference; the LLM sees only the file name and path.</p>
+</div></details>
+<details class="how"><summary>Show the model's reasoning for these classifications</summary><div class="how-body">
+<p>The language model's own notes while it decided. These are captured only when DataCheck runs with thinking-capture enabled. Classification keywords are colour-coded to match the badges above.</p>
+<details class="how"><summary>file-type Phase 1: 1 LLM call</summary><div class="how-body">
+<div class="trace-meta">chunk 1 · 3 path(s) · 221 words · model ollama/gpt-oss:20b-cloud</div>
+<pre class="trace">We need to classify each file.
+
+Paths:
+
+1. "Wearing_a_Bicycle_Helmet_Can/GambleWalkerPsychologicalScienceAnalysis.r"
+2. "Wearing_a_Bicycle_Helmet_Can/GambleWalkerPsychologicalScienceData.csv"
+3. "Wearing_a_Bicycle_Helmet_Can/GambleWalkerPsychologicalScienceKey.rtf"
+
+We need to determine type and group.
+
+First, group: we need to see if any experiment indicator in path or filename. The folder "Wearing_a_Bicycle_Helmet_Can" maybe not an experiment indicator. The filenames: "GambleWalkerPsychologicalScienceAnalysis.r", "GambleWalkerPsychologicalScienceData.csv", "GambleWalkerPsychologicalScienceKey.rtf". None contain "Study", "Experiment", "S", "Exp" etc. So group is "<span class="kw-grp">shared</span>" (everything else). No pilot indicator.
+
+Now type:
+
+1. .r file: extension .r. According to rules, .R files are always analysis → <span class="kw b-green">code</span>. So type: <span class="kw b-green">code</span>. Path: "Wearing_a_Bicycle_Helmet_Can/GambleWalkerPsychologicalScienceAnalysis.r"
+
+2. .csv file: "GambleWalkerPsychologicalScienceData.csv". Name contains "<span class="kw b-blue">Data</span>". According to tabular file rules: name contains "graph", "figure", "plot" → <span class="kw b-orange">output</span>. Name contains statistical tests or inferences → <span class="kw b-orange">output</span>. Name contains "scores", "processed", "cleaned" → <span class="kw b-blue">data</span>. Here "<span class="kw b-blue">Data</span>" is ambiguous. But "<span class="kw b-blue">Data</span>" is not a keyword for <span class="kw b-orange">output</span>. It's a measurement. So likely <span class="kw b-blue">data</span>. Also no <span class="kw b-gray">other</span> signals. So type: <span class="kw b-blue">data</span>.
+
+3. .rtf file: "GambleWalkerPsychologicalScienceKey.rtf". .rtf is a document. According to rules, documents are not <span class="kw b-slate">software</span>. For <span class="kw b-purple">codebook</span>: keywords: <span class="kw b-purple">codebook</span>, data_dictionary, variable_list, coding, variable_key, var_desc, data_guide, labels, legend, metadata. Also positional patterns: variables at start or end, _key suffix. Here filename ends with "Key.rtf". That matches the _key suffix pattern. So type: <span class="kw b-purple">codebook</span>. Even though extension .rtf, but <span class="kw b-purple">codebook</span> is primary. So type: <span class="kw b-purple">codebook</span>.
+
+Thus <span class="kw b-orange">output</span> array of objects with path, type, group.
+
+Return JSON array.
+
+Let's produce.
+
+</pre>
+</div></details>
+</div></details>
+</section>
+<section class="card">
+<h2 id="studies-detected"><span class="num">2</span>Studies detected</h2>
+<p>Files in your repository are split across these studies. Each column is a file type; click a study to list its files.</p>
+<div class="gtbl-wrap"><div class="gtbl">
+<div class="gtbl-head" style="grid-template-columns:minmax(48px,82px) 38px repeat(3,minmax(0,1fr)) 14px"><span>Study</span><span>Files</span><span class="gth"><span class="badge b-blue">data</span></span><span class="gth"><span class="badge b-purple">codebook</span></span><span class="gth"><span class="badge b-green">code</span></span><span></span></div>
+<div class="gtbl-sep">Files shared between experimental groups</div>
+<details class="grow"><summary class="grow-sum" style="grid-template-columns:minmax(48px,82px) 38px repeat(3,minmax(0,1fr)) 14px">
+<span class="gname">shared</span>
+<span class="gcount">3</span>
+<span class="gn">1</span><span class="gn">1</span><span class="gn">1</span>
+<span class="chev" aria-hidden="true">&#9656;</span>
+</summary>
+<div class="grow-body"><ul><li>Wearing_a_Bicycle_Helmet_Can/GambleWalkerPsychologicalScienceAnalysis.r</li><li>Wearing_a_Bicycle_Helmet_Can/GambleWalkerPsychologicalScienceData.csv</li><li>Wearing_a_Bicycle_Helmet_Can/GambleWalkerPsychologicalScienceKey.rtf</li></ul></div>
+</details>
+</div></div>
+<details class="how"><summary>How this step works</summary><div class="how-body">
+<p>DataCheck assigns each file to the study it belongs to: a numbered experiment (ex1, ex2, ...), a pilot (pilot1, ...), or 'shared' for project-wide files such as combined datasets, analysis scripts, and readmes. Experiment and pilot tags are inferred from folder and file context, often with help from a language model. readme, asset, and other files are always 'shared'. A group is the study, not a grouping of participants.</p>
+</div></details>
+</section>
+<section class="card">
+<h2 id="data-granularity"><span class="num">3</span>Data granularity</h2>
+<p>DataCheck marks each dataset as <b>individual</b> (one file per participant) or <b>combined</b> (all participants in one file). Below is what it found and how it decided.</p>
+<div class="tiles">
+<div class="tile"><div class="tile-val">0</div><div class="tile-lab">individual (per-participant)</div></div>
+<div class="tile"><div class="tile-val">1</div><div class="tile-lab">combined (all participants)</div></div>
+</div>
+<p>How it was inferred (granularity_source):</p>
+<table>
+<thead><tr>
+<th>Source</th>
+<th>Files</th>
+<th>What it means</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>default_combined</td>
+<td>1</td>
+<td>no per-participant signal was found, so it defaults to combined</td>
+</tr>
+</tbody>
+</table>
+<div class="callout info"><span class="ci">&#9432;</span><span>"default_combined" means no per-participant signal was detected. If your data is actually per-participant but the files or folders aren't named in a recognised pattern, those files may be marked combined here.</span></div>
+<details class="how"><summary>How this step works</summary><div class="how-body">
+<p>Folder structure (numbered participant subfolders) and filename patterns (sub-01, participant_003) decide most cases; when the structure is unclear, the LLM infers granularity. Granularity is settled here, right after classification, because it gates the next step: only combined files have their columns extracted. Per-participant 'individual' files are skipped, since one representative file covers the whole series. It also drives how the data is organised in the PsychDS export.</p>
+</div></details>
+</section>
+<section class="card">
+<h2 id="columns-their-types"><span class="num">4</span>Columns &amp; their types</h2>
+<p>DataCheck read 11 columns from your tabular data files and inferred a type for each. Only tabular files (CSV, XLSX, SAV) have columns to read; raw recordings (EEG, MATLAB, video) do not. Types are decided by rules first; a language model only helps with the ambiguous text columns.</p>
+<div class="dist">
+<span class="badge b-blue">continuous <b>8</b></span>
+<span class="badge b-purple">binary <b>2</b></span>
+<span class="badge b-gray">id <b>1</b></span>
+</div>
+<h3 class="sub">Every variable</h3>
+<p>Click a variable to see its inferred type (and how that was decided), its codebook label and how it was matched, granularity, sample values, and statistics.</p>
+<div class="var-hdr"><span>Variable</span><span>Description</span><span></span><span>Study</span><span>Type</span><span></span></div>
+<details class="var">
+<summary>
+<span class="var-name">ID</span>
+<span class="var-label">Participant identification number</span>
+<span></span>
+<span class="var-study"><span class="badge b-gray">shared</span></span>
+<span class="badge b-gray">id</span>
+<span class="chev" aria-hidden="true">&#9656;</span>
+</summary>
+<div class="var-body"><div class="spec"><div class="spec-k">Type</div><div class="spec-v"><span class="badge b-gray">id</span> &mdash; id <span class="mut">(<span class="badge b-green">Rule</span>: the column name looks like an identifier)</span></div><div class="spec-k">Codebook label</div><div class="spec-v">Participant identification number</div><div class="spec-k">Label status</div><div class="spec-v"><span class="badge b-green">labelled</span> Matched a codebook variable.</div><div class="spec-k">Matched how</div><div class="spec-v">exact name match (rule-based)</div><div class="spec-k">Codebook variable</div><div class="spec-v">ID</div><div class="spec-k">Codebook source</div><div class="spec-v">GambleWalkerPsychologicalScienceKey.rtf</div><div class="spec-k">Granularity</div><div class="spec-v"><span class="badge b-gray">combined</span> <span class="mut">(no per-participant signal was found, so it defaults to combined)</span></div><div class="spec-k">Sample values</div><div class="spec-v">1  ·  2  ·  3  ·  4  ·  5</div><div class="spec-k">Statistics</div><div class="spec-v">n 80 &middot; missing 0 &middot; unique 80</div></div></div>
+</details>
+<details class="var">
+<summary>
+<span class="var-name">Condition</span>
+<span class="var-label">Which condition the participant was in: 1=helmet, 2=cap</span>
+<span></span>
+<span class="var-study"><span class="badge b-gray">shared</span></span>
+<span class="badge b-purple">binary</span>
+<span class="chev" aria-hidden="true">&#9656;</span>
+</summary>
+<div class="var-body"><div class="spec"><div class="spec-k">Type</div><div class="spec-v"><span class="badge b-purple">binary</span> &mdash; binary <span class="mut">(<span class="badge b-green">Rule</span>: exactly two distinct values)</span></div><div class="spec-k">Codebook label</div><div class="spec-v">Which condition the participant was in: 1=helmet, 2=cap</div><div class="spec-k">Label status</div><div class="spec-v"><span class="badge b-green">labelled</span> Matched a codebook variable.</div><div class="spec-k">Matched how</div><div class="spec-v">exact name match (rule-based)</div><div class="spec-k">Codebook variable</div><div class="spec-v">Condition</div><div class="spec-k">Codebook source</div><div class="spec-v">GambleWalkerPsychologicalScienceKey.rtf</div><div class="spec-k">Granularity</div><div class="spec-v"><span class="badge b-gray">combined</span> <span class="mut">(no per-participant signal was found, so it defaults to combined)</span></div><div class="spec-k">Sample values</div><div class="spec-v">1  ·  1  ·  1  ·  1  ·  1</div><div class="spec-k">Statistics</div><div class="spec-v">n 80 &middot; missing 0 &middot; unique 2</div></div></div>
+</details>
+<details class="var">
+<summary>
+<span class="var-name">Age</span>
+<span class="var-label">Age in years</span>
+<span></span>
+<span class="var-study"><span class="badge b-gray">shared</span></span>
+<span class="badge b-blue">continuous</span>
+<span class="chev" aria-hidden="true">&#9656;</span>
+</summary>
+<div class="var-body"><div class="spec"><div class="spec-k">Type</div><div class="spec-v"><span class="badge b-blue">continuous</span> &mdash; continuous <span class="mut">(<span class="badge b-green">Rule</span>: numeric values (decimals, or a wide range of integers))</span></div><div class="spec-k">Codebook label</div><div class="spec-v">Age in years</div><div class="spec-k">Label status</div><div class="spec-v"><span class="badge b-green">labelled</span> Matched a codebook variable.</div><div class="spec-k">Matched how</div><div class="spec-v">exact name match (rule-based)</div><div class="spec-k">Codebook variable</div><div class="spec-v">Age</div><div class="spec-k">Codebook source</div><div class="spec-v">GambleWalkerPsychologicalScienceKey.rtf</div><div class="spec-k">Granularity</div><div class="spec-v"><span class="badge b-gray">combined</span> <span class="mut">(no per-participant signal was found, so it defaults to combined)</span></div><div class="spec-k">Sample values</div><div class="spec-v">25  ·  24  ·  26  ·  24  ·  24</div><div class="spec-k">Statistics</div><div class="spec-v">n 80 &middot; missing 0 &middot; unique 21<br>mean 25.62 &middot; sd 6.874 &middot; median 25 &middot; min 17 &middot; max 56 &middot; p25 22 &middot; p75 27</div></div></div>
+</details>
+<details class="var">
+<summary>
+<span class="var-name">Sex</span>
+<span class="var-label">Gender of the participant: 1=male, 2=female</span>
+<span></span>
+<span class="var-study"><span class="badge b-gray">shared</span></span>
+<span class="badge b-purple">binary</span>
+<span class="chev" aria-hidden="true">&#9656;</span>
+</summary>
+<div class="var-body"><div class="spec"><div class="spec-k">Type</div><div class="spec-v"><span class="badge b-purple">binary</span> &mdash; binary <span class="mut">(<span class="badge b-green">Rule</span>: exactly two distinct values)</span></div><div class="spec-k">Codebook label</div><div class="spec-v">Gender of the participant: 1=male, 2=female</div><div class="spec-k">Label status</div><div class="spec-v"><span class="badge b-green">labelled</span> Matched a codebook variable.</div><div class="spec-k">Matched how</div><div class="spec-v">exact name match (rule-based)</div><div class="spec-k">Codebook variable</div><div class="spec-v">Sex</div><div class="spec-k">Codebook source</div><div class="spec-v">GambleWalkerPsychologicalScienceKey.rtf</div><div class="spec-k">Granularity</div><div class="spec-v"><span class="badge b-gray">combined</span> <span class="mut">(no per-participant signal was found, so it defaults to combined)</span></div><div class="spec-k">Sample values</div><div class="spec-v">1  ·  2  ·  1  ·  1  ·  2</div><div class="spec-k">Statistics</div><div class="spec-v">n 80 &middot; missing 0 &middot; unique 2</div></div></div>
+</details>
+<details class="var">
+<summary>
+<span class="var-name">STAI_S_Y_PRE</span>
+<span class="var-label">State Trait Anxiety Inventory Y state anxiety total before wearing the eye-tracker</span>
+<span></span>
+<span class="var-study"><span class="badge b-gray">shared</span></span>
+<span class="badge b-blue">continuous</span>
+<span class="chev" aria-hidden="true">&#9656;</span>
+</summary>
+<div class="var-body"><div class="spec"><div class="spec-k">Type</div><div class="spec-v"><span class="badge b-blue">continuous</span> &mdash; continuous <span class="mut">(<span class="badge b-green">Rule</span>: numeric values (decimals, or a wide range of integers))</span></div><div class="spec-k">Codebook label</div><div class="spec-v">State Trait Anxiety Inventory Y state anxiety total before wearing the eye-tracker</div><div class="spec-k">Label status</div><div class="spec-v"><span class="badge b-green">llm</span> Matched via a language-model check after no exact name match.</div><div class="spec-k">Matched how</div><div class="spec-v">matched by a language-model check</div><div class="spec-k">Codebook variable</div><div class="spec-v">STAI pre</div><div class="spec-k">Codebook source</div><div class="spec-v">GambleWalkerPsychologicalScienceKey.rtf</div><div class="spec-k">Granularity</div><div class="spec-v"><span class="badge b-gray">combined</span> <span class="mut">(no per-participant signal was found, so it defaults to combined)</span></div><div class="spec-k">Sample values</div><div class="spec-v">37  ·  27  ·  30  ·  30  ·  32</div><div class="spec-k">Statistics</div><div class="spec-v">n 80 &middot; missing 0 &middot; unique 21<br>mean 31.59 &middot; sd 5.348 &middot; median 31 &middot; min 23 &middot; max 50 &middot; p25 27 &middot; p75 35.25</div></div></div>
+</details>
+<details class="var">
+<summary>
+<span class="var-name">SSS_total</span>
+<span class="var-label">Sensation Seeking Scale score</span>
+<span></span>
+<span class="var-study"><span class="badge b-gray">shared</span></span>
+<span class="badge b-blue">continuous</span>
+<span class="chev" aria-hidden="true">&#9656;</span>
+</summary>
+<div class="var-body"><div class="spec"><div class="spec-k">Type</div><div class="spec-v"><span class="badge b-blue">continuous</span> &mdash; continuous <span class="mut">(<span class="badge b-green">Rule</span>: numeric values (decimals, or a wide range of integers))</span></div><div class="spec-k">Codebook label</div><div class="spec-v">Sensation Seeking Scale score</div><div class="spec-k">Label status</div><div class="spec-v"><span class="badge b-green">labelled</span> Matched a codebook variable.</div><div class="spec-k">Matched how</div><div class="spec-v">exact name match (rule-based)</div><div class="spec-k">Codebook variable</div><div class="spec-v">SSS total</div><div class="spec-k">Codebook source</div><div class="spec-v">GambleWalkerPsychologicalScienceKey.rtf</div><div class="spec-k">Granularity</div><div class="spec-v"><span class="badge b-gray">combined</span> <span class="mut">(no per-participant signal was found, so it defaults to combined)</span></div><div class="spec-k">Sample values</div><div class="spec-v">18  ·  19  ·  35  ·  28  ·  26</div><div class="spec-k">Statistics</div><div class="spec-v">n 80 &middot; missing 0 &middot; unique 24<br>mean 20.95 &middot; sd 6.455 &middot; median 20 &middot; min 11 &middot; max 36 &middot; p25 16 &middot; p75 26</div></div></div>
+</details>
+<details class="var">
+<summary>
+<span class="var-name">BART</span>
+<span class="var-label">Balloon Analogue Risk Task adjusted mean (mean number of pumps on trials where the balloon did not burst)</span>
+<span></span>
+<span class="var-study"><span class="badge b-gray">shared</span></span>
+<span class="badge b-blue">continuous</span>
+<span class="chev" aria-hidden="true">&#9656;</span>
+</summary>
+<div class="var-body"><div class="spec"><div class="spec-k">Type</div><div class="spec-v"><span class="badge b-blue">continuous</span> &mdash; continuous <span class="mut">(<span class="badge b-green">Rule</span>: numeric values (decimals, or a wide range of integers))</span></div><div class="spec-k">Codebook label</div><div class="spec-v">Balloon Analogue Risk Task adjusted mean (mean number of pumps on trials where the balloon did not burst)</div><div class="spec-k">Label status</div><div class="spec-v"><span class="badge b-green">labelled</span> Matched a codebook variable.</div><div class="spec-k">Matched how</div><div class="spec-v">exact name match (rule-based)</div><div class="spec-k">Codebook variable</div><div class="spec-v">BART</div><div class="spec-k">Codebook source</div><div class="spec-v">GambleWalkerPsychologicalScienceKey.rtf</div><div class="spec-k">Granularity</div><div class="spec-v"><span class="badge b-gray">combined</span> <span class="mut">(no per-participant signal was found, so it defaults to combined)</span></div><div class="spec-k">Sample values</div><div class="spec-v">3.67  ·  36.5  ·  29.28  ·  30.5  ·  24.08</div><div class="spec-k">Statistics</div><div class="spec-v">n 80 &middot; missing 0 &middot; unique 80<br>mean 35.62 &middot; sd 16.45 &middot; median 33.63 &middot; min  2.68 &middot; max 81.29 &middot; p25  24.9 &middot; p75 42.95</div></div></div>
+</details>
+<details class="var">
+<summary>
+<span class="var-name">STAI_S_Y_DURING</span>
+<span class="var-label">State Trait Anxiety Inventory Y state anxiety total whilst wearing the eye-tracker</span>
+<span></span>
+<span class="var-study"><span class="badge b-gray">shared</span></span>
+<span class="badge b-blue">continuous</span>
+<span class="chev" aria-hidden="true">&#9656;</span>
+</summary>
+<div class="var-body"><div class="spec"><div class="spec-k">Type</div><div class="spec-v"><span class="badge b-blue">continuous</span> &mdash; continuous <span class="mut">(<span class="badge b-green">Rule</span>: numeric values (decimals, or a wide range of integers))</span></div><div class="spec-k">Codebook label</div><div class="spec-v">State Trait Anxiety Inventory Y state anxiety total whilst wearing the eye-tracker</div><div class="spec-k">Label status</div><div class="spec-v"><span class="badge b-green">llm</span> Matched via a language-model check after no exact name match.</div><div class="spec-k">Matched how</div><div class="spec-v">matched by a language-model check</div><div class="spec-k">Codebook variable</div><div class="spec-v">STAI during</div><div class="spec-k">Codebook source</div><div class="spec-v">GambleWalkerPsychologicalScienceKey.rtf</div><div class="spec-k">Granularity</div><div class="spec-v"><span class="badge b-gray">combined</span> <span class="mut">(no per-participant signal was found, so it defaults to combined)</span></div><div class="spec-k">Sample values</div><div class="spec-v">32  ·  30  ·  34  ·  28  ·  44</div><div class="spec-k">Statistics</div><div class="spec-v">n 80 &middot; missing 0 &middot; unique 25<br>mean 31.98 &middot; sd 7.117 &middot; median 31 &middot; min 23 &middot; max 54 &middot; p25 26.75 &middot; p75 35</div></div></div>
+</details>
+<details class="var">
+<summary>
+<span class="var-name">STAI_S_Y_POST</span>
+<span class="var-label">State Trait Anxiety Inventory Y state anxiety total after wearing the eye-tracker</span>
+<span></span>
+<span class="var-study"><span class="badge b-gray">shared</span></span>
+<span class="badge b-blue">continuous</span>
+<span class="chev" aria-hidden="true">&#9656;</span>
+</summary>
+<div class="var-body"><div class="spec"><div class="spec-k">Type</div><div class="spec-v"><span class="badge b-blue">continuous</span> &mdash; continuous <span class="mut">(<span class="badge b-green">Rule</span>: numeric values (decimals, or a wide range of integers))</span></div><div class="spec-k">Codebook label</div><div class="spec-v">State Trait Anxiety Inventory Y state anxiety total after wearing the eye-tracker</div><div class="spec-k">Label status</div><div class="spec-v"><span class="badge b-green">llm</span> Matched via a language-model check after no exact name match.</div><div class="spec-k">Matched how</div><div class="spec-v">matched by a language-model check</div><div class="spec-k">Codebook variable</div><div class="spec-v">STAI post</div><div class="spec-k">Codebook source</div><div class="spec-v">GambleWalkerPsychologicalScienceKey.rtf</div><div class="spec-k">Granularity</div><div class="spec-v"><span class="badge b-gray">combined</span> <span class="mut">(no per-participant signal was found, so it defaults to combined)</span></div><div class="spec-k">Sample values</div><div class="spec-v">32  ·  24  ·  28  ·  30  ·  32</div><div class="spec-k">Statistics</div><div class="spec-v">n 80 &middot; missing 0 &middot; unique 21<br>mean 30.71 &middot; sd 6.595 &middot; median 30 &middot; min 23 &middot; max 59 &middot; p25 25.75 &middot; p75 34.25</div></div></div>
+</details>
+<details class="var">
+<summary>
+<span class="var-name">Cycling_Frequency</span>
+<span class="var-label">How often does the participant cycle: 1=Never, 2=Rarely, 3=At least once a month, 4=At least once a week, 5=At least two to four times a week, 6=Five times a week or more</span>
+<span></span>
+<span class="var-study"><span class="badge b-gray">shared</span></span>
+<span class="badge b-blue">continuous</span>
+<span class="chev" aria-hidden="true">&#9656;</span>
+</summary>
+<div class="var-body"><div class="spec"><div class="spec-k">Type</div><div class="spec-v"><span class="badge b-blue">continuous</span> &mdash; continuous <span class="mut">(<span class="badge b-green">Rule</span>: numeric values (decimals, or a wide range of integers))</span></div><div class="spec-k">Codebook label</div><div class="spec-v">How often does the participant cycle: 1=Never, 2=Rarely, 3=At least once a month, 4=At least once a week, 5=At least two to four times a week, 6=Five times a week or more</div><div class="spec-k">Label status</div><div class="spec-v"><span class="badge b-green">labelled</span> Matched a codebook variable.</div><div class="spec-k">Matched how</div><div class="spec-v">exact name match (rule-based)</div><div class="spec-k">Codebook variable</div><div class="spec-v">Cycling frequency</div><div class="spec-k">Codebook source</div><div class="spec-v">GambleWalkerPsychologicalScienceKey.rtf</div><div class="spec-k">Granularity</div><div class="spec-v"><span class="badge b-gray">combined</span> <span class="mut">(no per-participant signal was found, so it defaults to combined)</span></div><div class="spec-k">Sample values</div><div class="spec-v">2  ·  2  ·  3  ·  4  ·  2</div><div class="spec-k">Statistics</div><div class="spec-v">n 80 &middot; missing 0 &middot; unique 6<br>mean 2.925 &middot; sd 1.499 &middot; median 2 &middot; min 1 &middot; max 6 &middot; p25 2 &middot; p75 4</div></div></div>
+</details>
+<details class="var">
+<summary>
+<span class="var-name">Helmet_Use_Likelihood</span>
+<span class="var-label">How often does the participant wear a cycle helmet: 0=don 92t cycle, 1=never - 7=always</span>
+<span></span>
+<span class="var-study"><span class="badge b-gray">shared</span></span>
+<span class="badge b-blue">continuous</span>
+<span class="chev" aria-hidden="true">&#9656;</span>
+</summary>
+<div class="var-body"><div class="spec"><div class="spec-k">Type</div><div class="spec-v"><span class="badge b-blue">continuous</span> &mdash; continuous <span class="mut">(<span class="badge b-green">Rule</span>: numeric values (decimals, or a wide range of integers))</span></div><div class="spec-k">Codebook label</div><div class="spec-v">How often does the participant wear a cycle helmet: 0=don 92t cycle, 1=never - 7=always</div><div class="spec-k">Label status</div><div class="spec-v"><span class="badge b-green">labelled</span> Matched a codebook variable.</div><div class="spec-k">Matched how</div><div class="spec-v">exact name match (rule-based)</div><div class="spec-k">Codebook variable</div><div class="spec-v">Helmet use likelihood</div><div class="spec-k">Codebook source</div><div class="spec-v">GambleWalkerPsychologicalScienceKey.rtf</div><div class="spec-k">Granularity</div><div class="spec-v"><span class="badge b-gray">combined</span> <span class="mut">(no per-participant signal was found, so it defaults to combined)</span></div><div class="spec-k">Sample values</div><div class="spec-v">1  ·  2  ·  2  ·  3  ·  1</div><div class="spec-k">Statistics</div><div class="spec-v">n 80 &middot; missing 0 &middot; unique 8<br>mean  2.75 &middot; sd 2.533 &middot; median 1 &middot; min 0 &middot; max 7 &middot; p25 1 &middot; p75 5</div></div></div>
+</details>
+<details class="how"><summary>How this step works</summary><div class="how-body">
+<p>From all detected data files that are tabular (.csv, .xlsx, etc.) and contain measurements of multiple participants (i.e. 'combined'), the variables are extracted. Each column is assumed to be a variable. Only the header and a sample of rows are read; no file contents are sent to the LLM.</p>
+<p>Each column is given a category of its own (continuous, binary, categorical, id, date, text, etc.). This is done using deterministic rules; ambiguous columns are handed to the LLM, which picks categorical, ordinal, or text. Summary statistics (mean, sd, quartiles, etc.) are then calculated for the numeric columns.</p>
+</div></details>
+</section>
+<section class="card">
+<h2 id="codebook-matching"><span class="num">5</span>Codebook matching</h2>
+<div class="tiles">
+<div class="tile"><div class="tile-val">1</div><div class="tile-lab">codebook files</div></div>
+<div class="tile"><div class="tile-val">11</div><div class="tile-lab">variables defined</div></div>
+<div class="tile"><div class="tile-val">100%</div><div class="tile-lab">columns labelled (11/11)</div></div>
+<div class="tile"><div class="tile-val">100%</div><div class="tile-lab">codebook vars matched (11/11)</div></div>
+</div>
+<p>Two views of the same matching: <b>labelled</b> is per data column (did this column get a description?); <b>coverage</b> is per codebook variable (was this defined variable found in the data?).</p>
+<div class="callout good"><span class="ci">&#10003;</span><span>Every data column was matched to the codebook and every codebook variable was found in the data. Excellent documentation.</span></div>
+<details class="how"><summary>How this step works</summary><div class="how-body">
+<p>DataCheck first parses any codebook or readme files into variable definitions: directly for spreadsheets and SPSS/Stata files, and via the LLM for free-text PDFs and Word documents. Each data column is then matched to a codebook variable by normalised name. When the same name carries different definitions across codebooks, the LLM is asked only whether they mean the same thing. Matched descriptions become the column labels you see in the variables table.</p>
+</div></details>
+</section>
+<section class="card">
+<h2 id="psychds-conversion"><span class="num">6</span>PsychDS conversion</h2>
+<p>PsychDS is a community standard layout for sharing a dataset so both humans and machines can read it.</p>
+<p>DataCheck re-packaged your repository into this layout: tabular data files are exported as CSV with a JSON metadata sidecar each, code and materials and documentation go into their own folders, and a dataset_description.json carries the variable metadata. Every original file is also copied across into a raw/ folder, and oversized or binary files (EEG, video, MATLAB) are copied untouched without conversion.</p>
+<div class="callout good"><span class="ci">&#10003;</span><span>Your original data files are never edited. DataCheck only restructures copies and adds metadata alongside them. The values inside your data are left exactly as they were.</span></div>
+<p>Each study group became its own PsychDS dataset:</p>
+<table>
+<thead><tr>
+<th>Study group</th>
+<th>Data files</th>
+<th>Variables</th>
+<th>Labelled</th>
+<th>OK</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>shared</td>
+<td>2</td>
+<td>11</td>
+<td>8</td>
+<td>&#10003;</td>
+</tr>
+</tbody>
+</table>
+<div class="callout info"><span class="ci">&#9432;</span><span>Paper metadata (extracted from the manuscript with GROBID) was attached to the dataset description.</span></div>
+<details class="how"><summary>Folder structure produced</summary><div class="how-body">
+<pre class="tree">
+0956797615620784/   (2 files)
+    analysis/   (1 file)
+    codebooks/   (1 file)
+        txt/   (1 file)
+    data/   (2 files)
+        raw/   (1 file)
+    documentation/   (1 file)
+</pre>
+</div></details>
+<details class="how"><summary>How this step works</summary><div class="how-body">
+<p>The outputs are reshaped into the PsychDS standard: a dataset_description.json carrying variable metadata, data files with JSON sidecars, and separate code/materials/documentation folders. Oversized files are copied raw without conversion. Ground-truth overrides and extracted paper metadata (from GROBID) are applied at this stage.</p>
+</div></details>
+</section>
+<footer>Generated by DataCheck · this report reads existing pipeline outputs only.</footer>
+</div>
+</div></div>
+</body>
+</html>

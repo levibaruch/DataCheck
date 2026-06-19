@@ -638,16 +638,14 @@ llm_batch <- function(paths, system_prompt, user_prefix, key_col, extra_cols,
         merged[match(chunk_match_keys, merged[[key_col]]), ]
       }, error = function(e) e)
 
-      # Feature 036: After a clean parse, validate the "type" column if present.
-      # Apply typo mapping first (e.g. "coden" → "code"), then check validity.
-      # If any type is still invalid, convert to simpleError so the existing retry
+      # After a clean parse, validate the "type" column if present.
+      # If any type is invalid, convert to simpleError so the existing retry
       # path below handles it identically to a parse failure.
       if (!inherits(parsed, "error") && "type" %in% names(parsed)) {
-        parsed$type <- vapply(parsed$type, validate_type, character(1L))
         invalid_types <- parsed$type[!vapply(parsed$type, is_valid_type, logical(1L))]
         if (length(invalid_types) > 0L) {
           parsed <- simpleError(sprintf(
-            "llm_validation: invalid type value(s) after mapping: %s",
+            "llm_validation: invalid type value(s): %s",
             paste(unique(invalid_types), collapse = ", ")
           ))
         }
@@ -822,19 +820,39 @@ normalize_varname <- function(x) {
   x
 }
 
+# Reduce each word in a label to its root using the Porter stemming algorithm
+# (SnowballC::wordStem). Falls back to a crude trailing-"s" stripper when
+# SnowballC is unavailable, so the pipeline still runs in minimal environments
+# (Principle I: Crash Resilience). Operates on one already-lowercased,
+# punctuation-stripped string and returns the space-joined stemmed words.
+.stem_words <- local({
+  have_snowball <- NULL  # cached availability check
+  function(s) {
+    if (is.null(have_snowball))
+      have_snowball <<- requireNamespace("SnowballC", quietly = TRUE)
+    words <- strsplit(s, " ", fixed = TRUE)[[1]]
+    words <- words[nzchar(words)]
+    if (length(words) == 0) return("")
+    if (isTRUE(have_snowball)) {
+      stemmed <- tryCatch(SnowballC::wordStem(words, language = "porter"),
+                          error = function(e) NULL)
+      if (!is.null(stemmed)) return(paste(stemmed, collapse = " "))
+    }
+    # Fallback: strip a single trailing "s" from words of >= 8 chars.
+    paste(sub("^([a-z]{7,})s$", "\\1", words, perl = TRUE), collapse = " ")
+  }
+})
+
 # Normalise a label string for semantic-equivalence comparison.
-# Strips possessives, punctuation, pluralising "s", and extra whitespace so
-# that minor wording differences (e.g. "Participants' age" vs "Participant age")
-# normalise to the same string.
+# Strips possessives and punctuation, applies Porter stemming, and collapses
+# whitespace so that minor wording differences (e.g. "Participants' responses"
+# vs "Participant response") normalise to the same string.
 normalize_label <- function(x) {
   x <- tolower(x)
   x <- gsub("'s|'s|\u2019s|\u2018s", "", x, perl = TRUE)  # strip possessives (straight + curly)
   x <- gsub("[^a-z0-9 ]", " ", x)                          # non-alphanumeric → space
-  # Strip trailing "s" from words of ≥ 8 total chars (handles "participants" → "participant",
-  # "feelings" → "feeling", "responses" → "response") while leaving short words intact
-  x <- gsub("\\b([a-z]{7,})s\\b", "\\1", x, perl = TRUE)
   x <- gsub("\\s+", " ", trimws(x))                        # collapse whitespace
-  x
+  vapply(x, .stem_words, character(1), USE.NAMES = FALSE)  # Porter stem each word
 }
 
 # Scan a data.frame's column headers for a "variable name" column and a
@@ -1078,9 +1096,11 @@ parse_codebook <- function(path) {
         )
         .extract_structured_codebook(df, src)
       },
-      dta =, sav = { 
-        df <- haven::read_dta(path)
-        .extract_haven_labels(df, src)
+      dta =, sav = {
+        df <- if (ext == "sav") haven::read_sav(path) else haven::read_dta(path)
+        res <- .extract_haven_labels(df, src)
+        if (!is.null(res)) attr(res, ".is_haven") <- TRUE
+        res
       },
       docx = , doc = , pdf = , rtf = , odt = {
         text <- .extract_rich_text(path, ext)
@@ -1103,7 +1123,7 @@ parse_codebook <- function(path) {
 
   if (!is.null(result) && is.data.frame(result) && nrow(result) > 0) {
     result$group        <- .infer_group(result$group) # TODO what the fuck is the point of this? Why would we need to infer group here when we know it upstream?
-    result$parse_method <- "structured"
+    result$parse_method <- if (isTRUE(attr(result, ".is_haven"))) "haven" else "structured"
     return(result)
   }
 
@@ -1280,9 +1300,23 @@ match_column_labels <- function(columns_df, codebook_vars_df,
 
     distinct_labels <- unique(applicable$label)
     if (length(distinct_labels) > 1) {
+      # Haven priority: a haven (.sav/.dta/.sas) label is the variable label
+      # embedded in the binary data file itself, so it is authoritative and wins
+      # any conflict with README / structured-file codebooks. Take it directly
+      # rather than flagging conflicting_definition (longest haven label if several).
+      haven_rows <- if ("parse_method" %in% names(applicable))
+        applicable[!is.na(applicable$parse_method) & applicable$parse_method == "haven", , drop = FALSE] else
+        applicable[0, , drop = FALSE]
       # Rule-based equivalence check: normalise labels and re-check uniqueness
       norm_labels <- normalize_label(distinct_labels)
-      if (length(unique(norm_labels)) == 1) {
+      if (nrow(haven_rows) > 0) {
+        canonical <- haven_rows$label[which.max(nchar(haven_rows$label))]
+        status_out[i]        <- "labelled"
+        label_out[i]         <- canonical
+        cbk_var_out[i]       <- haven_rows$codebook_variable[1]
+        src_out[i]           <- paste(unique(haven_rows$codebook_source), collapse = " | ")
+        label_method_out[i]  <- "haven_priority"
+      } else if (length(unique(norm_labels)) == 1) {
         # All labels normalise to the same string — pick the longest original label
         canonical <- distinct_labels[which.max(nchar(distinct_labels))]
         status_out[i]        <- "labelled"
@@ -1616,26 +1650,6 @@ group_aggregate_folder <- function(rel_paths_in_folder, folder = "") {
 
 # ── LLM Output Validation (Feature 036) ───────────────────────────────────────
 
-
-# Lookup table of known typos and case variations in LLM file type outputs.
-# Applied during validation to correct common mistakes before checking validity.
-# Extensible: add entries empirically as patterns emerge in error logs.
-TYPO_MAP <- c(
-  "coden"        = "code",          # Common typo
-  "Code"         = "code",          # Case variation
-  "supplimental" = "supplemental",  # Common misspelling
-  "supp"         = "supplemental"   # Abbreviation
-)
-
-# Apply typo mapping to a single file type value.
-# Returns the mapped value if found in typo_map; otherwise returns type_value unchanged.
-# Caller checks validity via is_valid_type() after mapping.
-validate_type <- function(type_value, typo_map = TYPO_MAP) {
-  if (!is.na(type_value) && type_value %in% names(typo_map)) {
-    return(typo_map[[type_value]])
-  }
-  return(as.character(type_value))
-}
 
 # Return TRUE if type_value is in the valid file type set.
 is_valid_type <- function(type_value, valid_types = VALID_FILE_TYPES) {

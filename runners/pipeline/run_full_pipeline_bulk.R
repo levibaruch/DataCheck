@@ -9,6 +9,7 @@
 source("pipeline/0_index.R")
 source("pipeline/2_codebook_label.R")
 source("pipeline/3_psychds_convert.R")
+source("pipeline/4_report.R")
 
 # ── Config (mirrors run_0_index_bulk.R) ───────────────────────────────────────
 
@@ -37,6 +38,7 @@ MAX_CODEBOOK_FILES     <- 10L
 INDEX_CSV    <- "./results/bulk_summary.csv"
 CODEBOOK_CSV <- "./results/codebook_summary.csv"
 PSYCHDS_CSV  <- file.path(PSYCHDS_OUT_DIR, "conversion_summary.csv")
+REPORT_CSV   <- "./results/report_summary.csv"
 TRACKER_CSV  <- "./results/pipeline_tracker.csv"
 
 MAX_DATA_MB  <- 10000   # psychds stage: skip if data folder exceeds this
@@ -126,6 +128,15 @@ message("── Will process ", n_total, " paper(s) through full pipeline")
 
 na_fallback <- function(x, na = NA) if (is.null(x) || length(x) == 0) na else x
 
+# Build a terminal hyperlink (OSC 8). Clickable in iTerm2/VS Code/most modern
+# terminals; the visible label (the absolute path) still shows everywhere else.
+file_link <- function(path, label = NULL) {
+  abs <- normalizePath(path, mustWork = FALSE)
+  url <- paste0("file://", abs)
+  if (is.null(label)) label <- abs
+  sprintf("\033]8;;%s\033\\%s\033]8;;\033\\", url, label)
+}
+
 folder_size_mb <- function(path) {
   if (!dir.exists(path)) return(0)
   files <- list.files(path, recursive = TRUE, full.names = TRUE)
@@ -178,6 +189,23 @@ append_codebook_row <- function(r, elapsed_sec) {
               row.names = FALSE, col.names = write_header)
 }
 
+append_report_row <- function(r, elapsed_sec) {
+  row <- data.frame(
+    paper_id        = na_fallback(r$paper_id, NA_character_),
+    success         = isTRUE(r$success),
+    error           = na_fallback(r$error, NA_character_),
+    elapsed_ms      = round(na_fallback(elapsed_sec, NA_real_) * 1000),
+    n_files         = na_fallback(r$n_files, NA_integer_),
+    n_columns       = na_fallback(r$n_columns, NA_integer_),
+    n_labelled      = na_fallback(r$n_labelled, NA_integer_),
+    n_codebook_vars = na_fallback(r$n_codebook_vars, NA_integer_),
+    stringsAsFactors = FALSE
+  )
+  write_header <- !file.exists(REPORT_CSV)
+  write.table(row, REPORT_CSV, append = TRUE, sep = ",",
+              row.names = FALSE, col.names = write_header)
+}
+
 already_done_codebook <- function(pid) {
   if (!file.exists(CODEBOOK_CSV)) return(FALSE)
   df <- tryCatch(
@@ -190,24 +218,31 @@ already_done_codebook <- function(pid) {
 
 # ── Tracker helpers ───────────────────────────────────────────────────────────
 # pipeline_tracker.csv: one row per paper, updated after each stage.
-# Columns: paper_id, source, index, codebook, psychds
+# Columns: paper_id, source, index, codebook, psychds, report
 # Values:  "ok" | "fail" | "skip" | "pending"
 
-load_tracker <- function() {
-  if (!file.exists(TRACKER_CSV)) return(data.frame(
+TRACKER_STAGES <- c("index", "codebook", "psychds", "report")
+
+empty_tracker <- function() {
+  data.frame(
     paper_id = character(), source = character(),
-    index = character(), codebook = character(), psychds = character(),
+    index = character(), codebook = character(),
+    psychds = character(), report = character(),
     stringsAsFactors = FALSE
-  ))
-  tryCatch(
+  )
+}
+
+load_tracker <- function() {
+  if (!file.exists(TRACKER_CSV)) return(empty_tracker())
+  tr <- tryCatch(
     read.csv(TRACKER_CSV, stringsAsFactors = FALSE,
              colClasses = c(paper_id = "character")),
-    error = function(e) data.frame(
-      paper_id = character(), source = character(),
-      index = character(), codebook = character(), psychds = character(),
-      stringsAsFactors = FALSE
-    )
+    error = function(e) empty_tracker()
   )
+  # Backfill any stage column missing from an older tracker file
+  for (stage in TRACKER_STAGES)
+    if (!stage %in% names(tr)) tr[[stage]] <- "pending"
+  tr
 }
 
 tracker_get <- function(tr, pid, stage) {
@@ -224,6 +259,7 @@ tracker_set <- function(pid, src, stage, status) {
     tr <- rbind(tr, data.frame(
       paper_id = pid, source = src,
       index = "pending", codebook = "pending", psychds = "pending",
+      report = "pending",
       stringsAsFactors = FALSE
     ))
     idx <- nrow(tr)
@@ -247,6 +283,9 @@ init_tracker <- function(all_ids, all_sources) {
                                colClasses = c(paper_id = "character")),
                       error = function(e) NULL)
   psy_df <- tryCatch(read.csv(PSYCHDS_CSV,  stringsAsFactors = FALSE,
+                               colClasses = c(paper_id = "character")),
+                      error = function(e) NULL)
+  rep_df <- tryCatch(read.csv(REPORT_CSV,   stringsAsFactors = FALSE,
                                colClasses = c(paper_id = "character")),
                       error = function(e) NULL)
 
@@ -286,9 +325,18 @@ init_tracker <- function(all_ids, all_sources) {
       "ok"
     } else "pending"
 
+    # ── Report ───────────────────────────────────────────────────────────────
+    rep_row <- if (!is.null(rep_df)) rep_df[rep_df$paper_id == pid, , drop = FALSE] else NULL
+    rep_st <- if (idx_st == "fail") "skip"
+    else if (!is.null(rep_row) && nrow(rep_row) > 0) {
+      if (isTRUE(as.logical(rep_row$success[1]))) "ok" else "fail"
+    } else if (file.exists(paper_path("outputs", src, pid, "report.html"))) {
+      "ok"
+    } else "pending"
+
     tr <- rbind(tr, data.frame(
       paper_id = pid, source = src,
-      index = idx_st, codebook = cb_st, psychds = psy_st,
+      index = idx_st, codebook = cb_st, psychds = psy_st, report = rep_st,
       stringsAsFactors = FALSE
     ))
     n_new <- n_new + 1L
@@ -329,14 +377,17 @@ for (i in seq_along(remaining_ids)) {
   idx_tracked <- tracker_get(tr, pid, "index")
   cb_tracked  <- tracker_get(tr, pid, "codebook")
   psy_tracked <- tracker_get(tr, pid, "psychds")
+  rep_tracked <- tracker_get(tr, pid, "report")
 
   # Check if all stages will skip — if so, count silently and continue
   already_indexed_q <- idx_tracked %in% c("ok", "fail") ||
     (HEURISTIC && file.exists(paper_path("outputs", src, pid, "structure.csv")))
   already_cb_q  <- cb_tracked  %in% c("ok", "fail", "no_cols", "skip", "no_columns")
   already_psy_q <- psy_tracked %in% c("ok", "fail", "skip")
+  already_rep_q <- rep_tracked %in% c("ok", "fail", "skip") ||
+    (HEURISTIC && file.exists(paper_path("outputs", src, pid, "report.html")))
 
-  if (already_indexed_q && already_cb_q && already_psy_q) {
+  if (already_indexed_q && already_cb_q && already_psy_q && already_rep_q) {
     skip_since_last <- skip_since_last + 1L
     next
   }
@@ -465,8 +516,9 @@ for (i in seq_along(remaining_ids)) {
     if (is.null(cb_result$paper_id)) cb_result$paper_id <- pid
     append_codebook_row(cb_result, elapsed)
     tracker_set(pid, src, "codebook", if (isTRUE(cb_result$success)) "ok" else "fail")
-    # Codebook re-ran — psychds must re-run too
+    # Codebook re-ran — psychds and report must re-run too
     tracker_set(pid, src, "psychds", "pending")
+    tracker_set(pid, src, "report", "pending")
     if (isTRUE(cb_result$success)) {
       n_lab <- na_fallback(cb_result$n_labelled, 0L)
       n_tot <- na_fallback(cb_result$n_labelled + cb_result$n_unlabelled, 0L)
@@ -526,19 +578,52 @@ for (i in seq_along(remaining_ids)) {
     }
   }
 
+  # ── Stage 4: Report ───────────────────────────────────────────────────────
+
+  rep_tracked     <- tracker_get(load_tracker(), pid, "report")
+  has_report_file <- file.exists(paper_path("outputs", src, pid, "report.html"))
+
+  if (rep_tracked %in% c("ok", "fail", "skip") ||
+      (HEURISTIC && has_report_file && rep_tracked != "fail")) {
+    if (rep_tracked == "pending") tracker_set(pid, src, "report", "ok")
+  } else {
+    cat("  ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\n")
+    cat(col_cyan("  [report]   running ...\n"))
+    t_start <- proc.time()[["elapsed"]]
+    rep_result <- tryCatch(
+      run_report(pid, src),
+      error = function(e) list(success = FALSE, error = conditionMessage(e), paper_id = pid)
+    )
+    elapsed <- proc.time()[["elapsed"]] - t_start
+    append_report_row(rep_result, elapsed)
+    tracker_set(pid, src, "report", if (isTRUE(rep_result$success)) "ok" else "fail")
+    if (isTRUE(rep_result$success)) {
+      cat(col_green(sprintf("  └ report    ✓  report.html  (%.1fs)\n", elapsed)))
+      cat(col_cyan(sprintf("              %s\n", file_link(rep_result$html_path))))
+    } else {
+      cat(col_red(sprintf("  └ report    ✗  FAILED: %s\n",
+                          na_fallback(rep_result$error, "?"))))
+    }
+  }
+
   # ── Output file paths ────────────────────────────────────────────────────────
   out_base <- paper_path("outputs", src, pid)
   out_files <- c(
     structure = file.path(out_base, "structure.csv"),
     columns   = file.path(out_base, "columns.csv"),
     labels    = file.path(out_base, "labels.csv"),
-    coverage  = file.path(out_base, "codebook_coverage.csv")
+    coverage  = file.path(out_base, "codebook_coverage.csv"),
+    report    = file.path(out_base, "report.html")
   )
   existing <- out_files[file.exists(out_files)]
   if (length(existing) > 0) {
     cat(col_dim("  \u2514 outputs:\n"))
-    for (nm in names(existing))
-      cat(col_dim(sprintf("      %-10s %s\n", nm, existing[[nm]])))
+    for (nm in names(existing)) {
+      if (nm == "report")
+        cat(col_cyan(sprintf("      %-10s %s\n", nm, file_link(existing[[nm]]))))
+      else
+        cat(col_dim(sprintf("      %-10s %s\n", nm, existing[[nm]])))
+    }
   }
 }
 
@@ -595,5 +680,7 @@ print_summary(CODEBOOK_CSV, "Codebook (codebook_summary.csv)", extras = function
 })
 
 print_summary(PSYCHDS_CSV, "PsychDS (conversion_summary.csv)")
+
+print_summary(REPORT_CSV, "Report (report_summary.csv)")
 
 cat("\n── Done.\n")

@@ -9,6 +9,7 @@
 # Data & outputs (large/generated)
 data/
 outputs/*/
+!outputs/example_outputs
 psychds/*/
 psychds/*.csv
 !psychds/EXPERIMENTAL.txt
@@ -55,3 +56,5 @@ results/
 
 # Generated from pipeline/prompts.R via runners/tools/export_prompts_appendix.R
 docs/appendix_prompts.tex
+# CrossRef DOI metadata cache
+cache/
