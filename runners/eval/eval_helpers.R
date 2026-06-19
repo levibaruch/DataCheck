@@ -44,9 +44,16 @@ cm_stats <- function(cm_m) {
   all_t <- rownames(cm_m)
   f1s <- sapply(all_t, function(cls) {
     tp <- cm_m[cls, cls]; fp <- sum(cm_m[, cls]) - tp; fn <- sum(cm_m[cls, ]) - tp
-    p  <- if ((tp + fp) > 0) tp / (tp + fp) else NA_real_
-    r  <- if ((tp + fn) > 0) tp / (tp + fn) else NA_real_
-    if (!is.na(p) && !is.na(r) && (p + r) > 0) 2*p*r/(p+r) else NA_real_
+    # Class genuinely absent from this repo (no true instances): F1 is undefined, so
+    # drop it from the macro mean — small repos must not be penalised for classes
+    # they simply don't contain. Keyed on recall denominator (tp+fn), NOT precision.
+    if ((tp + fn) == 0) return(NA_real_)
+    # Class is present. If the model never predicted it (tp+fp==0) precision is 0/0,
+    # but recall is a defined 0: that is a total recall failure → F1 = 0, not NA.
+    # Scoring it 0 (vs dropping) is what stops macro from being inflated.
+    p  <- if ((tp + fp) > 0) tp / (tp + fp) else 0
+    r  <- tp / (tp + fn)
+    if ((p + r) > 0) 2*p*r/(p+r) else 0
   })
   mf1   <- mean(f1s, na.rm = TRUE) * 100
   # mean is NaN only when every class F1 is undefined, which happens iff there are
