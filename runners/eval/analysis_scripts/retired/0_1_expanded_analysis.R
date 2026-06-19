@@ -21,7 +21,7 @@
 source("runners/eval/eval_helpers.R")
 
 ROOT     <- "results/eval/outputs/step2/osf"
-OUT_DIR  <- "results/eval/outputs/step2/comparison-new"
+OUT_DIR  <- "results/eval/outputs/step2/comparison"
 SENTINEL <- "llm_error"
 
 FIELD_MAP <- list(
