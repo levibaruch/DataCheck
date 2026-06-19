@@ -1300,9 +1300,23 @@ match_column_labels <- function(columns_df, codebook_vars_df,
 
     distinct_labels <- unique(applicable$label)
     if (length(distinct_labels) > 1) {
+      # Haven priority: a haven (.sav/.dta/.sas) label is the variable label
+      # embedded in the binary data file itself, so it is authoritative and wins
+      # any conflict with README / structured-file codebooks. Take it directly
+      # rather than flagging conflicting_definition (longest haven label if several).
+      haven_rows <- if ("parse_method" %in% names(applicable))
+        applicable[!is.na(applicable$parse_method) & applicable$parse_method == "haven", , drop = FALSE] else
+        applicable[0, , drop = FALSE]
       # Rule-based equivalence check: normalise labels and re-check uniqueness
       norm_labels <- normalize_label(distinct_labels)
-      if (length(unique(norm_labels)) == 1) {
+      if (nrow(haven_rows) > 0) {
+        canonical <- haven_rows$label[which.max(nchar(haven_rows$label))]
+        status_out[i]        <- "labelled"
+        label_out[i]         <- canonical
+        cbk_var_out[i]       <- haven_rows$codebook_variable[1]
+        src_out[i]           <- paste(unique(haven_rows$codebook_source), collapse = " | ")
+        label_method_out[i]  <- "haven_priority"
+      } else if (length(unique(norm_labels)) == 1) {
         # All labels normalise to the same string — pick the longest original label
         canonical <- distinct_labels[which.max(nchar(distinct_labels))]
         status_out[i]        <- "labelled"

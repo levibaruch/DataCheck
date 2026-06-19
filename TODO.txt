@@ -1,6 +1,22 @@
 TODO — metacheck-datacheck pipeline
 
 ────────────────────────────────────────────────────────────────────────────────
+[IMPROVEMENT] Stem R_id check should fire for aggregate members, not just non-agg
+  filename_heuristic (US1, pipeline/0_index.R) currently gates on
+  granularity_source == "default_combined", so only NON-aggregate data files have
+  their filename stem matched against R_id (is_participant_id). Aggregate members
+  are folder_heuristic and skip the stem check — a flat aggregate of files named
+  sub01.csv … sub30.csv only gets "individual" via the (costlier) LLM step.
+  Fix: gate on data_granularity == "combined" instead, so the stem check fires
+  for any still-combined data file (aggregate or not) while leaving already-
+  "individual" participant-series files untouched. Verified working in a scratch
+  test; reverted because it is a behaviour change that would invalidate the
+  current evaluation set (results/eval/full_120b_json). Apply + re-run eval
+  together, not piecemeal.
+  Location: US1 block, pipeline/0_index.R (~line 878)
+  Status: PENDING (deferred to avoid invalidating eval)
+
+────────────────────────────────────────────────────────────────────────────────
 [BUG] LLM echoes enumerated 'N. ' ordinal into path field → whole batch collapses to other/shared
   The structure prompt sends files as a numbered list ("1. `path`", "2. `path`", ...).
   Some models copy the leading ordinal into the returned JSON `path` field
@@ -18,6 +34,36 @@ TODO — metacheck-datacheck pipeline
   the match (and/or match on basename as a fallback). Conservative count — n>=2
   threshold excludes single-file batches, so true frequency is higher.
   Location: pipeline/0_index.R:819-832 (match + fallback), prompt enumeration upstream
+  Status: PENDING
+
+────────────────────────────────────────────────────────────────────────────────
+[BUG] Haven embedded labels lose label conflicts → counted unmatched_in_data
+  Haven .sav/.dta/.sas variable labels are read straight from the data file
+  (2_codebook_label.R:91-104) but then dumped into the SAME codebook pool as
+  README / structured-file codebooks and made to compete per column name
+  (merged at 2_codebook_label.R:165-169). When a second source gives a different
+  label for the same variable name, match_column_labels sets the column to
+  label_status="conflicting_definition" and picks NOTHING (helper.R:1313-1318).
+  Since coverage only counts {labelled, llm} as matched (2_codebook_label.R:197-211),
+  the haven variable is then written as match_status="unmatched_in_data" — even
+  though its label is the authoritative one straight from the binary file.
+  Effect (eval, full_120b_json): 1699 / 13166 haven vars (12.9%, 52 papers) marked
+  unmatched; 100% of them have their column name PRESENT in columns.csv, and 100%
+  of those columns are at status conflicting_definition. So none are "missing data"
+  — all are haven losing a label-conflict it should win.
+  Real examples (paper 0956797614524581):
+    var=ZFindexA  haven "Zscore(factualindexacrosstalks)" vs competing "Zscore(factualindexacross)"
+    var=whichtalk haven "Which talk did you watch?"        vs competing "1"
+    var=filter_$  haven "participant ~= 63 (FILTER)"       vs competing "participantid ~= 194 & 237 (FILTER)"
+  Most conflicts are near-duplicate wording across waves/files that normalize_label
+  fails to collapse; haven still loses by default.
+  Fix: give haven priority — haven embedded labels are extracted from the data file
+  itself and should ALWAYS win a conflict. When applicable codebook vars include a
+  parse_method=="haven" entry, take the haven label (status "labelled") instead of
+  emitting conflicting_definition. Apply + re-run eval together (changes coverage
+  match rates).
+  Location: helper.R match_column_labels conflict branch (~1301-1319);
+            coverage match in pipeline/2_codebook_label.R:197-211
   Status: PENDING
 
 ────────────────────────────────────────────────────────────────────────────────
